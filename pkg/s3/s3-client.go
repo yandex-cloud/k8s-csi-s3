@@ -13,6 +13,7 @@ import (
 
 const (
 	metadataName = ".metadata.json"
+	fsPrefix     = "csi-fs"
 )
 
 type s3Client struct {
@@ -22,6 +23,7 @@ type s3Client struct {
 
 type bucket struct {
 	Name          string
+	FSPath        string
 	CapacityBytes int64
 }
 
@@ -52,6 +54,14 @@ func (client *s3Client) bucketExists(bucketName string) (bool, error) {
 
 func (client *s3Client) createBucket(bucketName string) error {
 	return client.minio.MakeBucket(bucketName, client.cfg.Region)
+}
+
+func (client *s3Client) createPrefix(bucketName string, prefix string) error {
+	_, err := client.minio.PutObject(bucketName, prefix+"/", bytes.NewReader([]byte("")), 0, minio.PutObjectOptions{})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (client *s3Client) removeBucket(bucketName string) error {

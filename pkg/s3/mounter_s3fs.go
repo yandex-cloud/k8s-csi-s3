@@ -39,7 +39,7 @@ func (s3fs *s3fsMounter) Mount(source string, target string) error {
 		return err
 	}
 	args := []string{
-		fmt.Sprintf("%s", s3fs.bucket.Name),
+		fmt.Sprintf("%s:/%s", s3fs.bucket.Name, s3fs.bucket.FSPath),
 		fmt.Sprintf("%s", target),
 		"-o", "sigv2",
 		"-o", "use_path_request_style",
