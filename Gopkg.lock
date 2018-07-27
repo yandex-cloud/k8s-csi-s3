@@ -159,6 +159,12 @@
   revision = "3864e76763d94a6df2f9960b16a20a33da9f9a66"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/mitchellh/go-ps"
+  packages = ["."]
+  revision = "4fdf99ab29366514c69ccccddab5dc58b8d84062"
+
+[[projects]]
   name = "github.com/onsi/ginkgo"
   packages = [
     ".",
@@ -372,6 +378,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "659f47734b56af7fba146039231841e82cc4c3c95dff2814ec3688e967790a50"
+  inputs-digest = "a655e5231fe7b5c962579c8f032338c53177a95a3160bef4628f0761f714f730"
   solver-name = "gps-cdcl"
   solver-version = 1

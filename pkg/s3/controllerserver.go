@@ -34,58 +34,71 @@ type controllerServer struct {
 }
 
 func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
+	volumeID := req.GetName()
+
 	if err := cs.Driver.ValidateControllerServiceRequest(csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME); err != nil {
 		glog.V(3).Infof("invalid create volume req: %v", req)
 		return nil, err
 	}
 
 	// Check arguments
-	if len(req.GetName()) == 0 {
+	if len(volumeID) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Name missing in request")
 	}
 	if req.GetVolumeCapabilities() == nil {
 		return nil, status.Error(codes.InvalidArgument, "Volume Capabilities missing in request")
 	}
 
-	volumeID := req.GetName()
+	capacityBytes := int64(req.GetCapacityRange().GetRequiredBytes())
+
 	glog.V(5).Infof("Got a request to create bucket %s", volumeID)
 
 	exists, err := cs.s3.client.bucketExists(volumeID)
 	if err != nil {
 		return nil, err
 	}
-	if !exists {
+	if exists {
+		var b *bucket
+		b, err = cs.s3.client.getBucket(volumeID)
+		if err != nil {
+			return nil, err
+		}
+		// Check if volume capacity requested is bigger than the already existing capacity
+		if capacityBytes > b.CapacityBytes {
+			return nil, status.Error(codes.AlreadyExists, fmt.Sprintf("Volume with the same name: %s but with smaller size already exist", volumeID))
+		}
+	} else {
 		if err = cs.s3.client.createBucket(volumeID); err != nil {
 			glog.V(3).Infof("failed to create volume: %v", err)
 			return nil, err
 		}
 	}
-
-	mounter, err := newMounter(volumeID, cs.s3.cfg)
-	if err != nil {
-		return nil, err
+	b := &bucket{
+		Name:          volumeID,
+		CapacityBytes: capacityBytes,
 	}
-	if err := mounter.Format(); err != nil {
+	if err := cs.s3.client.setBucket(b); err != nil {
 		return nil, err
 	}
 
 	glog.V(4).Infof("create volume %s", volumeID)
 	s3Vol := s3Volume{}
-	s3Vol.VolName = req.GetName()
+	s3Vol.VolName = volumeID
 	s3Vol.VolID = volumeID
 	return &csi.CreateVolumeResponse{
 		Volume: &csi.Volume{
 			Id:            volumeID,
-			CapacityBytes: 1,
+			CapacityBytes: capacityBytes,
 			Attributes:    req.GetParameters(),
 		},
 	}, nil
 }
 
 func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVolumeRequest) (*csi.DeleteVolumeResponse, error) {
+	volumeID := req.GetVolumeId()
 
 	// Check arguments
-	if len(req.GetVolumeId()) == 0 {
+	if len(volumeID) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Volume ID missing in request")
 	}
 
@@ -93,7 +106,6 @@ func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVol
 		glog.V(3).Infof("Invalid delete volume req: %v", req)
 		return nil, err
 	}
-	volumeID := req.VolumeId
 	glog.V(4).Infof("Deleting volume %s", volumeID)
 
 	exists, err := cs.s3.client.bucketExists(volumeID)

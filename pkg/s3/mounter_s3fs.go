@@ -3,39 +3,44 @@ package s3
 import (
 	"fmt"
 	"os"
-	"os/exec"
-
-	"k8s.io/kubernetes/pkg/util/mount"
 )
 
 // Implements Mounter
 type s3fsMounter struct {
-	bucket        string
+	bucket        *bucket
 	url           string
 	region        string
 	pwFileContent string
 }
 
-func newS3fsMounter(bucket string, cfg *Config) (Mounter, error) {
+const (
+	s3fsCmd = "s3fs"
+)
+
+func newS3fsMounter(b *bucket, cfg *Config) (Mounter, error) {
 	return &s3fsMounter{
-		bucket:        bucket,
+		bucket:        b,
 		url:           cfg.Endpoint,
 		region:        cfg.Region,
 		pwFileContent: cfg.AccessKeyID + ":" + cfg.SecretAccessKey,
 	}, nil
 }
 
-func (s3fs *s3fsMounter) Format() error {
+func (s3fs *s3fsMounter) Stage(stageTarget string) error {
 	return nil
 }
 
-func (s3fs *s3fsMounter) Mount(targetPath string) error {
+func (s3fs *s3fsMounter) Unstage(stageTarget string) error {
+	return nil
+}
+
+func (s3fs *s3fsMounter) Mount(source string, target string) error {
 	if err := writes3fsPass(s3fs.pwFileContent); err != nil {
 		return err
 	}
 	args := []string{
-		fmt.Sprintf("%s", s3fs.bucket),
-		fmt.Sprintf("%s", targetPath),
+		fmt.Sprintf("%s", s3fs.bucket.Name),
+		fmt.Sprintf("%s", target),
 		"-o", "sigv2",
 		"-o", "use_path_request_style",
 		"-o", fmt.Sprintf("url=%s", s3fs.url),
@@ -43,16 +48,11 @@ func (s3fs *s3fsMounter) Mount(targetPath string) error {
 		"-o", "allow_other",
 		"-o", "mp_umask=000",
 	}
-	cmd := exec.Command("s3fs", args...)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("Error mounting using s3fs, output: %s", out)
-	}
-	return nil
+	return fuseMount(target, s3fsCmd, args)
 }
 
-func (s3fs *s3fsMounter) Unmount(targetPath string) error {
-	return mount.New("").Unmount(targetPath)
+func (s3fs *s3fsMounter) Unmount(target string) error {
+	return fuseUnmount(target, s3fsCmd)
 }
 
 func writes3fsPass(pwFileContent string) error {

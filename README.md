@@ -76,6 +76,7 @@ As seen in the deployment example above, the driver can be configured to use one
 * [s3fs](https://github.com/s3fs-fuse/s3fs-fuse)
 * [goofys](https://github.com/kahing/goofys)
 * [s3ql](https://github.com/s3ql/s3ql)
+* [s3backer](https://github.com/archiecobbs/s3backer)
 
 All mounters have different strengths and weaknesses depending on your use case. Here are some characteristics which should help you choose a mounter:
 
@@ -97,6 +98,14 @@ All mounters have different strengths and weaknesses depending on your use case.
 * Support appends
 * Supports compression before upload
 * Supports encryption before upload
+
+### s3backer
+* Represents a block device stored on S3
+* Allows to use a real filesystem
+* Files are not readable with other S3 clients
+* Support appends
+* Supports compression before upload (Not yet implemented in this driver)
+* Supports encryption before upload (Not yet implemented in this driver)
 
 # Limitations
 As S3 is not a real file system there are some limitations to consider here. Depending on what mounter you are using, you will have different levels of POSIX compability. Also depending on what S3 storage backend you are using there are not always consistency guarantees. The detailed limitations can be found on the documentation of [s3fs](https://github.com/s3fs-fuse/s3fs-fuse#limitations) and [goofys](https://github.com/kahing/goofys#current-status).

@@ -12,16 +12,13 @@ import (
 	"github.com/kubernetes-csi/csi-test/pkg/sanity"
 )
 
-const ()
-
 var _ = Describe("S3Driver", func() {
-	mntDir, err := ioutil.TempDir("", "mnt")
-	if err != nil {
-		Expect(err).NotTo(HaveOccurred())
-	}
+	mntDir, _ := ioutil.TempDir("", "mnt")
+	stagingDir, _ := ioutil.TempDir("", "staging")
 
 	AfterSuite(func() {
 		os.RemoveAll(mntDir)
+		os.RemoveAll(stagingDir)
 	})
 
 	Context("goofys", func() {
@@ -44,9 +41,9 @@ var _ = Describe("S3Driver", func() {
 
 		Describe("CSI sanity", func() {
 			sanityCfg := &sanity.Config{
-				TargetPath:     mntDir,
-				Address:        csiEndpoint,
-				TestVolumeSize: 1,
+				TargetPath:  mntDir,
+				StagingPath: stagingDir,
+				Address:     csiEndpoint,
 			}
 			sanity.GinkgoTest(sanityCfg)
 		})
@@ -70,13 +67,11 @@ var _ = Describe("S3Driver", func() {
 		}
 		go driver.Run()
 
-		defer os.RemoveAll(mntDir)
-
 		Describe("CSI sanity", func() {
 			sanityCfg := &sanity.Config{
-				TargetPath:     mntDir,
-				Address:        csiEndpoint,
-				TestVolumeSize: 1,
+				TargetPath:  mntDir,
+				StagingPath: stagingDir,
+				Address:     csiEndpoint,
 			}
 			sanity.GinkgoTest(sanityCfg)
 		})
@@ -105,9 +100,38 @@ var _ = Describe("S3Driver", func() {
 
 		Describe("CSI sanity", func() {
 			sanityCfg := &sanity.Config{
-				TargetPath:     mntDir,
-				Address:        csiEndpoint,
-				TestVolumeSize: 1,
+				TargetPath:  mntDir,
+				StagingPath: stagingDir,
+				Address:     csiEndpoint,
+			}
+			sanity.GinkgoTest(sanityCfg)
+		})
+	})
+
+	Context("s3backer", func() {
+		socket := "/tmp/csi-s3backer.sock"
+		csiEndpoint := "unix://" + socket
+
+		cfg := &s3.Config{
+			AccessKeyID:     "FJDSJ",
+			SecretAccessKey: "DSG643HGDS",
+			Endpoint:        "http://127.0.0.1:9000",
+			Mounter:         "s3backer",
+		}
+		if err := os.Remove(socket); err != nil && !os.IsNotExist(err) {
+			Expect(err).NotTo(HaveOccurred())
+		}
+		driver, err := s3.NewS3("test-node", csiEndpoint, cfg)
+		if err != nil {
+			log.Fatal(err)
+		}
+		go driver.Run()
+
+		Describe("CSI sanity", func() {
+			sanityCfg := &sanity.Config{
+				TargetPath:  mntDir,
+				StagingPath: stagingDir,
+				Address:     csiEndpoint,
 			}
 			sanity.GinkgoTest(sanityCfg)
 		})

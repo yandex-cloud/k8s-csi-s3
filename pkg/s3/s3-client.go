@@ -1,7 +1,10 @@
 package s3
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/url"
 
 	"github.com/golang/glog"
@@ -9,12 +12,17 @@ import (
 )
 
 const (
-	metadataName = ".meta"
+	metadataName = ".metadata.json"
 )
 
 type s3Client struct {
 	cfg   *Config
 	minio *minio.Client
+}
+
+type bucket struct {
+	Name          string
+	CapacityBytes int64
 }
 
 func newS3Client(cfg *Config) (*s3Client, error) {
@@ -90,4 +98,33 @@ func (client *s3Client) emptyBucket(bucketName string) error {
 	}
 
 	return nil
+}
+
+func (client *s3Client) setBucket(bucket *bucket) error {
+	b := new(bytes.Buffer)
+	json.NewEncoder(b).Encode(bucket)
+	opts := minio.PutObjectOptions{ContentType: "application/json"}
+	_, err := client.minio.PutObject(bucket.Name, metadataName, b, int64(b.Len()), opts)
+	return err
+}
+
+func (client *s3Client) getBucket(bucketName string) (*bucket, error) {
+	opts := minio.GetObjectOptions{}
+	obj, err := client.minio.GetObject(bucketName, metadataName, opts)
+	if err != nil {
+		return &bucket{}, err
+	}
+	objInfo, err := obj.Stat()
+	if err != nil {
+		return &bucket{}, err
+	}
+	b := make([]byte, objInfo.Size)
+	_, err = obj.Read(b)
+
+	if err != nil && err != io.EOF {
+		return &bucket{}, err
+	}
+	var meta bucket
+	err = json.Unmarshal(b, &meta)
+	return &meta, err
 }

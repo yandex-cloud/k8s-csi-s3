@@ -78,7 +78,7 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /var/lib/kubelet/plugins/ch.ctrox.csi.s3-driver
-        - name: s3-csi-driver
+        - name: csi-s3-driver
           image: ctrox/csi-s3-driver:0.2.0
           args:
             - "--endpoint=$(CSI_ENDPOINT)"
