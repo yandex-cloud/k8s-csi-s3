@@ -71,12 +71,14 @@ If something does not work as expected, check the troubleshooting section below.
 
 # Additional configuration
 ## Mounter
-As seen in the deployment example above, the driver can be configured to use one of these mounters to mount buckets:
+The driver can be configured to use one of these mounters to mount buckets:
 
 * [s3fs](https://github.com/s3fs-fuse/s3fs-fuse)
 * [goofys](https://github.com/kahing/goofys)
 * [s3ql](https://github.com/s3ql/s3ql)
 * [s3backer](https://github.com/archiecobbs/s3backer)
+
+The mounter can be set as a parameter in the storage class. You can also create multiple storage classes for each mounter if you like.
 
 All mounters have different strengths and weaknesses depending on your use case. Here are some characteristics which should help you choose a mounter:
 
@@ -114,7 +116,7 @@ As S3 is not a real file system there are some limitations to consider here. Dep
 ## Issues while creating PVC
 * Check the logs of the provisioner:
 ```
-$ kubectl logs -l app=csi-provisioner-s3 -c s3-csi-driver
+$ kubectl logs -l app=csi-provisioner-s3 -c csi-s3
 ```
 
 ## Issues creating containers
