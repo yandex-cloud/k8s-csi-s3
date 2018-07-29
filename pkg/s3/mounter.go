@@ -22,11 +22,17 @@ const (
 	goofysMounterType   = "goofys"
 	s3qlMounterType     = "s3ql"
 	s3backerMounterType = "s3backer"
+	mounterTypeKey      = "mounter"
 )
 
 // newMounter returns a new mounter depending on the mounterType parameter
 func newMounter(bucket *bucket, cfg *Config) (Mounter, error) {
-	switch cfg.Mounter {
+	mounter := bucket.Mounter
+	// Fall back to mounterType in cfg
+	if len(bucket.Mounter) == 0 {
+		mounter = cfg.Mounter
+	}
+	switch mounter {
 	case s3fsMounterType:
 		return newS3fsMounter(bucket, cfg)
 
@@ -39,8 +45,10 @@ func newMounter(bucket *bucket, cfg *Config) (Mounter, error) {
 	case s3backerMounterType:
 		return newS3backerMounter(bucket, cfg)
 
+	default:
+		// default to s3backer
+		return newS3backerMounter(bucket, cfg)
 	}
-	return nil, fmt.Errorf("Error mounting bucket %s, invalid mounter specified: %s", bucket.Name, cfg.Mounter)
 }
 
 func fuseMount(path string, command string, args []string) error {

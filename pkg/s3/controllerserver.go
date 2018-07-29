@@ -50,6 +50,8 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 	}
 
 	capacityBytes := int64(req.GetCapacityRange().GetRequiredBytes())
+	params := req.GetParameters()
+	mounter := params[mounterTypeKey]
 
 	glog.V(5).Infof("Got a request to create bucket %s", volumeID)
 
@@ -77,6 +79,7 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 	}
 	b := &bucket{
 		Name:          volumeID,
+		Mounter:       mounter,
 		CapacityBytes: capacityBytes,
 		FSPath:        fsPrefix,
 	}
