@@ -53,17 +53,17 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 	params := req.GetParameters()
 	mounter := params[mounterTypeKey]
 
-	glog.V(5).Infof("Got a request to create bucket %s", volumeID)
+	glog.V(4).Infof("Got a request to create volume %s", volumeID)
 
 	exists, err := cs.s3.client.bucketExists(volumeID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to check if bucket exists: %v", err)
 	}
 	if exists {
 		var b *bucket
 		b, err = cs.s3.client.getBucket(volumeID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get bucket: %v", err)
+			return nil, fmt.Errorf("failed to get bucket metadata: %v", err)
 		}
 		// Check if volume capacity requested is bigger than the already existing capacity
 		if capacityBytes > b.CapacityBytes {
