@@ -35,7 +35,7 @@ stringData:
 cd deploy/kubernetes
 $ kubectl create -f provisioner.yaml
 $ kubectl create -f attacher.yaml
-$ kubectl create -f csi-s3-driver.yaml
+$ kubectl create -f csi-s3.yaml
 ```
 
 ## 3. Create the storage class
@@ -121,13 +121,13 @@ $ kubectl logs -l app=csi-provisioner-s3 -c s3-csi-driver
 * Ensure feature gate `MountPropagation` is not set to `false`
 * Check the logs of the s3-driver:
 ```
-$ kubectl logs -l app=csi-s3-driver -c csi-s3-driver
+$ kubectl logs -l app=csi-s3 -c csi-s3
 ```
 
 # Development
 This project can be built like any other go application.
 ```bash
-$ go get -u github.com/ctrox/csi-s3-driver
+$ go get -u github.com/ctrox/csi-s3
 ```
 ## Build
 ```bash

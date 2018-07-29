@@ -39,7 +39,7 @@ RUN ./autogen.sh && \
 
 FROM python:3.6-slim
 LABEL maintainers="Cyrill Troxler <cyrilltroxler@gmail.com>"
-LABEL description="csi-s3-driver production image"
+LABEL description="csi-s3 production image"
 
 RUN apt-get update && \
     apt-get install -y \

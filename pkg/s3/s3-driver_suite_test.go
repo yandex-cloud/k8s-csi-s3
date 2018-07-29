@@ -8,7 +8,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/ctrox/csi-s3-driver/pkg/s3"
+	"github.com/ctrox/csi-s3/pkg/s3"
 	"github.com/kubernetes-csi/csi-test/pkg/sanity"
 )
 

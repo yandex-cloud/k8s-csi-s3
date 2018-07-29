@@ -13,9 +13,9 @@
 # limitations under the License.
 .PHONY: test build container push clean
 
-PROJECT_DIR=/go/src/github.com/ctrox/csi-s3-driver
+PROJECT_DIR=/go/src/github.com/ctrox/csi-s3
 REGISTRY_NAME=ctrox
-IMAGE_NAME=csi-s3-driver
+IMAGE_NAME=csi-s3
 IMAGE_VERSION=0.2.0
 IMAGE_TAG=$(REGISTRY_NAME)/$(IMAGE_NAME):$(IMAGE_VERSION)
 TEST_IMAGE_TAG=$(REGISTRY_NAME)/$(IMAGE_NAME):test

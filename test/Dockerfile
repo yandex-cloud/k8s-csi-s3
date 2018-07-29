@@ -1,6 +1,6 @@
-FROM ctrox/csi-s3-driver:0.2.0
+FROM ctrox/csi-s3:0.2.0
 LABEL maintainers="Cyrill Troxler <cyrilltroxler@gmail.com>"
-LABEL description="csi-s3-driver testing image"
+LABEL description="csi-s3 testing image"
 
 RUN apt-get update && \
     apt-get install -y \
@@ -17,4 +17,4 @@ ENV PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 
 RUN go get -u github.com/minio/minio && go install github.com/minio/minio/cmd
 
-ENTRYPOINT ["/go/src/github.com/ctrox/csi-s3-driver/test/test.sh"]
+ENTRYPOINT ["/go/src/github.com/ctrox/csi-s3/test/test.sh"]

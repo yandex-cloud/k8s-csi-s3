@@ -2,12 +2,12 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: csi-s3-driver
+  name: csi-s3
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: csi-s3-driver
+  name: csi-s3
 rules:
   - apiGroups: [""]
     resources: ["secrets"]
@@ -28,30 +28,30 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: csi-s3-driver
+  name: csi-s3
 subjects:
   - kind: ServiceAccount
-    name: csi-s3-driver
+    name: csi-s3
     namespace: default
 roleRef:
   kind: ClusterRole
-  name: csi-s3-driver
+  name: csi-s3
   apiGroup: rbac.authorization.k8s.io
 ---
 kind: DaemonSet
 apiVersion: apps/v1beta2
 metadata:
-  name: csi-s3-driver
+  name: csi-s3
 spec:
   selector:
     matchLabels:
-      app: csi-s3-driver
+      app: csi-s3
   template:
     metadata:
       labels:
-        app: csi-s3-driver
+        app: csi-s3
     spec:
-      serviceAccount: csi-s3-driver
+      serviceAccount: csi-s3
       hostNetwork: true
       containers:
         - name: driver-registrar
@@ -69,13 +69,13 @@ spec:
           volumeMounts:
             - name: plugin-dir
               mountPath: /csi
-        - name: csi-s3-driver
+        - name: csi-s3
           securityContext:
             privileged: true
             capabilities:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: ctrox/csi-s3-driver:0.2.0
+          image: ctrox/csi-s3:0.2.0
           args:
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--nodeid=$(NODE_ID)"
