@@ -60,8 +60,9 @@ func (goofys *goofysMounter) Mount(source string, target string) error {
 
 	os.Setenv("AWS_ACCESS_KEY_ID", goofys.accessKeyID)
 	os.Setenv("AWS_SECRET_ACCESS_KEY", goofys.secretAccessKey)
+	fullPath := fmt.Sprintf("%s:%s", goofys.bucket.Name, goofys.bucket.FSPath)
 
-	_, _, err := goofysApi.Mount(context.Background(), goofys.bucket.Name, goofysCfg)
+	_, _, err := goofysApi.Mount(context.Background(), fullPath, goofysCfg)
 
 	if err != nil {
 		return fmt.Errorf("Error mounting via goofys: %s", err)

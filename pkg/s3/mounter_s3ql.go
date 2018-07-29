@@ -49,7 +49,9 @@ func newS3qlMounter(b *bucket, cfg *Config) (Mounter, error) {
 		ssl:        ssl,
 	}
 
-	url.Path = path.Join(url.Path, b.Name)
+	// s3ql requires a trailing slash or it will just
+	// prepend the fspath to the s3ql files
+	url.Path = path.Join(url.Path, b.Name, b.FSPath) + "/"
 	s3ql.bucketURL = url.String()
 
 	if !ssl {

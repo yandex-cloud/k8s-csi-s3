@@ -2,6 +2,7 @@ package s3
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"path"
@@ -29,6 +30,11 @@ const (
 )
 
 func newS3backerMounter(bucket *bucket, cfg *Config) (Mounter, error) {
+	url, err := url.Parse(cfg.Endpoint)
+	if err != nil {
+		return nil, err
+	}
+	url.Path = path.Join(url.Path, bucket.Name, bucket.FSPath)
 	// s3backer cannot work with 0 size volumes
 	if bucket.CapacityBytes == 0 {
 		bucket.CapacityBytes = s3backerDefaultSize
@@ -88,8 +94,9 @@ func (s3backer *s3backerMounter) mountInit(path string) error {
 	args := []string{
 		// baseURL must end with /
 		fmt.Sprintf("--baseURL=%s/", s3backer.url),
-		fmt.Sprintf("--blockSize=%v", s3backerBlockSize),
+		fmt.Sprintf("--blockSize=%s", s3backerBlockSize),
 		fmt.Sprintf("--size=%v", s3backer.bucket.CapacityBytes),
+		fmt.Sprintf("--prefix=%s/", s3backer.bucket.FSPath),
 		"--listBlocks",
 		s3backer.bucket.Name,
 		path,
