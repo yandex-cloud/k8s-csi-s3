@@ -1,30 +1,20 @@
-FROM golang:stretch
+FROM ctrox/csi-s3-driver:0.2.0
 LABEL maintainers="Cyrill Troxler <cyrilltroxler@gmail.com>"
-LABEL description="s3 fuse csi plugin"
+LABEL description="csi-s3-driver testing image"
 
-RUN apt-get update && apt-get install -y \
-  s3fs \
-  build-essential \
-  autoconf \
-  libcurl4-openssl-dev \
-  libfuse-dev \
-  libexpat1-dev \
-  libssl-dev \
-  zlib1g-dev \
-  xfsprogs \
-  psmisc \
-  git && \
-  rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y \
+      git wget && \
+    rm -rf /var/lib/apt/lists/*
 
-RUN git clone https://github.com/archiecobbs/s3backer.git ./s3backer
+RUN wget -q https://dl.google.com/go/go1.10.3.linux-amd64.tar.gz && \
+    tar -xf go1.10.3.linux-amd64.tar.gz && \
+    mv go /usr/local
 
-WORKDIR "./s3backer"
-
-RUN ["./autogen.sh"]
-RUN ["./configure"]
-RUN ["make"]
-RUN ["make", "install"]
+ENV GOROOT /usr/local/go
+ENV GOPATH /go
+ENV PATH=$GOPATH/bin:$GOROOT/bin:$PATH
 
 RUN go get -u github.com/minio/minio && go install github.com/minio/minio/cmd
 
-CMD ["/go/src/github.com/ctrox/csi-s3-driver/test/test.sh"]
+ENTRYPOINT ["/go/src/github.com/ctrox/csi-s3-driver/test/test.sh"]
