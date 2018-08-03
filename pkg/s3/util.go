@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strings"
 	"syscall"
 	"time"
@@ -66,4 +67,21 @@ func getCmdLine(pid int) (string, error) {
 		return "", err
 	}
 	return string(cmdLine), nil
+}
+
+func createLoopDevice(device string) error {
+	if _, err := os.Stat(device); !os.IsNotExist(err) {
+		return nil
+	}
+	args := []string{
+		device,
+		"b", "7", "0",
+	}
+	cmd := exec.Command("mknod", args...)
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("Error configuring loop device: %s", out)
+	}
+	return nil
 }

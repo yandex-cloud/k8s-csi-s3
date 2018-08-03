@@ -1,0 +1,30 @@
+image:
+  name: ctrox/csi-s3:test
+  entrypoint: [""]
+
+variables:
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+  GO_PROJECT_BASE: /go/src/github.com/ctrox
+  GO_PROJECT_DIR: $GO_PROJECT_BASE/csi-s3
+
+stages:
+  - build
+  - test
+
+build:
+  stage: build
+  before_script:
+  - mkdir -p $GO_PROJECT_BASE
+  - ln -s $CI_PROJECT_DIR $GO_PROJECT_BASE
+  - cd $GO_PROJECT_DIR
+  script:
+    - make build
+
+test:
+  stage: test
+  image: docker:stable
+  services:
+    - docker:dind
+  script:
+    - docker run --rm --privileged -v $(pwd):$GO_PROJECT_DIR --device /dev/fuse ctrox/$CI_PROJECT_NAME:test

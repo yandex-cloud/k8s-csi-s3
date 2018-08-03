@@ -121,6 +121,8 @@ var _ = Describe("S3Driver", func() {
 		if err := os.Remove(socket); err != nil && !os.IsNotExist(err) {
 			Expect(err).NotTo(HaveOccurred())
 		}
+		// Clear loop device so we cover the creation of it
+		os.Remove(s3.S3backerLoopDevice)
 		driver, err := s3.NewS3("test-node", csiEndpoint, cfg)
 		if err != nil {
 			log.Fatal(err)

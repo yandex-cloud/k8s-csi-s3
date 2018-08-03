@@ -25,7 +25,7 @@ build:
 	CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o _output/s3driver ./cmd/s3driver
 test:
 	docker build -t $(TEST_IMAGE_TAG) -f test/Dockerfile .
-	docker run --rm --privileged -v $(PWD):$(PROJECT_DIR):ro -v /dev:/dev $(TEST_IMAGE_TAG)
+	docker run --rm --privileged -v $(PWD):$(PROJECT_DIR):ro --device /dev/fuse $(TEST_IMAGE_TAG)
 container: build
 	docker build -t $(IMAGE_TAG) -f cmd/s3driver/Dockerfile .
 push: container
