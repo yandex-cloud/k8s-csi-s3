@@ -20,11 +20,10 @@ metadata:
 stringData:
   accessKeyID: <YOUR_ACCESS_KEY_ID>
   secretAccessKey: <YOUR_SECRET_ACCES_KEY>
-  endpoint: <S3_ENDPOINT_URL
+  # For AWS set it to "https://s3.amazonaws.com"
+  endpoint: <S3_ENDPOINT_URL>
+  # If not on S3, set it to ""
   region: <S3_REGION>
-  # specify which mounter to use
-  # can be set to s3fs, goofys or s3ql
-  mounter: <MOUNTER>
   # Currently only for s3ql
   # If not using s3ql, set it to ""
   encryptionKey: <FS_ENCRYPTION_KEY>
@@ -71,6 +70,8 @@ If something does not work as expected, check the troubleshooting section below.
 
 # Additional configuration
 ## Mounter
+As S3 is not a real file system there are some limitations to consider here. Depending on what mounter you are using, you will have different levels of POSIX compability. Also depending on what S3 storage backend you are using there are not always [consistency guarantees](https://github.com/gaul/are-we-consistent-yet#observed-consistency).
+
 The driver can be configured to use one of these mounters to mount buckets:
 
 * [s3fs](https://github.com/s3fs-fuse/s3fs-fuse)
@@ -109,8 +110,7 @@ All mounters have different strengths and weaknesses depending on your use case.
 * Supports compression before upload (Not yet implemented in this driver)
 * Supports encryption before upload (Not yet implemented in this driver)
 
-# Limitations
-As S3 is not a real file system there are some limitations to consider here. Depending on what mounter you are using, you will have different levels of POSIX compability. Also depending on what S3 storage backend you are using there are not always consistency guarantees. The detailed limitations can be found on the documentation of [s3fs](https://github.com/s3fs-fuse/s3fs-fuse#limitations) and [goofys](https://github.com/kahing/goofys#current-status).
+Fore more detailed limitations consult the documentation of the different projects.
 
 # Troubleshooting
 ## Issues while creating PVC
