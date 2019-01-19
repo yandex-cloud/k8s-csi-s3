@@ -42,7 +42,7 @@ type s3Volume struct {
 }
 
 var (
-	vendorVersion = "0.1.0"
+	vendorVersion = "1.0.1-alpha"
 	driverName    = "ch.ctrox.csi.s3-driver"
 )
 
@@ -70,14 +70,14 @@ func NewS3(nodeID string, endpoint string, cfg *Config) (*s3, error) {
 func (s3 *s3) newIdentityServer(d *csicommon.CSIDriver) *identityServer {
 	return &identityServer{
 		DefaultIdentityServer: csicommon.NewDefaultIdentityServer(d),
-		s3: s3,
+		s3:                    s3,
 	}
 }
 
 func (s3 *s3) newControllerServer(d *csicommon.CSIDriver) *controllerServer {
 	return &controllerServer{
 		DefaultControllerServer: csicommon.NewDefaultControllerServer(d),
-		s3: s3,
+		s3:                      s3,
 	}
 }
 
@@ -90,6 +90,7 @@ func (s3 *s3) newNodeServer(d *csicommon.CSIDriver) *nodeServer {
 
 func (s3 *s3) Run() {
 	glog.Infof("Driver: %v ", driverName)
+	glog.Infof("Version: %v ", vendorVersion)
 	// Initialize default library driver
 
 	s3.driver.AddControllerServiceCapabilities([]csi.ControllerServiceCapability_RPC_Type{csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME})
