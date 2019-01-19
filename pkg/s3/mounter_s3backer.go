@@ -18,6 +18,7 @@ type s3backerMounter struct {
 	region          string
 	accessKeyID     string
 	secretAccessKey string
+	ssl             bool
 }
 
 const (
@@ -47,6 +48,7 @@ func newS3backerMounter(bucket *bucket, cfg *Config) (Mounter, error) {
 		region:          cfg.Region,
 		accessKeyID:     cfg.AccessKeyID,
 		secretAccessKey: cfg.SecretAccessKey,
+		ssl:             url.Scheme == "https",
 	}
 
 	return s3backer, s3backer.writePasswd()
@@ -98,8 +100,6 @@ func (s3backer *s3backerMounter) Unmount(targetPath string) error {
 
 func (s3backer *s3backerMounter) mountInit(path string) error {
 	args := []string{
-		// baseURL must end with /
-		fmt.Sprintf("--baseURL=%s/", s3backer.url),
 		fmt.Sprintf("--blockSize=%s", s3backerBlockSize),
 		fmt.Sprintf("--size=%v", s3backer.bucket.CapacityBytes),
 		fmt.Sprintf("--prefix=%s/", s3backer.bucket.FSPath),
@@ -109,6 +109,13 @@ func (s3backer *s3backerMounter) mountInit(path string) error {
 	}
 	if s3backer.region != "" {
 		args = append(args, fmt.Sprintf("--region=%s", s3backer.region))
+	} else {
+		// only set baseURL if not on AWS (region is not set)
+		// baseURL must end with /
+		args = append(args, fmt.Sprintf("--baseURL=%s/", s3backer.url))
+	}
+	if s3backer.ssl {
+		args = append(args, "--ssl")
 	}
 
 	return fuseMount(path, s3backerCmd, args)
