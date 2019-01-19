@@ -57,13 +57,13 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 
 	exists, err := cs.s3.client.bucketExists(volumeID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to check if bucket exists: %v", err)
+		return nil, fmt.Errorf("failed to check if bucket %s exists: %v", volumeID, err)
 	}
 	if exists {
 		var b *bucket
 		b, err = cs.s3.client.getBucket(volumeID)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get bucket metadata: %v", err)
+			return nil, fmt.Errorf("failed to get bucket metadata of bucket %s: %v", volumeID, err)
 		}
 		// Check if volume capacity requested is bigger than the already existing capacity
 		if capacityBytes > b.CapacityBytes {
@@ -71,10 +71,10 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 		}
 	} else {
 		if err = cs.s3.client.createBucket(volumeID); err != nil {
-			return nil, fmt.Errorf("failed to create volume: %v", err)
+			return nil, fmt.Errorf("failed to create volume %s: %v", volumeID, err)
 		}
 		if err = cs.s3.client.createPrefix(volumeID, fsPrefix); err != nil {
-			return nil, fmt.Errorf("failed to create prefix: %v", err)
+			return nil, fmt.Errorf("failed to create prefix %s: %v", fsPrefix, err)
 		}
 	}
 	b := &bucket{
