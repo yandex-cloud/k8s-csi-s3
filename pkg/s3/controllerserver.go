@@ -17,7 +17,11 @@ limitations under the License.
 package s3
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"fmt"
+	"io"
+	"strings"
 
 	"github.com/golang/glog"
 	"golang.org/x/net/context"
@@ -34,7 +38,7 @@ type controllerServer struct {
 }
 
 func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
-	volumeID := req.GetName()
+	volumeID := sanitizeVolumeID(req.GetName())
 
 	if err := cs.Driver.ValidateControllerServiceRequest(csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME); err != nil {
 		glog.V(3).Infof("invalid create volume req: %v", req)
@@ -155,4 +159,14 @@ func (cs *controllerServer) ValidateVolumeCapabilities(ctx context.Context, req 
 		}
 	}
 	return &csi.ValidateVolumeCapabilitiesResponse{Supported: true, Message: ""}, nil
+}
+
+func sanitizeVolumeID(volumeID string) string {
+	volumeID = strings.ToLower(volumeID)
+	if len(volumeID) > 63 {
+		h := sha1.New()
+		io.WriteString(h, volumeID)
+		volumeID = hex.EncodeToString(h.Sum(nil))
+	}
+	return volumeID
 }
