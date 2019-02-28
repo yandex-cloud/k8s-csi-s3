@@ -22,7 +22,7 @@ import (
 	"github.com/golang/glog"
 	"golang.org/x/net/context"
 
-	"github.com/container-storage-interface/spec/lib/go/csi/v0"
+	"github.com/container-storage-interface/spec/lib/go/csi"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"k8s.io/kubernetes/pkg/util/mount"
@@ -63,13 +63,14 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	}
 
 	deviceID := ""
-	if req.GetPublishInfo() != nil {
-		deviceID = req.GetPublishInfo()[deviceID]
+	if req.GetPublishContext() != nil {
+		deviceID = req.GetPublishContext()[deviceID]
 	}
 
 	// TODO: Implement readOnly & mountFlags
 	readOnly := req.GetReadonly()
-	attrib := req.GetVolumeAttributes()
+	// TODO: check if attrib is correct with context.
+	attrib := req.GetVolumeContext()
 	mountFlags := req.GetVolumeCapability().GetMount().GetMountFlags()
 
 	glog.V(4).Infof("target %v\ndevice %v\nreadonly %v\nvolumeId %v\nattributes %v\nmountflags %v\n",

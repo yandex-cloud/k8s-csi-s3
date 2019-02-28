@@ -32,7 +32,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: csi-s3
-    namespace: default
+    namespace: kube-system
 roleRef:
   kind: ClusterRole
   name: csi-s3
@@ -55,13 +55,16 @@ spec:
       hostNetwork: true
       containers:
         - name: driver-registrar
-          image: quay.io/k8scsi/driver-registrar:v0.2.0
+          image: quay.io/k8scsi/csi-node-driver-registrar:v1.0.1
           args:
+            - "--kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)"
             - "--v=4"
             - "--csi-address=$(ADDRESS)"
           env:
             - name: ADDRESS
               value: /csi/csi.sock
+            - name: DRIVER_REG_SOCK_PATH
+              value: /var/lib/kubelet/plugins/ch.ctrox.csi.s3-driver/csi.sock
             - name: KUBE_NODE_NAME
               valueFrom:
                 fieldRef:
@@ -69,6 +72,8 @@ spec:
           volumeMounts:
             - name: plugin-dir
               mountPath: /csi
+            - name: registration-dir
+              mountPath: /registration/
         - name: csi-s3
           securityContext:
             privileged: true
@@ -127,6 +132,10 @@ spec:
             - name: fuse-device
               mountPath: /dev/fuse
       volumes:
+        - name: registration-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins_registry/
+            type: DirectoryOrCreate
         - name: plugin-dir
           hostPath:
             path: /var/lib/kubelet/plugins/ch.ctrox.csi.s3-driver
