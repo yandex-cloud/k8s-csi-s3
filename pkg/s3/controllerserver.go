@@ -153,17 +153,26 @@ func (cs *controllerServer) ValidateVolumeCapabilities(ctx context.Context, req 
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("Volume with id %s does not exist", req.GetVolumeId()))
 	}
 
-	// TODO: checkout if this code is still needed?
-	//for _, cap := range req.VolumeCapabilities {
-	//	if cap.GetAccessMode().GetMode() != csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER {
-	//		return &csi.ValidateVolumeCapabilitiesResponse{Confirmed: false, Message: ""}, nil
-	//	}
-	//}
-	return &csi.ValidateVolumeCapabilitiesResponse{Confirmed: &csi.ValidateVolumeCapabilitiesResponse_Confirmed{
-		VolumeContext:      req.GetVolumeContext(),
-		VolumeCapabilities: req.GetVolumeCapabilities(),
-		Parameters:         req.GetParameters(),
-	}, Message: ""}, nil
+	// We currently only support RWO
+	supportedAccessMode := &csi.VolumeCapability_AccessMode{
+		Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+	}
+
+	for _, cap := range req.VolumeCapabilities {
+		if cap.GetAccessMode().GetMode() != supportedAccessMode.GetMode() {
+			return &csi.ValidateVolumeCapabilitiesResponse{Message: "Only single node writer is supported"}, nil
+		}
+	}
+
+	return &csi.ValidateVolumeCapabilitiesResponse{
+		Confirmed: &csi.ValidateVolumeCapabilitiesResponse_Confirmed{
+			VolumeCapabilities: []*csi.VolumeCapability{
+				{
+					AccessMode: supportedAccessMode,
+				},
+			},
+		},
+	}, nil
 }
 
 func sanitizeVolumeID(volumeID string) string {
