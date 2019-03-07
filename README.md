@@ -74,6 +74,7 @@ As S3 is not a real file system there are some limitations to consider here. Dep
 
 The driver can be configured to use one of these mounters to mount buckets:
 
+* [rclone](https://rclone.org/commands/rclone_mount)
 * [s3fs](https://github.com/s3fs-fuse/s3fs-fuse)
 * [goofys](https://github.com/kahing/goofys)
 * [s3ql](https://github.com/s3ql/s3ql)
@@ -82,6 +83,10 @@ The driver can be configured to use one of these mounters to mount buckets:
 The mounter can be set as a parameter in the storage class. You can also create multiple storage classes for each mounter if you like.
 
 All mounters have different strengths and weaknesses depending on your use case. Here are some characteristics which should help you choose a mounter:
+
+### rclone
+* Almost full POSIX compatibility (depends on caching mode)
+* Files can be viewed normally with any S3 client
 
 ### s3fs
 * Large subset of POSIX

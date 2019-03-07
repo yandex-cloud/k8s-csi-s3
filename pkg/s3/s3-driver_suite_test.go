@@ -139,4 +139,32 @@ var _ = Describe("S3Driver", func() {
 		})
 	})
 
+	Context("rclone", func() {
+		socket := "/tmp/csi-rclone.sock"
+		csiEndpoint := "unix://" + socket
+
+		cfg := &s3.Config{
+			AccessKeyID:     "FJDSJ",
+			SecretAccessKey: "DSG643HGDS",
+			Endpoint:        "http://127.0.0.1:9000",
+			Mounter:         "rclone",
+		}
+		if err := os.Remove(socket); err != nil && !os.IsNotExist(err) {
+			Expect(err).NotTo(HaveOccurred())
+		}
+		driver, err := s3.NewS3("test-node", csiEndpoint, cfg)
+		if err != nil {
+			log.Fatal(err)
+		}
+		go driver.Run()
+
+		Describe("CSI sanity", func() {
+			sanityCfg := &sanity.Config{
+				TargetPath:  mntDir,
+				StagingPath: stagingDir,
+				Address:     csiEndpoint,
+			}
+			sanity.GinkgoTest(sanityCfg)
+		})
+	})
 })

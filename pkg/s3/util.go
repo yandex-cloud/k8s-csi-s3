@@ -1,6 +1,7 @@
 package s3
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/mitchellh/go-ps"
+	"k8s.io/kubernetes/pkg/util/mount"
 
 	"github.com/golang/glog"
 )
@@ -37,6 +39,25 @@ func waitForProcess(p *os.Process, backoff int) error {
 	glog.Infof("Fuse process with PID %v still active, waiting...", p.Pid)
 	time.Sleep(time.Duration(backoff*100) * time.Millisecond)
 	return waitForProcess(p, backoff+1)
+}
+
+func waitForMount(path string, timeout time.Duration) error {
+	var elapsed time.Duration
+	var interval = 10 * time.Millisecond
+	for {
+		notMount, err := mount.New("").IsNotMountPoint(path)
+		if err != nil {
+			return err
+		}
+		if !notMount {
+			return nil
+		}
+		time.Sleep(interval)
+		elapsed = elapsed + interval
+		if elapsed >= timeout {
+			return errors.New("Timeout waiting for mount")
+		}
+	}
 }
 
 func findFuseMountProcess(path string, name string) (*os.Process, error) {

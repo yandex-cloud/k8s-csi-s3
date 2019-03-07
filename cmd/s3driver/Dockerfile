@@ -44,7 +44,7 @@ LABEL description="csi-s3 production image"
 RUN apt-get update && \
     apt-get install -y \
       libfuse2 gcc sqlite3 libsqlite3-dev \
-      s3fs psmisc procps libcurl3 xfsprogs && \
+      s3fs psmisc procps libcurl3 xfsprogs wget unzip && \
     rm -rf /var/lib/apt/lists/*
 
 ARG S3QL_VERSION=2.29
@@ -55,6 +55,14 @@ COPY --from=s3ql-deps /usr/local/lib/python3.6/site-packages /usr/local/lib/pyth
 RUN pip install ${S3QL_URL} && rm -rf /root/.cache
 
 COPY --from=s3backer /usr/bin/s3backer /usr/bin/s3backer
+
+# install rclone
+ARG RCLONE_VERSION=v1.46
+RUN cd /tmp \
+    && wget -q https://downloads.rclone.org/${RCLONE_VERSION}/rclone-${RCLONE_VERSION}-linux-amd64.zip \
+    && unzip /tmp/rclone-${RCLONE_VERSION}-linux-amd64.zip \
+    && mv /tmp/rclone-*-linux-amd64/rclone /usr/bin \
+    && rm -r /tmp/rclone*
 
 COPY ./_output/s3driver /s3driver
 ENTRYPOINT ["/s3driver"]

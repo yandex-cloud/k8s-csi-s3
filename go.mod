@@ -1,10 +1,9 @@
-module github.com/ctrox/csi-s3/cmd/s3driver
+module github.com/ctrox/csi-s3
 
 require (
 	github.com/StackExchange/wmi v0.0.0-20180116203802-5d049714c4a6 // indirect
 	github.com/aws/aws-sdk-go v1.14.27 // indirect
 	github.com/container-storage-interface/spec v1.0.0
-	github.com/ctrox/csi-s3 v0.0.0-20190228183403-83723f4be096
 	github.com/go-ini/ini v1.38.1 // indirect
 	github.com/go-ole/go-ole v1.2.1 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
