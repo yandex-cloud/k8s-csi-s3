@@ -20,14 +20,12 @@ import (
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/golang/glog"
 
-	"github.com/kubernetes-csi/drivers/pkg/csi-common"
+	csicommon "github.com/kubernetes-csi/drivers/pkg/csi-common"
 )
 
 type s3 struct {
 	driver   *csicommon.CSIDriver
-	client   *s3Client
 	endpoint string
-	cfg      *Config
 
 	ids *identityServer
 	ns  *nodeServer
@@ -47,22 +45,15 @@ var (
 )
 
 // NewS3 initializes the driver
-func NewS3(nodeID string, endpoint string, cfg *Config) (*s3, error) {
+func NewS3(nodeID string, endpoint string) (*s3, error) {
 	driver := csicommon.NewCSIDriver(driverName, vendorVersion, nodeID)
 	if driver == nil {
 		glog.Fatalln("Failed to initialize CSI Driver.")
 	}
 
-	client, err := newS3Client(cfg)
-	if err != nil {
-		glog.V(3).Infof("Failed to create s3 client: %v", err)
-		return nil, err
-	}
 	s3Driver := &s3{
 		endpoint: endpoint,
 		driver:   driver,
-		client:   client,
-		cfg:      cfg,
 	}
 	return s3Driver, nil
 }
@@ -70,21 +61,18 @@ func NewS3(nodeID string, endpoint string, cfg *Config) (*s3, error) {
 func (s3 *s3) newIdentityServer(d *csicommon.CSIDriver) *identityServer {
 	return &identityServer{
 		DefaultIdentityServer: csicommon.NewDefaultIdentityServer(d),
-		s3:                    s3,
 	}
 }
 
 func (s3 *s3) newControllerServer(d *csicommon.CSIDriver) *controllerServer {
 	return &controllerServer{
 		DefaultControllerServer: csicommon.NewDefaultControllerServer(d),
-		s3:                      s3,
 	}
 }
 
 func (s3 *s3) newNodeServer(d *csicommon.CSIDriver) *nodeServer {
 	return &nodeServer{
 		DefaultNodeServer: csicommon.NewDefaultNodeServer(d),
-		s3:                s3,
 	}
 }
 

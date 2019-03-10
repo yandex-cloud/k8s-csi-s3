@@ -15,7 +15,6 @@ type Mounter interface {
 	Stage(stagePath string) error
 	Unstage(stagePath string) error
 	Mount(source string, target string) error
-	Unmount(target string) error
 }
 
 const (
@@ -67,12 +66,12 @@ func fuseMount(path string, command string, args []string) error {
 	return waitForMount(path, 10*time.Second)
 }
 
-func fuseUnmount(path string, command string) error {
+func fuseUnmount(path string) error {
 	if err := mount.New("").Unmount(path); err != nil {
 		return err
 	}
 	// as fuse quits immediately, we will try to wait until the process is done
-	process, err := findFuseMountProcess(path, command)
+	process, err := findFuseMountProcess(path)
 	if err != nil {
 		glog.Errorf("Error getting PID of fuse mount: %s", err)
 		return nil

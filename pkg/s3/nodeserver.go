@@ -17,6 +17,7 @@ limitations under the License.
 package s3
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/golang/glog"
@@ -27,12 +28,11 @@ import (
 	"google.golang.org/grpc/status"
 	"k8s.io/kubernetes/pkg/util/mount"
 
-	"github.com/kubernetes-csi/drivers/pkg/csi-common"
+	csicommon "github.com/kubernetes-csi/drivers/pkg/csi-common"
 )
 
 type nodeServer struct {
 	*csicommon.DefaultNodeServer
-	*s3
 }
 
 func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublishVolumeRequest) (*csi.NodePublishVolumeResponse, error) {
@@ -76,12 +76,16 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	glog.V(4).Infof("target %v\ndevice %v\nreadonly %v\nvolumeId %v\nattributes %v\nmountflags %v\n",
 		targetPath, deviceID, readOnly, volumeID, attrib, mountFlags)
 
-	b, err := ns.s3.client.getBucket(volumeID)
+	s3, err := newS3ClientFromSecrets(req.GetSecrets())
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
+	}
+	b, err := s3.getBucket(volumeID)
 	if err != nil {
 		return nil, err
 	}
 
-	mounter, err := newMounter(b, ns.s3.cfg)
+	mounter, err := newMounter(b, s3.cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -106,15 +110,7 @@ func (ns *nodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpu
 		return nil, status.Error(codes.InvalidArgument, "Target path missing in request")
 	}
 
-	b, err := ns.s3.client.getBucket(volumeID)
-	if err != nil {
-		return nil, err
-	}
-	mounter, err := newMounter(b, ns.s3.cfg)
-	if err != nil {
-		return nil, err
-	}
-	if err := mounter.Unmount(targetPath); err != nil {
+	if err := fuseUnmount(targetPath); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	glog.V(4).Infof("s3: bucket %s has been unmounted.", volumeID)
@@ -146,12 +142,15 @@ func (ns *nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 	if !notMnt {
 		return &csi.NodeStageVolumeResponse{}, nil
 	}
-	b, err := ns.s3.client.getBucket(volumeID)
+	s3, err := newS3ClientFromSecrets(req.GetSecrets())
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
+	}
+	b, err := s3.getBucket(volumeID)
 	if err != nil {
 		return nil, err
 	}
-
-	mounter, err := newMounter(b, ns.s3.cfg)
+	mounter, err := newMounter(b, s3.cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -172,18 +171,6 @@ func (ns *nodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstag
 	}
 	if len(stagingTargetPath) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Target path missing in request")
-	}
-
-	b, err := ns.s3.client.getBucket(volumeID)
-	if err != nil {
-		return nil, err
-	}
-	mounter, err := newMounter(b, ns.s3.cfg)
-	if err != nil {
-		return nil, err
-	}
-	if err := mounter.Unstage(stagingTargetPath); err != nil {
-		return nil, err
 	}
 
 	return &csi.NodeUnstageVolumeResponse{}, nil

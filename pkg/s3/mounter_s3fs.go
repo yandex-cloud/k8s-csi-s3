@@ -51,10 +51,6 @@ func (s3fs *s3fsMounter) Mount(source string, target string) error {
 	return fuseMount(target, s3fsCmd, args)
 }
 
-func (s3fs *s3fsMounter) Unmount(target string) error {
-	return fuseUnmount(target, s3fsCmd)
-}
-
 func writes3fsPass(pwFileContent string) error {
 	pwFileName := fmt.Sprintf("%s/.passwd-s3fs", os.Getenv("HOME"))
 	pwFile, err := os.OpenFile(pwFileName, os.O_RDWR|os.O_CREATE, 0600)

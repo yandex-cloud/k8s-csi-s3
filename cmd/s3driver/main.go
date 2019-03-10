@@ -29,29 +29,14 @@ func init() {
 }
 
 var (
-	endpoint        = flag.String("endpoint", "unix://tmp/csi.sock", "CSI endpoint")
-	nodeID          = flag.String("nodeid", "", "node id")
-	accessKeyID     = flag.String("access-key-id", "", "S3 Access Key ID to use")
-	secretAccessKey = flag.String("secret-access-key", "", "S3 Secret Access Key to use")
-	s3endpoint      = flag.String("s3-endpoint", "", "S3 Endpoint URL to use")
-	region          = flag.String("region", "", "S3 Region to use")
-	mounter         = flag.String("mounter", "s3fs", "Specify which Mounter to use")
-	encryptionKey   = flag.String("encryption-key", "", "Encryption key for file system (only used with s3ql)")
+	endpoint = flag.String("endpoint", "unix://tmp/csi.sock", "CSI endpoint")
+	nodeID   = flag.String("nodeid", "", "node id")
 )
 
 func main() {
 	flag.Parse()
 
-	cfg := &s3.Config{
-		AccessKeyID:     *accessKeyID,
-		SecretAccessKey: *secretAccessKey,
-		Endpoint:        *s3endpoint,
-		Region:          *region,
-		Mounter:         *mounter,
-		EncryptionKey:   *encryptionKey,
-	}
-
-	driver, err := s3.NewS3(*nodeID, *endpoint, cfg)
+	driver, err := s3.NewS3(*nodeID, *endpoint)
 	if err != nil {
 		log.Fatal(err)
 	}

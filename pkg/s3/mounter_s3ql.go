@@ -93,10 +93,6 @@ func (s3ql *s3qlMounter) Mount(source string, target string) error {
 	return fuseMount(target, s3qlCmdMount, append(args, s3ql.options...))
 }
 
-func (s3ql *s3qlMounter) Unmount(target string) error {
-	return fuseUnmount(target, s3qlCmdMount)
-}
-
 func (s3ql *s3qlMounter) writeConfig() error {
 	s3qlIni := ini.Empty()
 	section, err := s3qlIni.NewSection("s3ql")

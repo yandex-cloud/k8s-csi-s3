@@ -17,10 +17,9 @@ limitations under the License.
 package s3
 
 import (
-	"github.com/kubernetes-csi/drivers/pkg/csi-common"
+	csicommon "github.com/kubernetes-csi/drivers/pkg/csi-common"
 )
 
 type identityServer struct {
 	*csicommon.DefaultIdentityServer
-	*s3
 }

@@ -42,3 +42,5 @@ require (
 	k8s.io/kubernetes v1.13.4
 	k8s.io/utils v0.0.0-20180703210027-ab9069044f32 // indirect
 )
+
+replace github.com/kubernetes-csi/csi-test => github.com/ctrox/csi-test v1.1.1-0.20190310103436-e50382dcb47f

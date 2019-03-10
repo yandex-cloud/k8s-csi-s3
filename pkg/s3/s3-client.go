@@ -49,6 +49,18 @@ func newS3Client(cfg *Config) (*s3Client, error) {
 	return client, nil
 }
 
+func newS3ClientFromSecrets(secrets map[string]string) (*s3Client, error) {
+	return newS3Client(&Config{
+		AccessKeyID:     secrets["accessKeyID"],
+		SecretAccessKey: secrets["secretAccessKey"],
+		Region:          secrets["region"],
+		Endpoint:        secrets["endpoint"],
+		EncryptionKey:   secrets["encryptionKey"],
+		// Mounter is set in the volume preferences, not secrets
+		Mounter: "",
+	})
+}
+
 func (client *s3Client) bucketExists(bucketName string) (bool, error) {
 	return client.minio.BucketExists(bucketName)
 }
