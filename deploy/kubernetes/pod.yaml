@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: csi-s3-test-nginx
+  namespace: default
 spec:
   containers:
    - name: csi-s3-test-nginx

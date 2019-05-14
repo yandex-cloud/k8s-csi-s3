@@ -40,7 +40,7 @@ type s3Volume struct {
 }
 
 var (
-	vendorVersion = "1.0.1-alpha"
+	vendorVersion = "1.1.0"
 	driverName    = "ch.ctrox.csi.s3-driver"
 )
 
