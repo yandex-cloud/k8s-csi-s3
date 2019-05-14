@@ -120,7 +120,8 @@ func (client *s3Client) emptyBucket(bucketName string) error {
 		}
 	}
 
-	return nil
+	// ensure our prefix is also removed
+	return client.minio.RemoveObject(bucketName, fsPrefix)
 }
 
 func (client *s3Client) setBucket(bucket *bucket) error {

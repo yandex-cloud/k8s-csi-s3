@@ -131,7 +131,7 @@ func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVol
 	}
 	if exists {
 		if err := s3.removeBucket(volumeID); err != nil {
-			glog.V(3).Infof("Failed to remove volume: %v", err)
+			glog.V(3).Infof("Failed to remove volume %s: %v", volumeID, err)
 			return nil, err
 		}
 	} else {
@@ -184,6 +184,10 @@ func (cs *controllerServer) ValidateVolumeCapabilities(ctx context.Context, req 
 			},
 		},
 	}, nil
+}
+
+func (cs *controllerServer) ControllerExpandVolume(ctx context.Context, req *csi.ControllerExpandVolumeRequest) (*csi.ControllerExpandVolumeResponse, error) {
+	return &csi.ControllerExpandVolumeResponse{}, status.Error(codes.Unimplemented, "ControllerExpandVolume is not implemented")
 }
 
 func sanitizeVolumeID(volumeID string) string {

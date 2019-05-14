@@ -1,25 +1,17 @@
 package s3_test
 
 import (
-	"io/ioutil"
 	"log"
 	"os"
 
+	"github.com/ctrox/csi-s3/pkg/s3"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/ctrox/csi-s3/pkg/s3"
 	"github.com/kubernetes-csi/csi-test/pkg/sanity"
 )
 
 var _ = Describe("S3Driver", func() {
-	mntDir, _ := ioutil.TempDir("", "mnt")
-	stagingDir, _ := ioutil.TempDir("", "staging")
-
-	AfterSuite(func() {
-		os.RemoveAll(mntDir)
-		os.RemoveAll(stagingDir)
-	})
 
 	Context("goofys", func() {
 		socket := "/tmp/csi-goofys.sock"
@@ -35,8 +27,8 @@ var _ = Describe("S3Driver", func() {
 
 		Describe("CSI sanity", func() {
 			sanityCfg := &sanity.Config{
-				TargetPath:  mntDir,
-				StagingPath: stagingDir,
+				TargetPath:  os.TempDir() + "/goofys-target",
+				StagingPath: os.TempDir() + "/goofys-staging",
 				Address:     csiEndpoint,
 				SecretsFile: "../../test/secret.yaml",
 				TestVolumeParameters: map[string]string{
@@ -61,8 +53,8 @@ var _ = Describe("S3Driver", func() {
 
 		Describe("CSI sanity", func() {
 			sanityCfg := &sanity.Config{
-				TargetPath:  mntDir,
-				StagingPath: stagingDir,
+				TargetPath:  os.TempDir() + "/s3fs-target",
+				StagingPath: os.TempDir() + "/s3fs-staging",
 				Address:     csiEndpoint,
 				SecretsFile: "../../test/secret.yaml",
 				TestVolumeParameters: map[string]string{
@@ -86,12 +78,10 @@ var _ = Describe("S3Driver", func() {
 		}
 		go driver.Run()
 
-		defer os.RemoveAll(mntDir)
-
 		Describe("CSI sanity", func() {
 			sanityCfg := &sanity.Config{
-				TargetPath:  mntDir,
-				StagingPath: stagingDir,
+				TargetPath:  os.TempDir() + "/s3ql-target",
+				StagingPath: os.TempDir() + "/s3ql-staging",
 				Address:     csiEndpoint,
 				SecretsFile: "../../test/secret.yaml",
 				TestVolumeParameters: map[string]string{
@@ -119,8 +109,8 @@ var _ = Describe("S3Driver", func() {
 
 		Describe("CSI sanity", func() {
 			sanityCfg := &sanity.Config{
-				TargetPath:  mntDir,
-				StagingPath: stagingDir,
+				TargetPath:  os.TempDir() + "/s3backer-target",
+				StagingPath: os.TempDir() + "/s3backer-staging",
 				Address:     csiEndpoint,
 				SecretsFile: "../../test/secret.yaml",
 				TestVolumeParameters: map[string]string{
@@ -146,8 +136,8 @@ var _ = Describe("S3Driver", func() {
 
 		Describe("CSI sanity", func() {
 			sanityCfg := &sanity.Config{
-				TargetPath:  mntDir,
-				StagingPath: stagingDir,
+				TargetPath:  os.TempDir() + "/rclone-target",
+				StagingPath: os.TempDir() + "/rclone-staging",
 				Address:     csiEndpoint,
 				SecretsFile: "../../test/secret.yaml",
 				TestVolumeParameters: map[string]string{
