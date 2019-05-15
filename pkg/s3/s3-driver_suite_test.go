@@ -65,33 +65,6 @@ var _ = Describe("S3Driver", func() {
 		})
 	})
 
-	Context("s3ql", func() {
-		socket := "/tmp/csi-s3ql.sock"
-		csiEndpoint := "unix://" + socket
-
-		if err := os.Remove(socket); err != nil && !os.IsNotExist(err) {
-			Expect(err).NotTo(HaveOccurred())
-		}
-		driver, err := s3.NewS3("test-node", csiEndpoint)
-		if err != nil {
-			log.Fatal(err)
-		}
-		go driver.Run()
-
-		Describe("CSI sanity", func() {
-			sanityCfg := &sanity.Config{
-				TargetPath:  os.TempDir() + "/s3ql-target",
-				StagingPath: os.TempDir() + "/s3ql-staging",
-				Address:     csiEndpoint,
-				SecretsFile: "../../test/secret.yaml",
-				TestVolumeParameters: map[string]string{
-					"mounter": "s3ql",
-				},
-			}
-			sanity.GinkgoTest(sanityCfg)
-		})
-	})
-
 	Context("s3backer", func() {
 		socket := "/tmp/csi-s3backer.sock"
 		csiEndpoint := "unix://" + socket

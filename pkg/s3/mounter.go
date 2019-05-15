@@ -20,7 +20,6 @@ type Mounter interface {
 const (
 	s3fsMounterType     = "s3fs"
 	goofysMounterType   = "goofys"
-	s3qlMounterType     = "s3ql"
 	s3backerMounterType = "s3backer"
 	rcloneMounterType   = "rclone"
 	mounterTypeKey      = "mounter"
@@ -39,9 +38,6 @@ func newMounter(bucket *bucket, cfg *Config) (Mounter, error) {
 
 	case goofysMounterType:
 		return newGoofysMounter(bucket, cfg)
-
-	case s3qlMounterType:
-		return newS3qlMounter(bucket, cfg)
 
 	case s3backerMounterType:
 		return newS3backerMounter(bucket, cfg)

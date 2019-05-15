@@ -10,13 +10,11 @@ This is still very experimental and should not be used in any production environ
 
 ### Requirements
 
-* Kubernetes 1.13+
+* Kubernetes 1.13+ (CSI v1.0.0 compatibility)
 * Kubernetes has to allow privileged containers
 * Docker daemon must allow shared mounts (systemd flag `MountFlags=shared`)
 
 ### 1. Create a secret with your S3 credentials
-
-The endpoint is optional if you are using something else than AWS S3. Also the region can be empty if you are using some other S3 compatible storage.
 
 ```yaml
 apiVersion: v1
@@ -30,10 +28,9 @@ stringData:
   endpoint: <S3_ENDPOINT_URL>
   # If not on S3, set it to ""
   region: <S3_REGION>
-  # Currently only for s3ql
-  # If not using s3ql, set it to ""
-  encryptionKey: <FS_ENCRYPTION_KEY>
 ```
+
+The region can be empty if you are using some other S3 compatible storage.
 
 ### 2. Deploy the driver
 
@@ -63,7 +60,7 @@ kubectl create -f pvc.yaml
 ```bash
 $ kubectl get pvc csi-s3-pvc
 NAME         STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
-csi-s3-pvc   Bound     pvc-c5d4634f-8507-11e8-9f33-0e243832354b   5Gi        RWX            csi-s3         9s
+csi-s3-pvc   Bound     pvc-c5d4634f-8507-11e8-9f33-0e243832354b   5Gi        RWO            csi-s3         9s
 ```
 
 * Create a test pod which mounts your volume:
@@ -96,7 +93,6 @@ The driver can be configured to use one of these mounters to mount buckets:
 * [rclone](https://rclone.org/commands/rclone_mount)
 * [s3fs](https://github.com/s3fs-fuse/s3fs-fuse)
 * [goofys](https://github.com/kahing/goofys)
-* [s3ql](https://github.com/s3ql/s3ql)
 * [s3backer](https://github.com/archiecobbs/s3backer)
 
 The mounter can be set as a parameter in the storage class. You can also create multiple storage classes for each mounter if you like.
@@ -121,16 +117,7 @@ All mounters have different strengths and weaknesses depending on your use case.
 * Files can be viewed normally with any S3 client
 * Does not support appends or random writes
 
-#### s3ql (not recommended*)
-
-* (Almost) full POSIX compatibility
-* Uses its own object format
-* Files are not readable with other S3 clients
-* Support appends
-* Supports compression before upload
-* Supports encryption before upload
-
-#### s3backer (not recommended*)
+#### s3backer (experimental*)
 
 * Represents a block device stored on S3
 * Allows to use a real filesystem
@@ -139,7 +126,8 @@ All mounters have different strengths and weaknesses depending on your use case.
 * Supports compression before upload (Not yet implemented in this driver)
 * Supports encryption before upload (Not yet implemented in this driver)
 
-*s3ql and s3backer are not recommended at this point because volume corruption can occur pretty quickly in case of an unexpected shutdown of a Kubernetes node or CSI pod.
+*s3backer is experimental at this point because volume corruption can occur pretty quickly in case of an unexpected shutdown of a Kubernetes node or CSI pod.
+The s3backer binary is not bundled with the normal docker image to keep that as small as possible. Use the `<version>-full` image tag for testing s3backer.
 
 Fore more detailed limitations consult the documentation of the different projects.
 

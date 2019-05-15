@@ -6,7 +6,7 @@ metadata:
 provisioner: ch.ctrox.csi.s3-driver
 parameters:
   # specify which mounter to use
-  # can be set to s3backer, s3ql, s3fs or goofys
+  # can be set to rclone, s3fs, goofys or s3backer
   mounter: rclone
   csi.storage.k8s.io/provisioner-secret-name: csi-s3-secret
   csi.storage.k8s.io/provisioner-secret-namespace: kube-system
