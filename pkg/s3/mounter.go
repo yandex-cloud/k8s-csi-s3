@@ -57,6 +57,7 @@ func newMounter(bucket *bucket, cfg *Config) (Mounter, error) {
 
 func fuseMount(path string, command string, args []string) error {
 	cmd := exec.Command(command, args...)
+	glog.V(3).Infof("Mounting fuse with command: %s and args: %s", command, args)
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
