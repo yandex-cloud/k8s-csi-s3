@@ -49,13 +49,13 @@ kubectl create -f storageclass.yaml
 
 ### 4. Test the S3 driver
 
-* Create a pvc using the new storage class:
+1. Create a pvc using the new storage class:
 
 ```bash
 kubectl create -f pvc.yaml
 ```
 
-* Check if the PVC has been bound:
+2. Check if the PVC has been bound:
 
 ```bash
 $ kubectl get pvc csi-s3-pvc
@@ -63,7 +63,7 @@ NAME         STATUS    VOLUME                                     CAPACITY   ACC
 csi-s3-pvc   Bound     pvc-c5d4634f-8507-11e8-9f33-0e243832354b   5Gi        RWO            csi-s3         9s
 ```
 
-* Create a test pod which mounts your volume:
+3. Create a test pod which mounts your volume:
 
 ```bash
 kubectl create -f poc.yaml
@@ -71,7 +71,7 @@ kubectl create -f poc.yaml
 
 If the pod can start, everything should be working.
 
-* Test the mount
+4. Test the mount
 
 ```bash
 $ kubectl exec -ti csi-s3-test-nginx bash
@@ -135,7 +135,7 @@ Fore more detailed limitations consult the documentation of the different projec
 
 ### Issues while creating PVC
 
-* Check the logs of the provisioner:
+Check the logs of the provisioner:
 
 ```bash
 kubectl logs -l app=csi-provisioner-s3 -c csi-s3
@@ -143,8 +143,8 @@ kubectl logs -l app=csi-provisioner-s3 -c csi-s3
 
 ### Issues creating containers
 
-* Ensure feature gate `MountPropagation` is not set to `false`
-* Check the logs of the s3-driver:
+1. Ensure feature gate `MountPropagation` is not set to `false`
+2. Check the logs of the s3-driver:
 
 ```bash
 kubectl logs -l app=csi-s3 -c csi-s3
