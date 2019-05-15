@@ -54,7 +54,3 @@ func (rclone *rcloneMounter) Mount(source string, target string) error {
 	os.Setenv("AWS_SECRET_ACCESS_KEY", rclone.secretAccessKey)
 	return fuseMount(target, rcloneCmd, args)
 }
-
-func (rclone *rcloneMounter) Unmount(target string) error {
-	return fuseUnmount(target, rcloneCmd)
-}

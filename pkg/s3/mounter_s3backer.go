@@ -71,14 +71,14 @@ func (s3backer *s3backerMounter) Stage(stageTarget string) error {
 	// ensure 'file' device is formatted
 	err := formatFs(s3backerFsType, path.Join(stageTarget, s3backerDevice))
 	if err != nil {
-		fuseUnmount(stageTarget, s3backerCmd)
+		fuseUnmount(stageTarget)
 	}
 	return err
 }
 
 func (s3backer *s3backerMounter) Unstage(stageTarget string) error {
 	// Unmount the s3backer fuse mount
-	return fuseUnmount(stageTarget, s3backerCmd)
+	return fuseUnmount(stageTarget)
 }
 
 func (s3backer *s3backerMounter) Mount(source string, target string) error {
@@ -87,15 +87,10 @@ func (s3backer *s3backerMounter) Mount(source string, target string) error {
 	err := mount.New("").Mount(device, target, s3backerFsType, []string{})
 	if err != nil {
 		// cleanup fuse mount
-		fuseUnmount(target, s3backerCmd)
+		fuseUnmount(target)
 		return err
 	}
 	return nil
-}
-
-func (s3backer *s3backerMounter) Unmount(targetPath string) error {
-	// Unmount the filesystem first
-	return mount.New("").Unmount(targetPath)
 }
 
 func (s3backer *s3backerMounter) mountInit(path string) error {

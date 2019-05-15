@@ -66,7 +66,7 @@ spec:
       serviceAccount: csi-provisioner-sa
       containers:
         - name: csi-provisioner
-          image: quay.io/k8scsi/csi-provisioner:v1.0.1
+          image: quay.io/k8scsi/csi-provisioner:v1.1.0
           args:
             - "--provisioner=ch.ctrox.csi.s3-driver"
             - "--csi-address=$(ADDRESS)"
@@ -79,15 +79,10 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/kubelet/plugins/ch.ctrox.csi.s3-driver
         - name: csi-s3
-          image: ctrox/csi-s3:1.0.1-alpha
+          image: ctrox/csi-s3:v1.1.0
           args:
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--nodeid=$(NODE_ID)"
-            - "--access-key-id=$(ACCESS_KEY_ID)"
-            - "--secret-access-key=$(SECRET_ACCESS_KEY)"
-            - "--s3-endpoint=$(S3_ENDPOINT)"
-            - "--region=$(REGION)"
-            - "--encryption-key=$(ENCRYPTION_KEY)"
             - "--v=4"
           env:
             - name: CSI_ENDPOINT

@@ -16,8 +16,9 @@
 PROJECT_DIR=/app
 REGISTRY_NAME=ctrox
 IMAGE_NAME=csi-s3
-IMAGE_VERSION=1.0.1-alpha
-IMAGE_TAG=$(REGISTRY_NAME)/$(IMAGE_NAME):$(IMAGE_VERSION)
+VERSION ?= dev
+IMAGE_TAG=$(REGISTRY_NAME)/$(IMAGE_NAME):$(VERSION)
+FULL_IMAGE_TAG=$(IMAGE_TAG)-full
 TEST_IMAGE_TAG=$(REGISTRY_NAME)/$(IMAGE_NAME):test
 
 build:
@@ -27,8 +28,10 @@ test:
 	docker run --rm --privileged -v $(PWD):$(PROJECT_DIR) --device /dev/fuse $(TEST_IMAGE_TAG)
 container: build
 	docker build -t $(IMAGE_TAG) -f cmd/s3driver/Dockerfile .
+	docker build -t $(FULL_IMAGE_TAG) --build-arg VERSION=$(VERSION) -f cmd/s3driver/Dockerfile.full .
 push: container
 	docker push $(IMAGE_TAG)
+	docker push $(FULL_IMAGE_TAG)
 clean:
 	go clean -r -x
 	-rm -rf _output

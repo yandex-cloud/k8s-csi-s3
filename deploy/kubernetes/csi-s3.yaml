@@ -55,7 +55,7 @@ spec:
       hostNetwork: true
       containers:
         - name: driver-registrar
-          image: quay.io/k8scsi/csi-node-driver-registrar:v1.0.1
+          image: quay.io/k8scsi/csi-node-driver-registrar:v1.1.0
           args:
             - "--kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)"
             - "--v=4"
@@ -80,15 +80,10 @@ spec:
             capabilities:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: ctrox/csi-s3:1.0.1-alpha
+          image: ctrox/csi-s3:v1.1.0
           args:
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--nodeid=$(NODE_ID)"
-            - "--access-key-id=$(ACCESS_KEY_ID)"
-            - "--secret-access-key=$(SECRET_ACCESS_KEY)"
-            - "--s3-endpoint=$(S3_ENDPOINT)"
-            - "--region=$(REGION)"
-            - "--encryption-key=$(ENCRYPTION_KEY)"
             - "--v=4"
           env:
             - name: CSI_ENDPOINT

@@ -15,13 +15,11 @@ type Mounter interface {
 	Stage(stagePath string) error
 	Unstage(stagePath string) error
 	Mount(source string, target string) error
-	Unmount(target string) error
 }
 
 const (
 	s3fsMounterType     = "s3fs"
 	goofysMounterType   = "goofys"
-	s3qlMounterType     = "s3ql"
 	s3backerMounterType = "s3backer"
 	rcloneMounterType   = "rclone"
 	mounterTypeKey      = "mounter"
@@ -41,9 +39,6 @@ func newMounter(bucket *bucket, cfg *Config) (Mounter, error) {
 	case goofysMounterType:
 		return newGoofysMounter(bucket, cfg)
 
-	case s3qlMounterType:
-		return newS3qlMounter(bucket, cfg)
-
 	case s3backerMounterType:
 		return newS3backerMounter(bucket, cfg)
 
@@ -58,6 +53,7 @@ func newMounter(bucket *bucket, cfg *Config) (Mounter, error) {
 
 func fuseMount(path string, command string, args []string) error {
 	cmd := exec.Command(command, args...)
+	glog.V(3).Infof("Mounting fuse with command: %s and args: %s", command, args)
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -67,12 +63,12 @@ func fuseMount(path string, command string, args []string) error {
 	return waitForMount(path, 10*time.Second)
 }
 
-func fuseUnmount(path string, command string) error {
+func fuseUnmount(path string) error {
 	if err := mount.New("").Unmount(path); err != nil {
 		return err
 	}
 	// as fuse quits immediately, we will try to wait until the process is done
-	process, err := findFuseMountProcess(path, command)
+	process, err := findFuseMountProcess(path)
 	if err != nil {
 		glog.Errorf("Error getting PID of fuse mount: %s", err)
 		return nil

@@ -60,22 +60,20 @@ func waitForMount(path string, timeout time.Duration) error {
 	}
 }
 
-func findFuseMountProcess(path string, name string) (*os.Process, error) {
+func findFuseMountProcess(path string) (*os.Process, error) {
 	processes, err := ps.Processes()
 	if err != nil {
 		return nil, err
 	}
 	for _, p := range processes {
-		if strings.Contains(p.Executable(), name) {
-			cmdLine, err := getCmdLine(p.Pid())
-			if err != nil {
-				glog.Errorf("Unable to get cmdline of PID %v: %s", p.Pid(), err)
-				continue
-			}
-			if strings.Contains(cmdLine, path) {
-				glog.Infof("Found matching pid %v on path %s", p.Pid(), path)
-				return os.FindProcess(p.Pid())
-			}
+		cmdLine, err := getCmdLine(p.Pid())
+		if err != nil {
+			glog.Errorf("Unable to get cmdline of PID %v: %s", p.Pid(), err)
+			continue
+		}
+		if strings.Contains(cmdLine, path) {
+			glog.Infof("Found matching pid %v on path %s", p.Pid(), path)
+			return os.FindProcess(p.Pid())
 		}
 	}
 	return nil, nil
