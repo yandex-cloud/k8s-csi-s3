@@ -91,31 +91,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            - name: ACCESS_KEY_ID
-              valueFrom:
-                secretKeyRef:
-                  name: csi-s3-secret
-                  key: accessKeyID
-            - name: SECRET_ACCESS_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: csi-s3-secret
-                  key: secretAccessKey
-            - name: S3_ENDPOINT
-              valueFrom:
-                secretKeyRef:
-                  name: csi-s3-secret
-                  key: endpoint
-            - name: REGION
-              valueFrom:
-                secretKeyRef:
-                  name: csi-s3-secret
-                  key: region
-            - name: ENCRYPTION_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: csi-s3-secret
-                  key: encryptionKey
           imagePullPolicy: "Always"
           volumeMounts:
             - name: socket-dir

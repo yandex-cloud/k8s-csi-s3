@@ -55,7 +55,6 @@ func newS3ClientFromSecrets(secrets map[string]string) (*s3Client, error) {
 		SecretAccessKey: secrets["secretAccessKey"],
 		Region:          secrets["region"],
 		Endpoint:        secrets["endpoint"],
-		EncryptionKey:   secrets["encryptionKey"],
 		// Mounter is set in the volume preferences, not secrets
 		Mounter: "",
 	})

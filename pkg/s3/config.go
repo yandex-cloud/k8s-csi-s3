@@ -7,5 +7,4 @@ type Config struct {
 	Region          string
 	Endpoint        string
 	Mounter         string
-	EncryptionKey   string
 }
