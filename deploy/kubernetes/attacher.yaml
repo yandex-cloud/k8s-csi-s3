@@ -23,7 +23,7 @@ rules:
     verbs: ["get", "list", "watch"]
   - apiGroups: ["storage.k8s.io"]
     resources: ["volumeattachments"]
-    verbs: ["get", "list", "watch", "update"]
+    verbs: ["get", "list", "watch", "update", "patch"]
 ---
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
@@ -72,7 +72,7 @@ spec:
       serviceAccount: csi-attacher-sa
       containers:
         - name: csi-attacher
-          image: quay.io/k8scsi/csi-attacher:v1.1.0
+          image: quay.io/k8scsi/csi-attacher:v2.2.0
           args:
             - "--v=4"
             - "--csi-address=$(ADDRESS)"
