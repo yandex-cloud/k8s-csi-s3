@@ -37,7 +37,12 @@ type controllerServer struct {
 }
 
 func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
+	params := req.GetParameters()
+
 	volumeID := sanitizeVolumeID(req.GetName())
+	if bucketName, bucketExists := params[bucketKey]; bucketExists {
+		volumeID = sanitizeVolumeID(bucketName)
+	}
 
 	if err := cs.Driver.ValidateControllerServiceRequest(csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME); err != nil {
 		glog.V(3).Infof("invalid create volume req: %v", req)
@@ -53,11 +58,10 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 	}
 
 	capacityBytes := int64(req.GetCapacityRange().GetRequiredBytes())
-	params := req.GetParameters()
+
 	mounter := params[mounterTypeKey]
 
 	glog.V(4).Infof("Got a request to create volume %s", volumeID)
-
 	s3, err := newS3ClientFromSecrets(req.GetSecrets())
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
@@ -69,12 +73,19 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 	if exists {
 		var b *bucket
 		b, err = s3.getBucket(volumeID)
+		// TODO 如果 bucket 已经存在了，为什么要去检查它是否有 metadata 和 capacity 呢？
+		// 或者说 metadata 的作用是什么？
 		if err != nil {
-			return nil, fmt.Errorf("failed to get bucket metadata of bucket %s: %v", volumeID, err)
-		}
-		// Check if volume capacity requested is bigger than the already existing capacity
-		if capacityBytes > b.CapacityBytes {
-			return nil, status.Error(codes.AlreadyExists, fmt.Sprintf("Volume with the same name: %s but with smaller size already exist", volumeID))
+			glog.Warningf("failed to get bucket metadata of bucket %s: %v", volumeID, err)
+			// return nil, fmt.Errorf("failed to get bucket metadata of bucket %s: %v", volumeID, err)
+			if err = s3.createPrefix(volumeID, fsPrefix); err != nil {
+				return nil, fmt.Errorf("failed to create prefix %s: %v", fsPrefix, err)
+			}
+		} else {
+			// Check if volume capacity requested is bigger than the already existing capacity
+			if capacityBytes > b.CapacityBytes {
+				return nil, status.Error(codes.AlreadyExists, fmt.Sprintf("Volume with the same name: %s but with smaller size already exist", volumeID))
+			}
 		}
 	} else {
 		if err = s3.createBucket(volumeID); err != nil {
