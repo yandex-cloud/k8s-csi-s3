@@ -70,36 +70,40 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 	if err != nil {
 		return nil, fmt.Errorf("failed to check if bucket %s exists: %v", volumeID, err)
 	}
+	var b *bucket
 	if exists {
-		var b *bucket
 		b, err = s3.getBucket(volumeID)
-		// TODO 如果 bucket 已经存在了，为什么要去检查它是否有 metadata 和 capacity 呢？
-		// 或者说 metadata 的作用是什么？
+
 		if err != nil {
-			glog.Warningf("failed to get bucket metadata of bucket %s: %v", volumeID, err)
-			// return nil, fmt.Errorf("failed to get bucket metadata of bucket %s: %v", volumeID, err)
-			if err = s3.createPrefix(volumeID, fsPrefix); err != nil {
-				return nil, fmt.Errorf("failed to create prefix %s: %v", fsPrefix, err)
+			glog.Warningf("Bucket %s exists, but failed to get its metadata: %v", volumeID, err)
+			b = &bucket{
+				Name:          volumeID,
+				Mounter:       mounter,
+				CapacityBytes: capacityBytes,
+				FSPath:        "",
+				CreatedByCsi:  false,
 			}
 		} else {
 			// Check if volume capacity requested is bigger than the already existing capacity
 			if capacityBytes > b.CapacityBytes {
 				return nil, status.Error(codes.AlreadyExists, fmt.Sprintf("Volume with the same name: %s but with smaller size already exist", volumeID))
 			}
+			b.Mounter = mounter
 		}
 	} else {
 		if err = s3.createBucket(volumeID); err != nil {
 			return nil, fmt.Errorf("failed to create volume %s: %v", volumeID, err)
 		}
-		if err = s3.createPrefix(volumeID, fsPrefix); err != nil {
-			return nil, fmt.Errorf("failed to create prefix %s: %v", fsPrefix, err)
+		if err = s3.createPrefix(volumeID, defaultFsPrefix); err != nil {
+			return nil, fmt.Errorf("failed to create prefix %s: %v", defaultFsPrefix, err)
 		}
-	}
-	b := &bucket{
-		Name:          volumeID,
-		Mounter:       mounter,
-		CapacityBytes: capacityBytes,
-		FSPath:        fsPrefix,
+		b = &bucket{
+			Name:          volumeID,
+			Mounter:       mounter,
+			CapacityBytes: capacityBytes,
+			FSPath:        defaultFsPrefix,
+			CreatedByCsi:  !exists,
+		}
 	}
 	if err := s3.setBucket(b); err != nil {
 		return nil, fmt.Errorf("Error setting bucket metadata: %v", err)

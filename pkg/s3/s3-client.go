@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	metadataName = ".metadata.json"
-	fsPrefix     = "csi-fs"
+	metadataName    = ".metadata.json"
+	defaultFsPrefix = "csi-fs"
 )
 
 type s3Client struct {
@@ -29,6 +29,7 @@ type bucket struct {
 	Mounter       string
 	FSPath        string
 	CapacityBytes int64
+	CreatedByCsi  bool
 }
 
 func newS3Client(cfg *Config) (*s3Client, error) {
@@ -133,7 +134,7 @@ func (client *s3Client) emptyBucket(bucketName string) error {
 	}
 
 	// ensure our prefix is also removed
-	return client.minio.RemoveObject(client.ctx, bucketName, fsPrefix, minio.RemoveObjectOptions{})
+	return client.minio.RemoveObject(client.ctx, bucketName, defaultFsPrefix, minio.RemoveObjectOptions{})
 }
 
 func (client *s3Client) setBucket(bucket *bucket) error {
