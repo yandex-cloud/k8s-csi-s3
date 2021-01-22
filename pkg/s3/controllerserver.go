@@ -145,9 +145,18 @@ func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVol
 		return nil, err
 	}
 	if exists {
-		if err := s3.removeBucket(volumeID); err != nil {
-			glog.V(3).Infof("Failed to remove volume %s: %v", volumeID, err)
-			return nil, err
+		b, err := s3.getBucket(volumeID)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to get metadata of buckect %s", volumeID)
+		}
+		if b.CreatedByCsi {
+			if err := s3.removeBucket(volumeID); err != nil {
+				glog.V(3).Infof("Failed to remove volume %s: %v", volumeID, err)
+				return nil, err
+			}
+			glog.V(4).Infof("Bucket %s removed", volumeID)
+		} else {
+			glog.V(4).Infof("Bucket %s is not created by csi-s3, will not be deleted by csi-s3 automatically.", volumeID)
 		}
 	} else {
 		glog.V(5).Infof("Bucket %s does not exist, ignoring request", volumeID)
