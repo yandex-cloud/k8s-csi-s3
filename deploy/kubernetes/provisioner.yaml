@@ -53,11 +53,14 @@ spec:
       port: 12345
 ---
 kind: StatefulSet
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 metadata:
   name: csi-provisioner-s3
   namespace: kube-system
 spec:
+  selector:
+    matchLabels:
+      app: "csi-provisioner-s3"
   serviceName: "csi-provisioner-s3"
   replicas: 1
   template:
