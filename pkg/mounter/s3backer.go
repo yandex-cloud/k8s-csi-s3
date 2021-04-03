@@ -1,4 +1,4 @@
-package s3
+package mounter
 
 import (
 	"fmt"
@@ -7,13 +7,14 @@ import (
 	"os/exec"
 	"path"
 
+	"github.com/ctrox/csi-s3/pkg/s3"
 	"github.com/golang/glog"
 	"k8s.io/kubernetes/pkg/util/mount"
 )
 
 // Implements Mounter
 type s3backerMounter struct {
-	bucket          *bucket
+	bucket          *s3.Bucket
 	url             string
 	region          string
 	accessKeyID     string
@@ -32,7 +33,7 @@ const (
 	S3backerLoopDevice = "/dev/loop0"
 )
 
-func newS3backerMounter(bucket *bucket, cfg *Config) (Mounter, error) {
+func newS3backerMounter(bucket *s3.Bucket, cfg *s3.Config) (Mounter, error) {
 	url, err := url.Parse(cfg.Endpoint)
 	if err != nil {
 		return nil, err
@@ -71,14 +72,14 @@ func (s3backer *s3backerMounter) Stage(stageTarget string) error {
 	// ensure 'file' device is formatted
 	err := formatFs(s3backerFsType, path.Join(stageTarget, s3backerDevice))
 	if err != nil {
-		fuseUnmount(stageTarget)
+		FuseUnmount(stageTarget)
 	}
 	return err
 }
 
 func (s3backer *s3backerMounter) Unstage(stageTarget string) error {
 	// Unmount the s3backer fuse mount
-	return fuseUnmount(stageTarget)
+	return FuseUnmount(stageTarget)
 }
 
 func (s3backer *s3backerMounter) Mount(source string, target string) error {
@@ -87,7 +88,7 @@ func (s3backer *s3backerMounter) Mount(source string, target string) error {
 	err := mount.New("").Mount(device, target, s3backerFsType, []string{})
 	if err != nil {
 		// cleanup fuse mount
-		fuseUnmount(target)
+		FuseUnmount(target)
 		return err
 	}
 	return nil

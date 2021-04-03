@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package s3
+package driver
 
 import (
 	"crypto/sha1"
@@ -23,6 +23,8 @@ import (
 	"io"
 	"strings"
 
+	"github.com/ctrox/csi-s3/pkg/mounter"
+	"github.com/ctrox/csi-s3/pkg/s3"
 	"github.com/golang/glog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -36,11 +38,15 @@ type controllerServer struct {
 	*csicommon.DefaultControllerServer
 }
 
+const (
+	defaultFsPrefix = "csi-fs"
+)
+
 func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
 	params := req.GetParameters()
 
 	volumeID := sanitizeVolumeID(req.GetName())
-	if bucketName, bucketExists := params[bucketKey]; bucketExists {
+	if bucketName, bucketExists := params[mounter.BucketKey]; bucketExists {
 		volumeID = sanitizeVolumeID(bucketName)
 	}
 
@@ -59,24 +65,24 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 
 	capacityBytes := int64(req.GetCapacityRange().GetRequiredBytes())
 
-	mounter := params[mounterTypeKey]
+	mounter := params[mounter.TypeKey]
 
 	glog.V(4).Infof("Got a request to create volume %s", volumeID)
-	s3, err := newS3ClientFromSecrets(req.GetSecrets())
+	client, err := s3.NewClientFromSecret(req.GetSecrets())
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
 	}
-	exists, err := s3.bucketExists(volumeID)
+	exists, err := client.BucketExists(volumeID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check if bucket %s exists: %v", volumeID, err)
 	}
-	var b *bucket
+	var b *s3.Bucket
 	if exists {
-		b, err = s3.getBucket(volumeID)
+		b, err = client.GetBucket(volumeID)
 
 		if err != nil {
 			glog.Warningf("Bucket %s exists, but failed to get its metadata: %v", volumeID, err)
-			b = &bucket{
+			b = &s3.Bucket{
 				Name:          volumeID,
 				Mounter:       mounter,
 				CapacityBytes: capacityBytes,
@@ -91,13 +97,13 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 			b.Mounter = mounter
 		}
 	} else {
-		if err = s3.createBucket(volumeID); err != nil {
+		if err = client.CreateBucket(volumeID); err != nil {
 			return nil, fmt.Errorf("failed to create volume %s: %v", volumeID, err)
 		}
-		if err = s3.createPrefix(volumeID, defaultFsPrefix); err != nil {
+		if err = client.CreatePrefix(volumeID, defaultFsPrefix); err != nil {
 			return nil, fmt.Errorf("failed to create prefix %s: %v", defaultFsPrefix, err)
 		}
-		b = &bucket{
+		b = &s3.Bucket{
 			Name:          volumeID,
 			Mounter:       mounter,
 			CapacityBytes: capacityBytes,
@@ -105,7 +111,7 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 			CreatedByCsi:  !exists,
 		}
 	}
-	if err := s3.setBucket(b); err != nil {
+	if err := client.SetBucket(b); err != nil {
 		return nil, fmt.Errorf("Error setting bucket metadata: %v", err)
 	}
 
@@ -136,21 +142,21 @@ func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVol
 	}
 	glog.V(4).Infof("Deleting volume %s", volumeID)
 
-	s3, err := newS3ClientFromSecrets(req.GetSecrets())
+	client, err := s3.NewClientFromSecret(req.GetSecrets())
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
 	}
-	exists, err := s3.bucketExists(volumeID)
+	exists, err := client.BucketExists(volumeID)
 	if err != nil {
 		return nil, err
 	}
 	if exists {
-		b, err := s3.getBucket(volumeID)
+		b, err := client.GetBucket(volumeID)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to get metadata of buckect %s", volumeID)
 		}
 		if b.CreatedByCsi {
-			if err := s3.removeBucket(volumeID); err != nil {
+			if err := client.RemoveBucket(volumeID); err != nil {
 				glog.V(3).Infof("Failed to remove volume %s: %v", volumeID, err)
 				return nil, err
 			}
@@ -175,11 +181,11 @@ func (cs *controllerServer) ValidateVolumeCapabilities(ctx context.Context, req 
 		return nil, status.Error(codes.InvalidArgument, "Volume capabilities missing in request")
 	}
 
-	s3, err := newS3ClientFromSecrets(req.GetSecrets())
+	s3, err := s3.NewClientFromSecret(req.GetSecrets())
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
 	}
-	exists, err := s3.bucketExists(req.GetVolumeId())
+	exists, err := s3.BucketExists(req.GetVolumeId())
 	if err != nil {
 		return nil, err
 	}

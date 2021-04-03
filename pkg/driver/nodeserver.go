@@ -14,12 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package s3
+package driver
 
 import (
 	"fmt"
 	"os"
 
+	"github.com/ctrox/csi-s3/pkg/mounter"
+	"github.com/ctrox/csi-s3/pkg/s3"
 	"github.com/golang/glog"
 	"golang.org/x/net/context"
 
@@ -76,16 +78,16 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	glog.V(4).Infof("target %v\ndevice %v\nreadonly %v\nvolumeId %v\nattributes %v\nmountflags %v\n",
 		targetPath, deviceID, readOnly, volumeID, attrib, mountFlags)
 
-	s3, err := newS3ClientFromSecrets(req.GetSecrets())
+	s3, err := s3.NewClientFromSecret(req.GetSecrets())
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
 	}
-	b, err := s3.getBucket(volumeID)
+	b, err := s3.GetBucket(volumeID)
 	if err != nil {
 		return nil, err
 	}
 
-	mounter, err := newMounter(b, s3.cfg)
+	mounter, err := mounter.New(b, s3.Config)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +112,7 @@ func (ns *nodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpu
 		return nil, status.Error(codes.InvalidArgument, "Target path missing in request")
 	}
 
-	if err := fuseUnmount(targetPath); err != nil {
+	if err := mounter.FuseUnmount(targetPath); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	glog.V(4).Infof("s3: bucket %s has been unmounted.", volumeID)
@@ -142,15 +144,15 @@ func (ns *nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 	if !notMnt {
 		return &csi.NodeStageVolumeResponse{}, nil
 	}
-	s3, err := newS3ClientFromSecrets(req.GetSecrets())
+	client, err := s3.NewClientFromSecret(req.GetSecrets())
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
 	}
-	b, err := s3.getBucket(volumeID)
+	b, err := client.GetBucket(volumeID)
 	if err != nil {
 		return nil, err
 	}
-	mounter, err := newMounter(b, s3.cfg)
+	mounter, err := mounter.New(b, client.Config)
 	if err != nil {
 		return nil, err
 	}

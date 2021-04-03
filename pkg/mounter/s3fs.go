@@ -1,13 +1,15 @@
-package s3
+package mounter
 
 import (
 	"fmt"
 	"os"
+
+	"github.com/ctrox/csi-s3/pkg/s3"
 )
 
 // Implements Mounter
 type s3fsMounter struct {
-	bucket        *bucket
+	bucket        *s3.Bucket
 	url           string
 	region        string
 	pwFileContent string
@@ -17,7 +19,7 @@ const (
 	s3fsCmd = "s3fs"
 )
 
-func newS3fsMounter(b *bucket, cfg *Config) (Mounter, error) {
+func newS3fsMounter(b *s3.Bucket, cfg *s3.Config) (Mounter, error) {
 	return &s3fsMounter{
 		bucket:        b,
 		url:           cfg.Endpoint,

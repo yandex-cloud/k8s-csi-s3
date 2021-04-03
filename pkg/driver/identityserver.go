@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package s3
+package driver
 
 import (
 	csicommon "github.com/kubernetes-csi/drivers/pkg/csi-common"

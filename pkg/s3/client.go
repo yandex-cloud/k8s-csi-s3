@@ -14,17 +14,25 @@ import (
 )
 
 const (
-	metadataName    = ".metadata.json"
-	defaultFsPrefix = "csi-fs"
+	metadataName = ".metadata.json"
 )
 
 type s3Client struct {
-	cfg   *Config
-	minio *minio.Client
-	ctx   context.Context
+	Config *Config
+	minio  *minio.Client
+	ctx    context.Context
 }
 
-type bucket struct {
+// Config holds values to configure the driver
+type Config struct {
+	AccessKeyID     string
+	SecretAccessKey string
+	Region          string
+	Endpoint        string
+	Mounter         string
+}
+
+type Bucket struct {
 	Name          string
 	Mounter       string
 	FSPath        string
@@ -32,11 +40,11 @@ type bucket struct {
 	CreatedByCsi  bool
 }
 
-func newS3Client(cfg *Config) (*s3Client, error) {
+func NewClient(cfg *Config) (*s3Client, error) {
 	var client = &s3Client{}
 
-	client.cfg = cfg
-	u, err := url.Parse(client.cfg.Endpoint)
+	client.Config = cfg
+	u, err := url.Parse(client.Config.Endpoint)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +54,7 @@ func newS3Client(cfg *Config) (*s3Client, error) {
 		endpoint = u.Hostname() + ":" + u.Port()
 	}
 	minioClient, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(client.cfg.AccessKeyID, client.cfg.SecretAccessKey, client.cfg.Region),
+		Creds:  credentials.NewStaticV4(client.Config.AccessKeyID, client.Config.SecretAccessKey, client.Config.Region),
 		Secure: ssl,
 	})
 	if err != nil {
@@ -57,26 +65,26 @@ func newS3Client(cfg *Config) (*s3Client, error) {
 	return client, nil
 }
 
-func newS3ClientFromSecrets(secrets map[string]string) (*s3Client, error) {
-	return newS3Client(&Config{
-		AccessKeyID:     secrets["accessKeyID"],
-		SecretAccessKey: secrets["secretAccessKey"],
-		Region:          secrets["region"],
-		Endpoint:        secrets["endpoint"],
+func NewClientFromSecret(secret map[string]string) (*s3Client, error) {
+	return NewClient(&Config{
+		AccessKeyID:     secret["accessKeyID"],
+		SecretAccessKey: secret["secretAccessKey"],
+		Region:          secret["region"],
+		Endpoint:        secret["endpoint"],
 		// Mounter is set in the volume preferences, not secrets
 		Mounter: "",
 	})
 }
 
-func (client *s3Client) bucketExists(bucketName string) (bool, error) {
+func (client *s3Client) BucketExists(bucketName string) (bool, error) {
 	return client.minio.BucketExists(client.ctx, bucketName)
 }
 
-func (client *s3Client) createBucket(bucketName string) error {
-	return client.minio.MakeBucket(client.ctx, bucketName, minio.MakeBucketOptions{Region: client.cfg.Region})
+func (client *s3Client) CreateBucket(bucketName string) error {
+	return client.minio.MakeBucket(client.ctx, bucketName, minio.MakeBucketOptions{Region: client.Config.Region})
 }
 
-func (client *s3Client) createPrefix(bucketName string, prefix string) error {
+func (client *s3Client) CreatePrefix(bucketName string, prefix string) error {
 	_, err := client.minio.PutObject(client.ctx, bucketName, prefix+"/", bytes.NewReader([]byte("")), 0, minio.PutObjectOptions{})
 	if err != nil {
 		return err
@@ -84,7 +92,11 @@ func (client *s3Client) createPrefix(bucketName string, prefix string) error {
 	return nil
 }
 
-func (client *s3Client) removeBucket(bucketName string) error {
+func (client *s3Client) RemovePrefix(bucketName string, prefix string) error {
+	return client.minio.RemoveObject(client.ctx, bucketName, prefix, minio.RemoveObjectOptions{})
+}
+
+func (client *s3Client) RemoveBucket(bucketName string) error {
 	if err := client.emptyBucket(bucketName); err != nil {
 		return err
 	}
@@ -133,11 +145,10 @@ func (client *s3Client) emptyBucket(bucketName string) error {
 		}
 	}
 
-	// ensure our prefix is also removed
-	return client.minio.RemoveObject(client.ctx, bucketName, defaultFsPrefix, minio.RemoveObjectOptions{})
+	return nil
 }
 
-func (client *s3Client) setBucket(bucket *bucket) error {
+func (client *s3Client) SetBucket(bucket *Bucket) error {
 	b := new(bytes.Buffer)
 	json.NewEncoder(b).Encode(bucket)
 	opts := minio.PutObjectOptions{ContentType: "application/json"}
@@ -145,23 +156,23 @@ func (client *s3Client) setBucket(bucket *bucket) error {
 	return err
 }
 
-func (client *s3Client) getBucket(bucketName string) (*bucket, error) {
+func (client *s3Client) GetBucket(bucketName string) (*Bucket, error) {
 	opts := minio.GetObjectOptions{}
 	obj, err := client.minio.GetObject(client.ctx, bucketName, metadataName, opts)
 	if err != nil {
-		return &bucket{}, err
+		return &Bucket{}, err
 	}
 	objInfo, err := obj.Stat()
 	if err != nil {
-		return &bucket{}, err
+		return &Bucket{}, err
 	}
 	b := make([]byte, objInfo.Size)
 	_, err = obj.Read(b)
 
 	if err != nil && err != io.EOF {
-		return &bucket{}, err
+		return &Bucket{}, err
 	}
-	var meta bucket
+	var meta Bucket
 	err = json.Unmarshal(b, &meta)
 	return &meta, err
 }
