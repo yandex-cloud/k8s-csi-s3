@@ -20,6 +20,7 @@ This is still very experimental and should not be used in any production environ
 apiVersion: v1
 kind: Secret
 metadata:
+  namespace: kube-system
   name: csi-s3-secret
 stringData:
   accessKeyID: <YOUR_ACCESS_KEY_ID>
