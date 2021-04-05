@@ -34,28 +34,28 @@ const (
 )
 
 // New returns a new mounter depending on the mounterType parameter
-func New(bucket *s3.Bucket, cfg *s3.Config) (Mounter, error) {
-	mounter := bucket.Mounter
+func New(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
+	mounter := meta.Mounter
 	// Fall back to mounterType in cfg
-	if len(bucket.Mounter) == 0 {
+	if len(meta.Mounter) == 0 {
 		mounter = cfg.Mounter
 	}
 	switch mounter {
 	case s3fsMounterType:
-		return newS3fsMounter(bucket, cfg)
+		return newS3fsMounter(meta, cfg)
 
 	case goofysMounterType:
-		return newGoofysMounter(bucket, cfg)
+		return newGoofysMounter(meta, cfg)
 
 	case s3backerMounterType:
-		return newS3backerMounter(bucket, cfg)
+		return newS3backerMounter(meta, cfg)
 
 	case rcloneMounterType:
-		return newRcloneMounter(bucket, cfg)
+		return newRcloneMounter(meta, cfg)
 
 	default:
 		// default to s3backer
-		return newS3backerMounter(bucket, cfg)
+		return newS3backerMounter(meta, cfg)
 	}
 }
 

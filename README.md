@@ -47,7 +47,7 @@ kubectl create -f csi-s3.yaml
 ### 3. Create the storage class
 
 ```bash
-kubectl create -f storageclass.yaml
+kubectl create -f examples/storageclass.yaml
 ```
 
 ### 4. Test the S3 driver
@@ -55,10 +55,10 @@ kubectl create -f storageclass.yaml
 1. Create a pvc using the new storage class:
 
 ```bash
-kubectl create -f pvc.yaml
+kubectl create -f examples/pvc.yaml
 ```
 
-2. Check if the PVC has been bound:
+1. Check if the PVC has been bound:
 
 ```bash
 $ kubectl get pvc csi-s3-pvc
@@ -66,15 +66,15 @@ NAME         STATUS    VOLUME                                     CAPACITY   ACC
 csi-s3-pvc   Bound     pvc-c5d4634f-8507-11e8-9f33-0e243832354b   5Gi        RWO            csi-s3         9s
 ```
 
-3. Create a test pod which mounts your volume:
+1. Create a test pod which mounts your volume:
 
 ```bash
-kubectl create -f pod.yaml
+kubectl create -f examples/pod.yaml
 ```
 
 If the pod can start, everything should be working.
 
-4. Test the mount
+1. Test the mount
 
 ```bash
 $ kubectl exec -ti csi-s3-test-nginx bash
@@ -86,6 +86,23 @@ $ touch /var/lib/www/html/hello_world
 If something does not work as expected, check the troubleshooting section below.
 
 ## Additional configuration
+
+### Bucket
+
+By default, csi-s3 will create a new bucket per volume. The bucket name will match that of the volume ID. If you want your volumes to live in a precreated bucket, you can simply specify the bucket in the storage class parameters:
+
+```yaml
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: csi-s3-existing-bucket
+provisioner: ch.ctrox.csi.s3-driver
+parameters:
+  mounter: rclone
+  bucket: some-existing-bucket-name
+```
+
+If the bucket is specified, it will still be created if it does not exist on the backend. Every volume will get its own prefix within the bucket which matches the volume ID. When deleting a volume, also just the prefix will be deleted.
 
 ### Mounter
 

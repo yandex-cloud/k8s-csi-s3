@@ -32,13 +32,6 @@ type driver struct {
 	cs  *controllerServer
 }
 
-type s3Volume struct {
-	VolName string `json:"volName"`
-	VolID   string `json:"volID"`
-	VolSize int64  `json:"volSize"`
-	VolPath string `json:"volPath"`
-}
-
 var (
 	vendorVersion = "v1.1.1"
 	driverName    = "ch.ctrox.csi.s3-driver"

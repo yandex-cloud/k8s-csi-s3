@@ -3,6 +3,7 @@ package mounter
 import (
 	"fmt"
 	"os"
+	"path"
 
 	"context"
 
@@ -17,21 +18,21 @@ const (
 
 // Implements Mounter
 type goofysMounter struct {
-	bucket          *s3.Bucket
+	meta            *s3.FSMeta
 	endpoint        string
 	region          string
 	accessKeyID     string
 	secretAccessKey string
 }
 
-func newGoofysMounter(b *s3.Bucket, cfg *s3.Config) (Mounter, error) {
+func newGoofysMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
 	region := cfg.Region
 	// if endpoint is set we need a default region
 	if region == "" && cfg.Endpoint != "" {
 		region = defaultRegion
 	}
 	return &goofysMounter{
-		bucket:          b,
+		meta:            meta,
 		endpoint:        cfg.Endpoint,
 		region:          region,
 		accessKeyID:     cfg.AccessKeyID,
@@ -61,7 +62,7 @@ func (goofys *goofysMounter) Mount(source string, target string) error {
 
 	os.Setenv("AWS_ACCESS_KEY_ID", goofys.accessKeyID)
 	os.Setenv("AWS_SECRET_ACCESS_KEY", goofys.secretAccessKey)
-	fullPath := fmt.Sprintf("%s:%s", goofys.bucket.Name, goofys.bucket.FSPath)
+	fullPath := fmt.Sprintf("%s:%s", goofys.meta.BucketName, path.Join(goofys.meta.Prefix, goofys.meta.FSPath))
 
 	_, _, err := goofysApi.Mount(context.Background(), fullPath, goofysCfg)
 

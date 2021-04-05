@@ -14,7 +14,7 @@ import (
 
 // Implements Mounter
 type s3backerMounter struct {
-	bucket          *s3.Bucket
+	meta            *s3.FSMeta
 	url             string
 	region          string
 	accessKeyID     string
@@ -33,18 +33,18 @@ const (
 	S3backerLoopDevice = "/dev/loop0"
 )
 
-func newS3backerMounter(bucket *s3.Bucket, cfg *s3.Config) (Mounter, error) {
+func newS3backerMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
 	url, err := url.Parse(cfg.Endpoint)
 	if err != nil {
 		return nil, err
 	}
-	url.Path = path.Join(url.Path, bucket.Name, bucket.FSPath)
+	url.Path = path.Join(url.Path, meta.BucketName, meta.Prefix, meta.FSPath)
 	// s3backer cannot work with 0 size volumes
-	if bucket.CapacityBytes == 0 {
-		bucket.CapacityBytes = s3backerDefaultSize
+	if meta.CapacityBytes == 0 {
+		meta.CapacityBytes = s3backerDefaultSize
 	}
 	s3backer := &s3backerMounter{
-		bucket:          bucket,
+		meta:            meta,
 		url:             cfg.Endpoint,
 		region:          cfg.Region,
 		accessKeyID:     cfg.AccessKeyID,
@@ -56,7 +56,7 @@ func newS3backerMounter(bucket *s3.Bucket, cfg *s3.Config) (Mounter, error) {
 }
 
 func (s3backer *s3backerMounter) String() string {
-	return s3backer.bucket.Name
+	return path.Join(s3backer.meta.BucketName, s3backer.meta.Prefix)
 }
 
 func (s3backer *s3backerMounter) Stage(stageTarget string) error {
@@ -94,14 +94,14 @@ func (s3backer *s3backerMounter) Mount(source string, target string) error {
 	return nil
 }
 
-func (s3backer *s3backerMounter) mountInit(path string) error {
+func (s3backer *s3backerMounter) mountInit(p string) error {
 	args := []string{
 		fmt.Sprintf("--blockSize=%s", s3backerBlockSize),
-		fmt.Sprintf("--size=%v", s3backer.bucket.CapacityBytes),
-		fmt.Sprintf("--prefix=%s/", s3backer.bucket.FSPath),
+		fmt.Sprintf("--size=%v", s3backer.meta.CapacityBytes),
+		fmt.Sprintf("--prefix=%s/", path.Join(s3backer.meta.Prefix, s3backer.meta.FSPath)),
 		"--listBlocks",
-		s3backer.bucket.Name,
-		path,
+		s3backer.meta.BucketName,
+		p,
 	}
 	if s3backer.region != "" {
 		args = append(args, fmt.Sprintf("--region=%s", s3backer.region))
@@ -114,7 +114,7 @@ func (s3backer *s3backerMounter) mountInit(path string) error {
 		args = append(args, "--ssl")
 	}
 
-	return fuseMount(path, s3backerCmd, args)
+	return fuseMount(p, s3backerCmd, args)
 }
 
 func (s3backer *s3backerMounter) writePasswd() error {
