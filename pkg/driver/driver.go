@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package s3
+package driver
 
 import (
 	"github.com/container-storage-interface/spec/lib/go/csi"
@@ -23,7 +23,7 @@ import (
 	csicommon "github.com/kubernetes-csi/drivers/pkg/csi-common"
 )
 
-type s3 struct {
+type driver struct {
 	driver   *csicommon.CSIDriver
 	endpoint string
 
@@ -44,39 +44,39 @@ var (
 	driverName    = "ch.ctrox.csi.s3-driver"
 )
 
-// NewS3 initializes the driver
-func NewS3(nodeID string, endpoint string) (*s3, error) {
-	driver := csicommon.NewCSIDriver(driverName, vendorVersion, nodeID)
-	if driver == nil {
+// New initializes the driver
+func New(nodeID string, endpoint string) (*driver, error) {
+	d := csicommon.NewCSIDriver(driverName, vendorVersion, nodeID)
+	if d == nil {
 		glog.Fatalln("Failed to initialize CSI Driver.")
 	}
 
-	s3Driver := &s3{
+	s3Driver := &driver{
 		endpoint: endpoint,
-		driver:   driver,
+		driver:   d,
 	}
 	return s3Driver, nil
 }
 
-func (s3 *s3) newIdentityServer(d *csicommon.CSIDriver) *identityServer {
+func (s3 *driver) newIdentityServer(d *csicommon.CSIDriver) *identityServer {
 	return &identityServer{
 		DefaultIdentityServer: csicommon.NewDefaultIdentityServer(d),
 	}
 }
 
-func (s3 *s3) newControllerServer(d *csicommon.CSIDriver) *controllerServer {
+func (s3 *driver) newControllerServer(d *csicommon.CSIDriver) *controllerServer {
 	return &controllerServer{
 		DefaultControllerServer: csicommon.NewDefaultControllerServer(d),
 	}
 }
 
-func (s3 *s3) newNodeServer(d *csicommon.CSIDriver) *nodeServer {
+func (s3 *driver) newNodeServer(d *csicommon.CSIDriver) *nodeServer {
 	return &nodeServer{
 		DefaultNodeServer: csicommon.NewDefaultNodeServer(d),
 	}
 }
 
-func (s3 *s3) Run() {
+func (s3 *driver) Run() {
 	glog.Infof("Driver: %v ", driverName)
 	glog.Infof("Version: %v ", vendorVersion)
 	// Initialize default library driver

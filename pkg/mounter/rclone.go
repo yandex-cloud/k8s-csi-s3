@@ -1,13 +1,15 @@
-package s3
+package mounter
 
 import (
 	"fmt"
 	"os"
+
+	"github.com/ctrox/csi-s3/pkg/s3"
 )
 
 // Implements Mounter
 type rcloneMounter struct {
-	bucket          *bucket
+	bucket          *s3.Bucket
 	url             string
 	region          string
 	accessKeyID     string
@@ -18,7 +20,7 @@ const (
 	rcloneCmd = "rclone"
 )
 
-func newRcloneMounter(b *bucket, cfg *Config) (Mounter, error) {
+func newRcloneMounter(b *s3.Bucket, cfg *s3.Config) (Mounter, error) {
 	return &rcloneMounter{
 		bucket:          b,
 		url:             cfg.Endpoint,

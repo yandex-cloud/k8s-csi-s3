@@ -1,10 +1,11 @@
-package s3_test
+package driver_test
 
 import (
 	"log"
 	"os"
 
-	"github.com/ctrox/csi-s3/pkg/s3"
+	"github.com/ctrox/csi-s3/pkg/driver"
+	"github.com/ctrox/csi-s3/pkg/mounter"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -19,7 +20,7 @@ var _ = Describe("S3Driver", func() {
 		if err := os.Remove(socket); err != nil && !os.IsNotExist(err) {
 			Expect(err).NotTo(HaveOccurred())
 		}
-		driver, err := s3.NewS3("test-node", csiEndpoint)
+		driver, err := driver.New("test-node", csiEndpoint)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -45,7 +46,7 @@ var _ = Describe("S3Driver", func() {
 		if err := os.Remove(socket); err != nil && !os.IsNotExist(err) {
 			Expect(err).NotTo(HaveOccurred())
 		}
-		driver, err := s3.NewS3("test-node", csiEndpoint)
+		driver, err := driver.New("test-node", csiEndpoint)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -73,8 +74,8 @@ var _ = Describe("S3Driver", func() {
 			Expect(err).NotTo(HaveOccurred())
 		}
 		// Clear loop device so we cover the creation of it
-		os.Remove(s3.S3backerLoopDevice)
-		driver, err := s3.NewS3("test-node", csiEndpoint)
+		os.Remove(mounter.S3backerLoopDevice)
+		driver, err := driver.New("test-node", csiEndpoint)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -101,7 +102,7 @@ var _ = Describe("S3Driver", func() {
 		if err := os.Remove(socket); err != nil && !os.IsNotExist(err) {
 			Expect(err).NotTo(HaveOccurred())
 		}
-		driver, err := s3.NewS3("test-node", csiEndpoint)
+		driver, err := driver.New("test-node", csiEndpoint)
 		if err != nil {
 			log.Fatal(err)
 		}

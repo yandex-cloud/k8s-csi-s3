@@ -1,4 +1,4 @@
-package s3
+package mounter
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 
 	"context"
 
+	"github.com/ctrox/csi-s3/pkg/s3"
 	goofysApi "github.com/kahing/goofys/api"
 )
 
@@ -16,14 +17,14 @@ const (
 
 // Implements Mounter
 type goofysMounter struct {
-	bucket          *bucket
+	bucket          *s3.Bucket
 	endpoint        string
 	region          string
 	accessKeyID     string
 	secretAccessKey string
 }
 
-func newGoofysMounter(b *bucket, cfg *Config) (Mounter, error) {
+func newGoofysMounter(b *s3.Bucket, cfg *s3.Config) (Mounter, error) {
 	region := cfg.Region
 	// if endpoint is set we need a default region
 	if region == "" && cfg.Endpoint != "" {

@@ -21,7 +21,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/ctrox/csi-s3/pkg/s3"
+	"github.com/ctrox/csi-s3/pkg/driver"
 )
 
 func init() {
@@ -36,7 +36,7 @@ var (
 func main() {
 	flag.Parse()
 
-	driver, err := s3.NewS3(*nodeID, *endpoint)
+	driver, err := driver.New(*nodeID, *endpoint)
 	if err != nil {
 		log.Fatal(err)
 	}
