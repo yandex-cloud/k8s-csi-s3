@@ -54,34 +54,34 @@ kubectl create -f examples/storageclass.yaml
 
 1. Create a pvc using the new storage class:
 
-```bash
-kubectl create -f examples/pvc.yaml
-```
+    ```bash
+    kubectl create -f examples/pvc.yaml
+    ```
 
 1. Check if the PVC has been bound:
 
-```bash
-$ kubectl get pvc csi-s3-pvc
-NAME         STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
-csi-s3-pvc   Bound     pvc-c5d4634f-8507-11e8-9f33-0e243832354b   5Gi        RWO            csi-s3         9s
-```
+    ```bash
+    $ kubectl get pvc csi-s3-pvc
+    NAME         STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+    csi-s3-pvc   Bound     pvc-c5d4634f-8507-11e8-9f33-0e243832354b   5Gi        RWO            csi-s3         9s
+    ```
 
 1. Create a test pod which mounts your volume:
 
-```bash
-kubectl create -f examples/pod.yaml
-```
+    ```bash
+    kubectl create -f examples/pod.yaml
+    ```
 
-If the pod can start, everything should be working.
+    If the pod can start, everything should be working.
 
 1. Test the mount
 
-```bash
-$ kubectl exec -ti csi-s3-test-nginx bash
-$ mount | grep fuse
-s3fs on /var/lib/www/html type fuse.s3fs (rw,nosuid,nodev,relatime,user_id=0,group_id=0,allow_other)
-$ touch /var/lib/www/html/hello_world
-```
+    ```bash
+    $ kubectl exec -ti csi-s3-test-nginx bash
+    $ mount | grep fuse
+    s3fs on /var/lib/www/html type fuse.s3fs (rw,nosuid,nodev,relatime,user_id=0,group_id=0,allow_other)
+    $ touch /var/lib/www/html/hello_world
+    ```
 
 If something does not work as expected, check the troubleshooting section below.
 
