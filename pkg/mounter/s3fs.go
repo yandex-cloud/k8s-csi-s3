@@ -3,13 +3,14 @@ package mounter
 import (
 	"fmt"
 	"os"
+	"path"
 
 	"github.com/ctrox/csi-s3/pkg/s3"
 )
 
 // Implements Mounter
 type s3fsMounter struct {
-	bucket        *s3.Bucket
+	meta          *s3.FSMeta
 	url           string
 	region        string
 	pwFileContent string
@@ -19,9 +20,9 @@ const (
 	s3fsCmd = "s3fs"
 )
 
-func newS3fsMounter(b *s3.Bucket, cfg *s3.Config) (Mounter, error) {
+func newS3fsMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
 	return &s3fsMounter{
-		bucket:        b,
+		meta:          meta,
 		url:           cfg.Endpoint,
 		region:        cfg.Region,
 		pwFileContent: cfg.AccessKeyID + ":" + cfg.SecretAccessKey,
@@ -41,8 +42,8 @@ func (s3fs *s3fsMounter) Mount(source string, target string) error {
 		return err
 	}
 	args := []string{
-		fmt.Sprintf("%s:/%s", s3fs.bucket.Name, s3fs.bucket.FSPath),
-		fmt.Sprintf("%s", target),
+		fmt.Sprintf("%s:/%s", s3fs.meta.BucketName, path.Join(s3fs.meta.Prefix, s3fs.meta.FSPath)),
+		target,
 		"-o", "use_path_request_style",
 		"-o", fmt.Sprintf("url=%s", s3fs.url),
 		"-o", fmt.Sprintf("endpoint=%s", s3fs.region),

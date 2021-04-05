@@ -3,13 +3,14 @@ package mounter
 import (
 	"fmt"
 	"os"
+	"path"
 
 	"github.com/ctrox/csi-s3/pkg/s3"
 )
 
 // Implements Mounter
 type rcloneMounter struct {
-	bucket          *s3.Bucket
+	meta            *s3.FSMeta
 	url             string
 	region          string
 	accessKeyID     string
@@ -20,9 +21,9 @@ const (
 	rcloneCmd = "rclone"
 )
 
-func newRcloneMounter(b *s3.Bucket, cfg *s3.Config) (Mounter, error) {
+func newRcloneMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
 	return &rcloneMounter{
-		bucket:          b,
+		meta:            meta,
 		url:             cfg.Endpoint,
 		region:          cfg.Region,
 		accessKeyID:     cfg.AccessKeyID,
@@ -41,7 +42,7 @@ func (rclone *rcloneMounter) Unstage(stageTarget string) error {
 func (rclone *rcloneMounter) Mount(source string, target string) error {
 	args := []string{
 		"mount",
-		fmt.Sprintf(":s3:%s/%s", rclone.bucket.Name, rclone.bucket.FSPath),
+		fmt.Sprintf(":s3:%s", path.Join(rclone.meta.BucketName, rclone.meta.Prefix, rclone.meta.FSPath)),
 		fmt.Sprintf("%s", target),
 		"--daemon",
 		"--s3-provider=AWS",

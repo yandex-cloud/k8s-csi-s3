@@ -34,6 +34,33 @@ var _ = Describe("S3Driver", func() {
 				SecretsFile: "../../test/secret.yaml",
 				TestVolumeParameters: map[string]string{
 					"mounter": "goofys",
+					"bucket":  "testbucket0",
+				},
+			}
+			sanity.GinkgoTest(sanityCfg)
+		})
+	})
+
+	Context("goofys-no-bucket", func() {
+		socket := "/tmp/csi-goofys-no-bucket.sock"
+		csiEndpoint := "unix://" + socket
+		if err := os.Remove(socket); err != nil && !os.IsNotExist(err) {
+			Expect(err).NotTo(HaveOccurred())
+		}
+		driver, err := driver.New("test-node", csiEndpoint)
+		if err != nil {
+			log.Fatal(err)
+		}
+		go driver.Run()
+
+		Describe("CSI sanity", func() {
+			sanityCfg := &sanity.Config{
+				TargetPath:  os.TempDir() + "/goofys-no-bucket-target",
+				StagingPath: os.TempDir() + "/goofys-no-bucket-staging",
+				Address:     csiEndpoint,
+				SecretsFile: "../../test/secret.yaml",
+				TestVolumeParameters: map[string]string{
+					"mounter": "goofys",
 				},
 			}
 			sanity.GinkgoTest(sanityCfg)
@@ -60,6 +87,7 @@ var _ = Describe("S3Driver", func() {
 				SecretsFile: "../../test/secret.yaml",
 				TestVolumeParameters: map[string]string{
 					"mounter": "s3fs",
+					"bucket":  "testbucket1",
 				},
 			}
 			sanity.GinkgoTest(sanityCfg)
@@ -89,6 +117,7 @@ var _ = Describe("S3Driver", func() {
 				SecretsFile: "../../test/secret.yaml",
 				TestVolumeParameters: map[string]string{
 					"mounter": "s3backer",
+					"bucket":  "testbucket2",
 				},
 			}
 			sanity.GinkgoTest(sanityCfg)
@@ -116,6 +145,7 @@ var _ = Describe("S3Driver", func() {
 				SecretsFile: "../../test/secret.yaml",
 				TestVolumeParameters: map[string]string{
 					"mounter": "rclone",
+					"bucket":  "testbucket3",
 				},
 			}
 			sanity.GinkgoTest(sanityCfg)

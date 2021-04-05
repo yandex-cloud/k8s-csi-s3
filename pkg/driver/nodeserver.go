@@ -41,6 +41,7 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	volumeID := req.GetVolumeId()
 	targetPath := req.GetTargetPath()
 	stagingTargetPath := req.GetStagingTargetPath()
+	bucketName, prefix := volumeIDToBucketPrefix(volumeID)
 
 	// Check arguments
 	if req.GetVolumeCapability() == nil {
@@ -82,12 +83,12 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
 	}
-	b, err := s3.GetBucket(volumeID)
+	meta, err := s3.GetFSMeta(bucketName, prefix)
 	if err != nil {
 		return nil, err
 	}
 
-	mounter, err := mounter.New(b, s3.Config)
+	mounter, err := mounter.New(meta, s3.Config)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +96,7 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 		return nil, err
 	}
 
-	glog.V(4).Infof("s3: bucket %s successfuly mounted to %s", b.Name, targetPath)
+	glog.V(4).Infof("s3: volume %s successfuly mounted to %s", volumeID, targetPath)
 
 	return &csi.NodePublishVolumeResponse{}, nil
 }
@@ -115,7 +116,7 @@ func (ns *nodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpu
 	if err := mounter.FuseUnmount(targetPath); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	glog.V(4).Infof("s3: bucket %s has been unmounted.", volumeID)
+	glog.V(4).Infof("s3: volume %s has been unmounted.", volumeID)
 
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
@@ -123,6 +124,7 @@ func (ns *nodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpu
 func (ns *nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVolumeRequest) (*csi.NodeStageVolumeResponse, error) {
 	volumeID := req.GetVolumeId()
 	stagingTargetPath := req.GetStagingTargetPath()
+	bucketName, prefix := volumeIDToBucketPrefix(volumeID)
 
 	// Check arguments
 	if len(volumeID) == 0 {
@@ -148,11 +150,11 @@ func (ns *nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
 	}
-	b, err := client.GetBucket(volumeID)
+	meta, err := client.GetFSMeta(bucketName, prefix)
 	if err != nil {
 		return nil, err
 	}
-	mounter, err := mounter.New(b, client.Config)
+	mounter, err := mounter.New(meta, client.Config)
 	if err != nil {
 		return nil, err
 	}
