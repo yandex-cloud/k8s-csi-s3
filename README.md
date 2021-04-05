@@ -111,7 +111,6 @@ All mounters have different strengths and weaknesses depending on your use case.
 
 * Large subset of POSIX
 * Files can be viewed normally with any S3 client
-* Does not support appends or random writes
 
 #### goofys
 
