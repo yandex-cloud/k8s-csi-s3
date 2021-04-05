@@ -23,6 +23,7 @@ const (
 	s3backerMounterType = "s3backer"
 	rcloneMounterType   = "rclone"
 	mounterTypeKey      = "mounter"
+	bucketKey           = "bucket"
 )
 
 // newMounter returns a new mounter depending on the mounterType parameter

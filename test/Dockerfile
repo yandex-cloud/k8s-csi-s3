@@ -7,9 +7,9 @@ RUN apt-get update && \
   git wget make && \
   rm -rf /var/lib/apt/lists/*
 
-RUN wget -q https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz && \
-  tar -xf go1.12.5.linux-amd64.tar.gz && \
-  rm go1.12.5.linux-amd64.tar.gz && \
+RUN wget -q https://golang.org/dl/go1.15.7.linux-amd64.tar.gz && \
+  tar -xf go1.15.7.linux-amd64.tar.gz && \
+  rm go1.15.7.linux-amd64.tar.gz && \
   mv go /usr/local
 
 ENV GOROOT /usr/local/go
