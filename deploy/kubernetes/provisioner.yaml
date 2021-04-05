@@ -63,6 +63,9 @@ spec:
       app: "csi-provisioner-s3"
   serviceName: "csi-provisioner-s3"
   replicas: 1
+  selector:
+    matchLabels:
+      app: csi-provisioner-s3
   template:
     metadata:
       labels:
@@ -71,7 +74,7 @@ spec:
       serviceAccount: csi-provisioner-sa
       containers:
         - name: csi-provisioner
-          image: quay.io/k8scsi/csi-provisioner:v1.1.0
+          image: quay.io/k8scsi/csi-provisioner:v1.3.1
           args:
             - "--provisioner=ch.ctrox.csi.s3-driver"
             - "--csi-address=$(ADDRESS)"

@@ -56,7 +56,7 @@ spec:
       hostNetwork: true
       containers:
         - name: driver-registrar
-          image: quay.io/k8scsi/csi-node-driver-registrar:v1.1.0
+          image: quay.io/k8scsi/csi-node-driver-registrar:v1.2.0
           args:
             - "--kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)"
             - "--v=4"
