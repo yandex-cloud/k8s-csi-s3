@@ -49,8 +49,8 @@ spec:
   selector:
     app: csi-provisioner-s3
   ports:
-    - name: dummy
-      port: 12345
+    - name: csi-s3-dummy
+      port: 65535
 ---
 kind: StatefulSet
 apiVersion: apps/v1
@@ -72,11 +72,13 @@ spec:
         app: csi-provisioner-s3
     spec:
       serviceAccount: csi-provisioner-sa
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: "Exists"
       containers:
         - name: csi-provisioner
-          image: quay.io/k8scsi/csi-provisioner:v1.3.1
+          image: quay.io/k8scsi/csi-provisioner:v2.1.0
           args:
-            - "--provisioner=ch.ctrox.csi.s3-driver"
             - "--csi-address=$(ADDRESS)"
             - "--v=4"
           env:
@@ -88,7 +90,6 @@ spec:
               mountPath: /var/lib/kubelet/plugins/ch.ctrox.csi.s3-driver
         - name: csi-s3
           image: ctrox/csi-s3:dev
-          imagePullPolicy: Never
           args:
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--nodeid=$(NODE_ID)"

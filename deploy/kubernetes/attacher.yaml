@@ -50,8 +50,8 @@ spec:
   selector:
     app: csi-attacher-s3
   ports:
-    - name: dummy
-      port: 12345
+    - name: csi-s3-dummy
+      port: 65535
 ---
 kind: StatefulSet
 apiVersion: apps/v1
@@ -73,6 +73,9 @@ spec:
         app: csi-attacher-s3
     spec:
       serviceAccount: csi-attacher-sa
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: "Exists"
       containers:
         - name: csi-attacher
           image: quay.io/k8scsi/csi-attacher:v2.2.0
