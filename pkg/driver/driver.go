@@ -33,7 +33,7 @@ type driver struct {
 }
 
 var (
-	vendorVersion = "v1.1.1"
+	vendorVersion = "v1.2.0-rc.1"
 	driverName    = "ch.ctrox.csi.s3-driver"
 )
 
