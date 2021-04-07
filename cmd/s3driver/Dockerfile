@@ -17,7 +17,7 @@ RUN apt-get update && \
   rm -rf /var/lib/apt/lists/*
 
 # install rclone
-ARG RCLONE_VERSION=v1.47.0
+ARG RCLONE_VERSION=v1.54.1
 RUN cd /tmp \
   && curl -O https://downloads.rclone.org/${RCLONE_VERSION}/rclone-${RCLONE_VERSION}-linux-amd64.zip \
   && unzip /tmp/rclone-${RCLONE_VERSION}-linux-amd64.zip \
