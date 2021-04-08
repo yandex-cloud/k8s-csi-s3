@@ -167,8 +167,8 @@ func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVol
 	}
 
 	if deleteErr != nil {
-		glog.Warning("remove volume failed, will ensure fsmeta exist, or may will lost control")
-		if err := client.EnsureFSMetaExist(meta, bucketName, prefix); err != nil {
+		glog.Warning("remove volume failed, will ensure fsmeta exists to avoid losing control over volume")
+		if err := client.SetFSMeta(meta); err != nil {
 			glog.Error(err)
 		}
 		return nil, deleteErr

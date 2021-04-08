@@ -100,7 +100,7 @@ func (client *s3Client) RemovePrefix(bucketName string, prefix string) error {
 		return client.minio.RemoveObject(client.ctx, bucketName, prefix, minio.RemoveObjectOptions{})
 	}
 
-	glog.Warning("removeObjects failed with: ", err, ", will try removeObjectsOneByOne")
+	glog.Warningf("removeObjects failed with: %s, will try removeObjectsOneByOne", err)
 
 	if err = client.removeObjectsOneByOne(bucketName, prefix); err == nil {
 		return client.minio.RemoveObject(client.ctx, bucketName, prefix, minio.RemoveObjectOptions{})
@@ -116,7 +116,7 @@ func (client *s3Client) RemoveBucket(bucketName string) error {
 		return client.minio.RemoveBucket(client.ctx, bucketName)
 	}
 
-	glog.Warning("removeObjects failed with: ", err, ", will try removeObjectsOneByOne")
+	glog.Warningf("removeObjects failed with: %s, will try removeObjectsOneByOne", err)
 
 	if err = client.removeObjectsOneByOne(bucketName, ""); err == nil {
 		return client.minio.RemoveBucket(client.ctx, bucketName)
@@ -253,14 +253,4 @@ func (client *s3Client) GetFSMeta(bucketName, prefix string) (*FSMeta, error) {
 	var meta FSMeta
 	err = json.Unmarshal(b, &meta)
 	return &meta, err
-}
-
-func (client *s3Client) EnsureFSMetaExist(meta *FSMeta, bucketName, prefix string) error {
-	if _, err := client.GetFSMeta(bucketName, prefix); err != nil {
-		glog.Warningf("%s/%s get meta failed with: %s, will set meta of it", bucketName, prefix, err)
-		if err := client.SetFSMeta(meta); err != nil {
-			return fmt.Errorf("%s/%s get meta failed with: %s, may will lost control of it", bucketName, prefix, err)
-		}
-	}
-	return nil
 }
