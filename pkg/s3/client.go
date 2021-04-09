@@ -157,10 +157,8 @@ func (client *s3Client) removeObjects(bucketName, prefix string) error {
 		errorCh := client.minio.RemoveObjects(client.ctx, bucketName, objectsCh, opts)
 		haveErrWhenRemoveObjects := false
 		for e := range errorCh {
-			if e.Err.Error() != "EOF" {
-				glog.Errorf("Failed to remove object %s, error: %s", e.ObjectName, e.Err)
-				haveErrWhenRemoveObjects = true
-			}
+			glog.Errorf("Failed to remove object %s, error: %s", e.ObjectName, e.Err)
+			haveErrWhenRemoveObjects = true
 		}
 		if haveErrWhenRemoveObjects {
 			return fmt.Errorf("Failed to remove all objects of bucket %s", bucketName)
@@ -212,10 +210,8 @@ func (client *s3Client) removeObjectsOneByOne(bucketName, prefix string) error {
 
 	haveErrWhenRemoveObjects := false
 	for e := range removeErrCh {
-		if e.Err.Error() != "EOF" {
-			glog.Errorf("Failed to remove object %s, error: %s", e.ObjectName, e.Err)
-			haveErrWhenRemoveObjects = true
-		}
+		glog.Errorf("Failed to remove object %s, error: %s", e.ObjectName, e.Err)
+		haveErrWhenRemoveObjects = true
 	}
 	if haveErrWhenRemoveObjects {
 		return fmt.Errorf("Failed to remove all objects of path %s", bucketName)
