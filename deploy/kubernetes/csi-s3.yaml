@@ -82,7 +82,7 @@ spec:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
           image: ctrox/csi-s3:v1.2.0-rc.1
-          imagePullPolicy: Never
+          imagePullPolicy: "Always"
           args:
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--nodeid=$(NODE_ID)"
@@ -94,7 +94,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          imagePullPolicy: "Always"
           volumeMounts:
             - name: plugin-dir
               mountPath: /csi

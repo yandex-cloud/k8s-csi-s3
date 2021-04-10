@@ -58,9 +58,6 @@ metadata:
   name: csi-provisioner-s3
   namespace: kube-system
 spec:
-  selector:
-    matchLabels:
-      app: "csi-provisioner-s3"
   serviceName: "csi-provisioner-s3"
   replicas: 1
   selector:

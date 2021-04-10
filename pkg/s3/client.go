@@ -94,17 +94,35 @@ func (client *s3Client) CreatePrefix(bucketName string, prefix string) error {
 }
 
 func (client *s3Client) RemovePrefix(bucketName string, prefix string) error {
-	if err := client.removeObjects(bucketName, prefix); err != nil {
-		return err
+	var err error
+
+	if err = client.removeObjects(bucketName, prefix); err == nil {
+		return client.minio.RemoveObject(client.ctx, bucketName, prefix, minio.RemoveObjectOptions{})
 	}
-	return client.minio.RemoveObject(client.ctx, bucketName, prefix, minio.RemoveObjectOptions{})
+
+	glog.Warningf("removeObjects failed with: %s, will try removeObjectsOneByOne", err)
+
+	if err = client.removeObjectsOneByOne(bucketName, prefix); err == nil {
+		return client.minio.RemoveObject(client.ctx, bucketName, prefix, minio.RemoveObjectOptions{})
+	}
+
+	return err
 }
 
 func (client *s3Client) RemoveBucket(bucketName string) error {
-	if err := client.removeObjects(bucketName, ""); err != nil {
-		return err
+	var err error
+
+	if err = client.removeObjects(bucketName, ""); err == nil {
+		return client.minio.RemoveBucket(client.ctx, bucketName)
 	}
-	return client.minio.RemoveBucket(client.ctx, bucketName)
+
+	glog.Warningf("removeObjects failed with: %s, will try removeObjectsOneByOne", err)
+
+	if err = client.removeObjectsOneByOne(bucketName, ""); err == nil {
+		return client.minio.RemoveBucket(client.ctx, bucketName)
+	}
+
+	return err
 }
 
 func (client *s3Client) removeObjects(bucketName, prefix string) error {
@@ -113,10 +131,6 @@ func (client *s3Client) removeObjects(bucketName, prefix string) error {
 
 	go func() {
 		defer close(objectsCh)
-
-		doneCh := make(chan struct{})
-
-		defer close(doneCh)
 
 		for object := range client.minio.ListObjects(
 			client.ctx,
@@ -141,12 +155,66 @@ func (client *s3Client) removeObjects(bucketName, prefix string) error {
 			GovernanceBypass: true,
 		}
 		errorCh := client.minio.RemoveObjects(client.ctx, bucketName, objectsCh, opts)
+		haveErrWhenRemoveObjects := false
 		for e := range errorCh {
 			glog.Errorf("Failed to remove object %s, error: %s", e.ObjectName, e.Err)
+			haveErrWhenRemoveObjects = true
 		}
-		if len(errorCh) != 0 {
+		if haveErrWhenRemoveObjects {
 			return fmt.Errorf("Failed to remove all objects of bucket %s", bucketName)
 		}
+	}
+
+	return nil
+}
+
+// will delete files one by one without file lock
+func (client *s3Client) removeObjectsOneByOne(bucketName, prefix string) error {
+	objectsCh := make(chan minio.ObjectInfo, 1)
+	removeErrCh := make(chan minio.RemoveObjectError, 1)
+	var listErr error
+
+	go func() {
+		defer close(objectsCh)
+
+		for object := range client.minio.ListObjects(client.ctx, bucketName,
+			minio.ListObjectsOptions{Prefix: prefix, Recursive: true}) {
+			if object.Err != nil {
+				listErr = object.Err
+				return
+			}
+			objectsCh <- object
+		}
+	}()
+
+	if listErr != nil {
+		glog.Error("Error listing objects", listErr)
+		return listErr
+	}
+
+	go func() {
+		defer close(removeErrCh)
+
+		for object := range objectsCh {
+			err := client.minio.RemoveObject(client.ctx, bucketName, object.Key,
+				minio.RemoveObjectOptions{VersionID: object.VersionID})
+			if err != nil {
+				removeErrCh <- minio.RemoveObjectError{
+					ObjectName: object.Key,
+					VersionID:  object.VersionID,
+					Err:        err,
+				}
+			}
+		}
+	}()
+
+	haveErrWhenRemoveObjects := false
+	for e := range removeErrCh {
+		glog.Errorf("Failed to remove object %s, error: %s", e.ObjectName, e.Err)
+		haveErrWhenRemoveObjects = true
+	}
+	if haveErrWhenRemoveObjects {
+		return fmt.Errorf("Failed to remove all objects of path %s", bucketName)
 	}
 
 	return nil

@@ -129,6 +129,7 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVolumeRequest) (*csi.DeleteVolumeResponse, error) {
 	volumeID := req.GetVolumeId()
 	bucketName, prefix := volumeIDToBucketPrefix(volumeID)
+	var meta *s3.FSMeta
 
 	// Check arguments
 	if len(volumeID) == 0 {
@@ -146,23 +147,31 @@ func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVol
 		return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
 	}
 
-	if _, err := client.GetFSMeta(bucketName, prefix); err != nil {
+	if meta, err = client.GetFSMeta(bucketName, prefix); err != nil {
 		glog.V(5).Infof("FSMeta of volume %s does not exist, ignoring delete request", volumeID)
 		return &csi.DeleteVolumeResponse{}, nil
 	}
 
+	var deleteErr error
 	if prefix == "" {
 		// prefix is empty, we delete the whole bucket
 		if err := client.RemoveBucket(bucketName); err != nil {
-			glog.V(3).Infof("Failed to remove volume %s: %v", volumeID, err)
-			return nil, err
+			deleteErr = err
 		}
 		glog.V(4).Infof("Bucket %s removed", bucketName)
 	} else {
 		if err := client.RemovePrefix(bucketName, prefix); err != nil {
-			return nil, fmt.Errorf("unable to remove prefix: %w", err)
+			deleteErr = fmt.Errorf("unable to remove prefix: %w", err)
 		}
 		glog.V(4).Infof("Prefix %s removed", prefix)
+	}
+
+	if deleteErr != nil {
+		glog.Warning("remove volume failed, will ensure fsmeta exists to avoid losing control over volume")
+		if err := client.SetFSMeta(meta); err != nil {
+			glog.Error(err)
+		}
+		return nil, deleteErr
 	}
 
 	return &csi.DeleteVolumeResponse{}, nil
@@ -178,11 +187,11 @@ func (cs *controllerServer) ValidateVolumeCapabilities(ctx context.Context, req 
 	}
 	bucketName, prefix := volumeIDToBucketPrefix(req.GetVolumeId())
 
-	s3, err := s3.NewClientFromSecret(req.GetSecrets())
+	client, err := s3.NewClientFromSecret(req.GetSecrets())
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
 	}
-	exists, err := s3.BucketExists(bucketName)
+	exists, err := client.BucketExists(bucketName)
 	if err != nil {
 		return nil, err
 	}
@@ -192,7 +201,7 @@ func (cs *controllerServer) ValidateVolumeCapabilities(ctx context.Context, req 
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("bucket of volume with id %s does not exist", req.GetVolumeId()))
 	}
 
-	if _, err := s3.GetFSMeta(bucketName, prefix); err != nil {
+	if _, err := client.GetFSMeta(bucketName, prefix); err != nil {
 		// return an error if the fsmeta of the requested volume does not exist
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("fsmeta of volume with id %s does not exist", req.GetVolumeId()))
 	}
@@ -202,8 +211,8 @@ func (cs *controllerServer) ValidateVolumeCapabilities(ctx context.Context, req 
 		Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
 	}
 
-	for _, cap := range req.VolumeCapabilities {
-		if cap.GetAccessMode().GetMode() != supportedAccessMode.GetMode() {
+	for _, capability := range req.VolumeCapabilities {
+		if capability.GetAccessMode().GetMode() != supportedAccessMode.GetMode() {
 			return &csi.ValidateVolumeCapabilitiesResponse{Message: "Only single node writer is supported"}, nil
 		}
 	}
