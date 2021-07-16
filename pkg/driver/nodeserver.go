@@ -19,6 +19,8 @@ package driver
 import (
 	"fmt"
 	"os"
+	"regexp"
+	"strconv"
 
 	"github.com/ctrox/csi-s3/pkg/mounter"
 	"github.com/ctrox/csi-s3/pkg/s3"
@@ -35,6 +37,31 @@ import (
 
 type nodeServer struct {
 	*csicommon.DefaultNodeServer
+}
+
+func getMeta(bucketName, prefix string, context map[string]string) *s3.FSMeta {
+	mountOptions := make([]string, 0)
+	mountOptStr := context[mounter.OptionsKey]
+	if mountOptStr != "" {
+		re, _ := regexp.Compile(`([^\s"]+|"([^"\\]+|\\")*")+`)
+		re2, _ := regexp.Compile(`"([^"\\]+|\\")*"`)
+		re3, _ := regexp.Compile(`\\(.)`)
+		for _, opt := range re.FindAll([]byte(mountOptStr), -1) {
+			// Unquote options
+			opt = re2.ReplaceAllFunc(opt, func(q []byte) []byte {
+				return re3.ReplaceAll(q[1 : len(q)-1], []byte("$1"))
+			})
+			mountOptions = append(mountOptions, string(opt))
+		}
+	}
+	capacity, _ := strconv.ParseInt(context["capacity"], 10, 64)
+	return &s3.FSMeta{
+		BucketName:    bucketName,
+		Prefix:        prefix,
+		Mounter:       context[mounter.TypeKey],
+		MountOptions:  mountOptions,
+		CapacityBytes: capacity,
+	}
 }
 
 func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublishVolumeRequest) (*csi.NodePublishVolumeResponse, error) {
@@ -65,29 +92,21 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 		return &csi.NodePublishVolumeResponse{}, nil
 	}
 
-	deviceID := ""
-	if req.GetPublishContext() != nil {
-		deviceID = req.GetPublishContext()[deviceID]
-	}
-
 	// TODO: Implement readOnly & mountFlags
 	readOnly := req.GetReadonly()
 	// TODO: check if attrib is correct with context.
 	attrib := req.GetVolumeContext()
 	mountFlags := req.GetVolumeCapability().GetMount().GetMountFlags()
 
-	glog.V(4).Infof("target %v\ndevice %v\nreadonly %v\nvolumeId %v\nattributes %v\nmountflags %v\n",
-		targetPath, deviceID, readOnly, volumeID, attrib, mountFlags)
+	glog.V(4).Infof("target %v\nreadonly %v\nvolumeId %v\nattributes %v\nmountflags %v\n",
+		targetPath, readOnly, volumeID, attrib, mountFlags)
 
 	s3, err := s3.NewClientFromSecret(req.GetSecrets())
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
 	}
-	meta, err := s3.GetFSMeta(bucketName, prefix)
-	if err != nil {
-		return nil, err
-	}
 
+	meta := getMeta(bucketName, prefix, req.VolumeContext)
 	mounter, err := mounter.New(meta, s3.Config)
 	if err != nil {
 		return nil, err
@@ -150,10 +169,8 @@ func (ns *nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
 	}
-	meta, err := client.GetFSMeta(bucketName, prefix)
-	if err != nil {
-		return nil, err
-	}
+
+	meta := getMeta(bucketName, prefix, req.VolumeContext)
 	mounter, err := mounter.New(meta, client.Config)
 	if err != nil {
 		return nil, err

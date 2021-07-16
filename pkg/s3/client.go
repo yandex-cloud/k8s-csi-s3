@@ -3,11 +3,8 @@ package s3
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/url"
-	"path"
 
 	"github.com/golang/glog"
 	"github.com/minio/minio-go/v7"
@@ -220,35 +217,4 @@ func (client *s3Client) removeObjectsOneByOne(bucketName, prefix string) error {
 	}
 
 	return nil
-}
-
-func (client *s3Client) SetFSMeta(meta *FSMeta) error {
-	b := new(bytes.Buffer)
-	json.NewEncoder(b).Encode(meta)
-	opts := minio.PutObjectOptions{ContentType: "application/json"}
-	_, err := client.minio.PutObject(
-		client.ctx, meta.BucketName, path.Join(meta.Prefix, metadataName), b, int64(b.Len()), opts,
-	)
-	return err
-}
-
-func (client *s3Client) GetFSMeta(bucketName, prefix string) (*FSMeta, error) {
-	opts := minio.GetObjectOptions{}
-	obj, err := client.minio.GetObject(client.ctx, bucketName, path.Join(prefix, metadataName), opts)
-	if err != nil {
-		return &FSMeta{}, err
-	}
-	objInfo, err := obj.Stat()
-	if err != nil {
-		return &FSMeta{}, err
-	}
-	b := make([]byte, objInfo.Size)
-	_, err = obj.Read(b)
-
-	if err != nil && err != io.EOF {
-		return &FSMeta{}, err
-	}
-	var meta FSMeta
-	err = json.Unmarshal(b, &meta)
-	return &meta, err
 }
