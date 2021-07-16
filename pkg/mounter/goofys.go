@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 
 	"context"
 
@@ -49,15 +50,27 @@ func (goofys *goofysMounter) Unstage(stageTarget string) error {
 }
 
 func (goofys *goofysMounter) Mount(source string, target string) error {
+	mountOptions := make(map[string]string)
+	for _, opt := range goofys.meta.MountOptions {
+		s := 0
+		if len(opt) >= 2 && opt[0] == '-' && opt[1] == byte('-') {
+			s = 2
+		}
+		p := strings.Index(opt, "=")
+		if p > 0 {
+			mountOptions[string(opt[s : p])] = string(opt[p : ])
+		} else {
+			mountOptions[string(opt[s : ])] = ""
+		}
+	}
+	mountOptions["allow_other"] = ""
 	goofysCfg := &goofysApi.Config{
 		MountPoint: target,
 		Endpoint:   goofys.endpoint,
 		Region:     goofys.region,
 		DirMode:    0755,
 		FileMode:   0644,
-		MountOptions: map[string]string{
-			"allow_other": "",
-		},
+		MountOptions: mountOptions,
 	}
 
 	os.Setenv("AWS_ACCESS_KEY_ID", goofys.accessKeyID)

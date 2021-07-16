@@ -37,6 +37,7 @@ type FSMeta struct {
 	BucketName    string `json:"Name"`
 	Prefix        string `json:"Prefix"`
 	Mounter       string `json:"Mounter"`
+	MountOptions  []string `json:"MountOptions"`
 	FSPath        string `json:"FSPath"`
 	CapacityBytes int64  `json:"CapacityBytes"`
 }

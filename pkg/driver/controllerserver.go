@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"path"
+	"regexp"
 	"strings"
 
 	"github.com/ctrox/csi-s3/pkg/mounter"
@@ -50,6 +51,20 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 	volumeID := sanitizeVolumeID(req.GetName())
 	bucketName := volumeID
 	prefix := ""
+	mountOptions := make([]string, 0)
+	mountOptStr := params[mounter.OptionsKey]
+	if mountOptStr != "" {
+		re, _ := regexp.Compile(`([^\s"]+|"([^"\\]+|\\")*")+`)
+		re2, _ := regexp.Compile(`"([^"\\]+|\\")*"`)
+		re3, _ := regexp.Compile(`\\(.)`)
+		for _, opt := range re.FindAll([]byte(mountOptStr), -1) {
+			// Unquote options
+			opt = re2.ReplaceAllFunc(opt, func(q []byte) []byte {
+				return re3.ReplaceAll(q[1 : len(q)-1], []byte("$1"))
+			})
+			mountOptions = append(mountOptions, string(opt))
+		}
+	}
 
 	// check if bucket name is overridden
 	if nameOverride, ok := params[mounter.BucketKey]; ok {
@@ -77,6 +92,7 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 		BucketName:    bucketName,
 		Prefix:        prefix,
 		Mounter:       mounterType,
+		MountOptions:  mountOptions,
 		CapacityBytes: capacityBytes,
 		FSPath:        defaultFsPath,
 	}
