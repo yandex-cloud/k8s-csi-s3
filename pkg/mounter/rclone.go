@@ -42,7 +42,7 @@ func (rclone *rcloneMounter) Unstage(stageTarget string) error {
 func (rclone *rcloneMounter) Mount(source string, target string) error {
 	args := []string{
 		"mount",
-		fmt.Sprintf(":s3:%s", path.Join(rclone.meta.BucketName, rclone.meta.Prefix, rclone.meta.FSPath)),
+		fmt.Sprintf(":s3:%s", path.Join(rclone.meta.BucketName, rclone.meta.Prefix)),
 		fmt.Sprintf("%s", target),
 		"--daemon",
 		"--s3-provider=AWS",

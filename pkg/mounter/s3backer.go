@@ -38,7 +38,7 @@ func newS3backerMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
 	if err != nil {
 		return nil, err
 	}
-	url.Path = path.Join(url.Path, meta.BucketName, meta.Prefix, meta.FSPath)
+	url.Path = path.Join(url.Path, meta.BucketName, meta.Prefix)
 	// s3backer cannot work with 0 size volumes
 	if meta.CapacityBytes == 0 {
 		meta.CapacityBytes = s3backerDefaultSize
@@ -98,7 +98,7 @@ func (s3backer *s3backerMounter) mountInit(p string) error {
 	args := []string{
 		fmt.Sprintf("--blockSize=%s", s3backerBlockSize),
 		fmt.Sprintf("--size=%v", s3backer.meta.CapacityBytes),
-		fmt.Sprintf("--prefix=%s/", path.Join(s3backer.meta.Prefix, s3backer.meta.FSPath)),
+		fmt.Sprintf("--prefix=%s/", s3backer.meta.Prefix),
 		"--listBlocks",
 		s3backer.meta.BucketName,
 		p,

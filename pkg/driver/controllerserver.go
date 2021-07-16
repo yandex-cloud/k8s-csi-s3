@@ -40,10 +40,6 @@ type controllerServer struct {
 	*csicommon.DefaultControllerServer
 }
 
-const (
-	defaultFsPath = "csi-fs"
-)
-
 func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
 	params := req.GetParameters()
 	capacityBytes := int64(req.GetCapacityRange().GetRequiredBytes())
@@ -94,7 +90,6 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 		Mounter:       mounterType,
 		MountOptions:  mountOptions,
 		CapacityBytes: capacityBytes,
-		FSPath:        defaultFsPath,
 	}
 
 	client, err := s3.NewClientFromSecret(req.GetSecrets())
@@ -124,8 +119,8 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 		}
 	}
 
-	if err = client.CreatePrefix(bucketName, path.Join(prefix, defaultFsPath)); err != nil {
-		return nil, fmt.Errorf("failed to create prefix %s: %v", path.Join(prefix, defaultFsPath), err)
+	if err = client.CreatePrefix(bucketName, prefix); err != nil {
+		return nil, fmt.Errorf("failed to create prefix %s: %v", prefix, err)
 	}
 
 	if err := client.SetFSMeta(meta); err != nil {
