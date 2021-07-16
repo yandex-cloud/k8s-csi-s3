@@ -38,7 +38,6 @@ type FSMeta struct {
 	Prefix        string `json:"Prefix"`
 	Mounter       string `json:"Mounter"`
 	MountOptions  []string `json:"MountOptions"`
-	FSPath        string `json:"FSPath"`
 	CapacityBytes int64  `json:"CapacityBytes"`
 }
 
@@ -87,9 +86,11 @@ func (client *s3Client) CreateBucket(bucketName string) error {
 }
 
 func (client *s3Client) CreatePrefix(bucketName string, prefix string) error {
-	_, err := client.minio.PutObject(client.ctx, bucketName, prefix+"/", bytes.NewReader([]byte("")), 0, minio.PutObjectOptions{})
-	if err != nil {
-		return err
+	if prefix != "" {
+		_, err := client.minio.PutObject(client.ctx, bucketName, prefix+"/", bytes.NewReader([]byte("")), 0, minio.PutObjectOptions{})
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

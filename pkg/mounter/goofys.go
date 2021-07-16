@@ -3,7 +3,6 @@ package mounter
 import (
 	"fmt"
 	"os"
-	"path"
 
 	"github.com/ctrox/csi-s3/pkg/s3"
 )
@@ -46,7 +45,7 @@ func (goofys *goofysMounter) Unstage(stageTarget string) error {
 }
 
 func (goofys *goofysMounter) Mount(source string, target string) error {
-	fullPath := fmt.Sprintf("%s:%s", goofys.meta.BucketName, path.Join(goofys.meta.Prefix, goofys.meta.FSPath))
+	fullPath := fmt.Sprintf("%s:%s", goofys.meta.BucketName, goofys.meta.Prefix)
 	args := []string{
 		"--endpoint", goofys.endpoint,
 		"--region", goofys.region,
