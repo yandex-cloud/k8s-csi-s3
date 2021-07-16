@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io"
 	"path"
-	"regexp"
 	"strings"
 
 	"github.com/ctrox/csi-s3/pkg/mounter"
@@ -43,24 +42,9 @@ type controllerServer struct {
 func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
 	params := req.GetParameters()
 	capacityBytes := int64(req.GetCapacityRange().GetRequiredBytes())
-	mounterType := params[mounter.TypeKey]
 	volumeID := sanitizeVolumeID(req.GetName())
 	bucketName := volumeID
 	prefix := ""
-	mountOptions := make([]string, 0)
-	mountOptStr := params[mounter.OptionsKey]
-	if mountOptStr != "" {
-		re, _ := regexp.Compile(`([^\s"]+|"([^"\\]+|\\")*")+`)
-		re2, _ := regexp.Compile(`"([^"\\]+|\\")*"`)
-		re3, _ := regexp.Compile(`\\(.)`)
-		for _, opt := range re.FindAll([]byte(mountOptStr), -1) {
-			// Unquote options
-			opt = re2.ReplaceAllFunc(opt, func(q []byte) []byte {
-				return re3.ReplaceAll(q[1 : len(q)-1], []byte("$1"))
-			})
-			mountOptions = append(mountOptions, string(opt))
-		}
-	}
 
 	// check if bucket name is overridden
 	if nameOverride, ok := params[mounter.BucketKey]; ok {
@@ -84,14 +68,6 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 
 	glog.V(4).Infof("Got a request to create volume %s", volumeID)
 
-	meta := &s3.FSMeta{
-		BucketName:    bucketName,
-		Prefix:        prefix,
-		Mounter:       mounterType,
-		MountOptions:  mountOptions,
-		CapacityBytes: capacityBytes,
-	}
-
 	client, err := s3.NewClientFromSecret(req.GetSecrets())
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
@@ -102,18 +78,7 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 		return nil, fmt.Errorf("failed to check if bucket %s exists: %v", volumeID, err)
 	}
 
-	if exists {
-		// get meta, ignore errors as it could just mean meta does not exist yet
-		m, err := client.GetFSMeta(bucketName, prefix)
-		if err == nil {
-			// Check if volume capacity requested is bigger than the already existing capacity
-			if capacityBytes > m.CapacityBytes {
-				return nil, status.Error(
-					codes.AlreadyExists, fmt.Sprintf("Volume with the same name: %s but with smaller size already exist", volumeID),
-				)
-			}
-		}
-	} else {
+	if !exists {
 		if err = client.CreateBucket(bucketName); err != nil {
 			return nil, fmt.Errorf("failed to create bucket %s: %v", bucketName, err)
 		}
@@ -123,16 +88,19 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 		return nil, fmt.Errorf("failed to create prefix %s: %v", prefix, err)
 	}
 
-	if err := client.SetFSMeta(meta); err != nil {
-		return nil, fmt.Errorf("error setting bucket metadata: %w", err)
-	}
-
 	glog.V(4).Infof("create volume %s", volumeID)
+	// DeleteVolume lacks VolumeContext, but publish&unpublish requests have it,
+	// so we don't need to store additional metadata anywhere
+	context := make(map[string]string)
+	for k, v := range params {
+		context[k] = v
+	}
+	context["capacity"] = fmt.Sprintf("%v", capacityBytes)
 	return &csi.CreateVolumeResponse{
 		Volume: &csi.Volume{
 			VolumeId:      volumeID,
 			CapacityBytes: capacityBytes,
-			VolumeContext: req.GetParameters(),
+			VolumeContext: context,
 		},
 	}, nil
 }
@@ -140,7 +108,6 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVolumeRequest) (*csi.DeleteVolumeResponse, error) {
 	volumeID := req.GetVolumeId()
 	bucketName, prefix := volumeIDToBucketPrefix(volumeID)
-	var meta *s3.FSMeta
 
 	// Check arguments
 	if len(volumeID) == 0 {
@@ -158,11 +125,6 @@ func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVol
 		return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
 	}
 
-	if meta, err = client.GetFSMeta(bucketName, prefix); err != nil {
-		glog.V(5).Infof("FSMeta of volume %s does not exist, ignoring delete request", volumeID)
-		return &csi.DeleteVolumeResponse{}, nil
-	}
-
 	var deleteErr error
 	if prefix == "" {
 		// prefix is empty, we delete the whole bucket
@@ -178,10 +140,6 @@ func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVol
 	}
 
 	if deleteErr != nil {
-		glog.Warning("remove volume failed, will ensure fsmeta exists to avoid losing control over volume")
-		if err := client.SetFSMeta(meta); err != nil {
-			glog.Error(err)
-		}
 		return nil, deleteErr
 	}
 
@@ -196,7 +154,7 @@ func (cs *controllerServer) ValidateVolumeCapabilities(ctx context.Context, req 
 	if req.GetVolumeCapabilities() == nil {
 		return nil, status.Error(codes.InvalidArgument, "Volume capabilities missing in request")
 	}
-	bucketName, prefix := volumeIDToBucketPrefix(req.GetVolumeId())
+	bucketName, _ := volumeIDToBucketPrefix(req.GetVolumeId())
 
 	client, err := s3.NewClientFromSecret(req.GetSecrets())
 	if err != nil {
@@ -210,11 +168,6 @@ func (cs *controllerServer) ValidateVolumeCapabilities(ctx context.Context, req 
 	if !exists {
 		// return an error if the bucket of the requested volume does not exist
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("bucket of volume with id %s does not exist", req.GetVolumeId()))
-	}
-
-	if _, err := client.GetFSMeta(bucketName, prefix); err != nil {
-		// return an error if the fsmeta of the requested volume does not exist
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("fsmeta of volume with id %s does not exist", req.GetVolumeId()))
 	}
 
 	// We currently only support RWO
