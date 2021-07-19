@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"os"
 	"os/exec"
 	"strings"
@@ -87,7 +88,7 @@ func FuseUnmount(path string) error {
 		return nil
 	}
 	glog.Infof("Found fuse pid %v of mount %s, checking if it still runs", process.Pid, path)
-	return waitForProcess(process, 1)
+	return waitForProcess(process, 20)
 }
 
 func waitForMount(path string, timeout time.Duration) error {
@@ -128,29 +129,28 @@ func findFuseMountProcess(path string) (*os.Process, error) {
 	return nil, nil
 }
 
-func waitForProcess(p *os.Process, backoff int) error {
-	if backoff == 20 {
-		return fmt.Errorf("Timeout waiting for PID %v to end", p.Pid)
+func waitForProcess(p *os.Process, limit int) error {
+	for backoff := 0; backoff < limit; backoff++ {
+		cmdLine, err := getCmdLine(p.Pid)
+		if err != nil {
+			glog.Warningf("Error checking cmdline of PID %v, assuming it is dead: %s", p.Pid, err)
+			return nil
+		}
+		if cmdLine == "" {
+			// ignore defunct processes
+			// TODO: debug why this happens in the first place
+			// seems to only happen on k8s, not on local docker
+			glog.Warning("Fuse process seems dead, returning")
+			return nil
+		}
+		if err := p.Signal(syscall.Signal(0)); err != nil {
+			glog.Warningf("Fuse process does not seem active or we are unprivileged: %s", err)
+			return nil
+		}
+		glog.Infof("Fuse process with PID %v still active, waiting...", p.Pid)
+		time.Sleep(time.Duration(math.Pow(1.5, float64(backoff))*100) * time.Millisecond)
 	}
-	cmdLine, err := getCmdLine(p.Pid)
-	if err != nil {
-		glog.Warningf("Error checking cmdline of PID %v, assuming it is dead: %s", p.Pid, err)
-		return nil
-	}
-	if cmdLine == "" {
-		// ignore defunct processes
-		// TODO: debug why this happens in the first place
-		// seems to only happen on k8s, not on local docker
-		glog.Warning("Fuse process seems dead, returning")
-		return nil
-	}
-	if err := p.Signal(syscall.Signal(0)); err != nil {
-		glog.Warningf("Fuse process does not seem active or we are unprivileged: %s", err)
-		return nil
-	}
-	glog.Infof("Fuse process with PID %v still active, waiting...", p.Pid)
-	time.Sleep(time.Duration(backoff*100) * time.Millisecond)
-	return waitForProcess(p, backoff+1)
+	return fmt.Errorf("Timeout waiting for PID %v to end", p.Pid)
 }
 
 func getCmdLine(pid int) (string, error) {
