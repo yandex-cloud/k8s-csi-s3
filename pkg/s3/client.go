@@ -168,6 +168,7 @@ func (client *s3Client) removeObjects(bucketName, prefix string) error {
 }
 
 // will delete files one by one without file lock
+// FIXME Delete in parallel (if we want to delete objects at all!)
 func (client *s3Client) removeObjectsOneByOne(bucketName, prefix string) error {
 	objectsCh := make(chan minio.ObjectInfo, 1)
 	removeErrCh := make(chan minio.RemoveObjectError, 1)

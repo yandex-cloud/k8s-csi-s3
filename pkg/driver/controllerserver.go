@@ -125,6 +125,7 @@ func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVol
 		return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
 	}
 
+	// FIXME Don't delete the bucket if it existed initially
 	var deleteErr error
 	if prefix == "" {
 		// prefix is empty, we delete the whole bucket

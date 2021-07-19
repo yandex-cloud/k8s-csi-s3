@@ -46,6 +46,7 @@ func (goofys *goofysMounter) Unstage(stageTarget string) error {
 
 func (goofys *goofysMounter) Mount(source string, target string) error {
 	fullPath := fmt.Sprintf("%s:%s", goofys.meta.BucketName, goofys.meta.Prefix)
+	// FIXME Add memory limits
 	args := []string{
 		"--endpoint", goofys.endpoint,
 		"--region", goofys.region,
