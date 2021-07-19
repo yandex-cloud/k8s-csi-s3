@@ -94,9 +94,8 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 
 	// TODO: Implement readOnly & mountFlags
 	readOnly := req.GetReadonly()
-	// TODO: check if attrib is correct with context.
-	attrib := req.GetVolumeContext()
 	mountFlags := req.GetVolumeCapability().GetMount().GetMountFlags()
+	attrib := req.GetVolumeContext()
 
 	glog.V(4).Infof("target %v\nreadonly %v\nvolumeId %v\nattributes %v\nmountflags %v\n",
 		targetPath, readOnly, volumeID, attrib, mountFlags)
