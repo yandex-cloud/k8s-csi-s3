@@ -86,7 +86,8 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/kubelet/plugins/ch.ctrox.csi.s3-driver
         - name: csi-s3
-          image: ctrox/csi-s3:v1.2.0-rc.1
+          image: csi-s3
+          imagePullPolicy: IfNotPresent
           args:
             - "--endpoint=$(CSI_ENDPOINT)"
             - "--nodeid=$(NODE_ID)"
@@ -98,7 +99,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          imagePullPolicy: "Always"
           volumeMounts:
             - name: socket-dir
               mountPath: /var/lib/kubelet/plugins/ch.ctrox.csi.s3-driver
