@@ -8,7 +8,7 @@ spec:
    - name: csi-s3-test-nginx
      image: nginx
      volumeMounts:
-       - mountPath: /var/lib/www/html
+       - mountPath: /usr/share/nginx/html/s3
          name: webroot
   volumes:
    - name: webroot
