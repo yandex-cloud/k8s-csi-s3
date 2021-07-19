@@ -134,22 +134,23 @@ func waitForProcess(p *os.Process, limit int) error {
 		cmdLine, err := getCmdLine(p.Pid)
 		if err != nil {
 			glog.Warningf("Error checking cmdline of PID %v, assuming it is dead: %s", p.Pid, err)
+			p.Wait()
 			return nil
 		}
 		if cmdLine == "" {
-			// ignore defunct processes
-			// TODO: debug why this happens in the first place
-			// seems to only happen on k8s, not on local docker
 			glog.Warning("Fuse process seems dead, returning")
+			p.Wait()
 			return nil
 		}
 		if err := p.Signal(syscall.Signal(0)); err != nil {
 			glog.Warningf("Fuse process does not seem active or we are unprivileged: %s", err)
+			p.Wait()
 			return nil
 		}
 		glog.Infof("Fuse process with PID %v still active, waiting...", p.Pid)
 		time.Sleep(time.Duration(math.Pow(1.5, float64(backoff))*100) * time.Millisecond)
 	}
+	p.Release()
 	return fmt.Errorf("Timeout waiting for PID %v to end", p.Pid)
 }
 
