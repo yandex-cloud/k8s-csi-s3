@@ -46,7 +46,6 @@ func (geesefs *geesefsMounter) Unstage(stageTarget string) error {
 
 func (geesefs *geesefsMounter) Mount(source string, target string) error {
 	fullPath := fmt.Sprintf("%s:%s", geesefs.meta.BucketName, geesefs.meta.Prefix)
-	// FIXME Add memory limits
 	args := []string{
 		"--endpoint", geesefs.endpoint,
 		"--region", geesefs.region,
