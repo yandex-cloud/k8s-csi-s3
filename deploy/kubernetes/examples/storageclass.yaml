@@ -6,8 +6,10 @@ metadata:
 provisioner: ch.ctrox.csi.s3-driver
 parameters:
   mounter: geesefs
+  # you can set mount options here, for example limit memory cache size (recommended)
+  options: "--memory-limit 1000 --dir-mode 0777 --file-mode 0666"
   # to use an existing bucket, specify it here:
-  # bucket: some-existing-bucket
+  #bucket: some-existing-bucket
   csi.storage.k8s.io/provisioner-secret-name: csi-s3-secret
   csi.storage.k8s.io/provisioner-secret-namespace: kube-system
   csi.storage.k8s.io/controller-publish-secret-name: csi-s3-secret
