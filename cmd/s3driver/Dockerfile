@@ -10,8 +10,7 @@ FROM debian:buster-slim
 LABEL maintainers="Vitaliy Filippov <vitalif@yourcmc.ru>"
 LABEL description="csi-s3 slim image"
 
-# patched goofys
-ADD goofys /usr/bin/
+ADD geesefs /usr/bin/
 
 RUN apt-get update && \
   apt-get install -y ca-certificates && \

@@ -5,7 +5,7 @@ metadata:
   name: csi-s3
 provisioner: ch.ctrox.csi.s3-driver
 parameters:
-  mounter: goofys
+  mounter: geesefs
   # to use an existing bucket, specify it here:
   # bucket: some-existing-bucket
   csi.storage.k8s.io/provisioner-secret-name: csi-s3-secret

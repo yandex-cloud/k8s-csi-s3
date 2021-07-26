@@ -14,8 +14,8 @@ import (
 
 var _ = Describe("S3Driver", func() {
 
-	Context("goofys", func() {
-		socket := "/tmp/csi-goofys.sock"
+	Context("geesefs", func() {
+		socket := "/tmp/csi-geesefs.sock"
 		csiEndpoint := "unix://" + socket
 		if err := os.Remove(socket); err != nil && !os.IsNotExist(err) {
 			Expect(err).NotTo(HaveOccurred())
@@ -28,12 +28,12 @@ var _ = Describe("S3Driver", func() {
 
 		Describe("CSI sanity", func() {
 			sanityCfg := &sanity.Config{
-				TargetPath:  os.TempDir() + "/goofys-target",
-				StagingPath: os.TempDir() + "/goofys-staging",
+				TargetPath:  os.TempDir() + "/geesefs-target",
+				StagingPath: os.TempDir() + "/geesefs-staging",
 				Address:     csiEndpoint,
 				SecretsFile: "../../test/secret.yaml",
 				TestVolumeParameters: map[string]string{
-					"mounter": "goofys",
+					"mounter": "geesefs",
 					"bucket":  "testbucket0",
 				},
 			}
@@ -41,8 +41,8 @@ var _ = Describe("S3Driver", func() {
 		})
 	})
 
-	Context("goofys-no-bucket", func() {
-		socket := "/tmp/csi-goofys-no-bucket.sock"
+	Context("geesefs-no-bucket", func() {
+		socket := "/tmp/csi-geesefs-no-bucket.sock"
 		csiEndpoint := "unix://" + socket
 		if err := os.Remove(socket); err != nil && !os.IsNotExist(err) {
 			Expect(err).NotTo(HaveOccurred())
@@ -55,12 +55,12 @@ var _ = Describe("S3Driver", func() {
 
 		Describe("CSI sanity", func() {
 			sanityCfg := &sanity.Config{
-				TargetPath:  os.TempDir() + "/goofys-no-bucket-target",
-				StagingPath: os.TempDir() + "/goofys-no-bucket-staging",
+				TargetPath:  os.TempDir() + "/geesefs-no-bucket-target",
+				StagingPath: os.TempDir() + "/geesefs-no-bucket-staging",
 				Address:     csiEndpoint,
 				SecretsFile: "../../test/secret.yaml",
 				TestVolumeParameters: map[string]string{
-					"mounter": "goofys",
+					"mounter": "geesefs",
 				},
 			}
 			sanity.GinkgoTest(sanityCfg)
