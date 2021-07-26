@@ -1,0 +1,45 @@
+# Statically provisioned PVC:
+# An existing bucket or path inside bucket manually created
+# by the administrator beforehand will be bound to the PVC,
+# and it won't be removed when you remove the PV
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: manualbucket/path
+spec:
+  storageClassName: csi-s3
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  claimRef:
+    namespace: default
+    name: manualclaim
+  csi:
+    driver: ch.ctrox.csi.s3-driver
+    controllerPublishSecretRef:
+      name: csi-s3-secret
+      namespace: kube-system
+    nodePublishSecretRef:
+      name: csi-s3-secret
+      namespace: kube-system
+    nodeStageSecretRef:
+      name: csi-s3-secret
+      namespace: kube-system
+    volumeAttributes:
+      capacity: 10Gi
+      mounter: geesefs
+    volumeHandle: manualbucket/path
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: csi-s3-pvc
+spec:
+  # Empty storage class disables dynamic provisioning
+  storageClassName: ""
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi

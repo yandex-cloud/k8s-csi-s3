@@ -1,3 +1,6 @@
+# Dynamically provisioned PVC:
+# A bucket or path inside bucket will be created automatically
+# for the PV and removed when the PV will be removed
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
