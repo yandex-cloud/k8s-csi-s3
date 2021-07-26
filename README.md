@@ -110,31 +110,33 @@ As S3 is not a real file system there are some limitations to consider here. Dep
 
 The driver can be configured to use one of these mounters to mount buckets:
 
-* [rclone](https://rclone.org/commands/rclone_mount)
+* [geesefs](https://github.com/yandex-cloud/geesefs) (recommended and default)
 * [s3fs](https://github.com/s3fs-fuse/s3fs-fuse)
-* [goofys](https://github.com/kahing/goofys)
+* [rclone](https://rclone.org/commands/rclone_mount)
 * [s3backer](https://github.com/archiecobbs/s3backer)
 
 The mounter can be set as a parameter in the storage class. You can also create multiple storage classes for each mounter if you like.
 
-All mounters have different strengths and weaknesses depending on your use case. Here are some characteristics which should help you choose a mounter:
+Characteristics of different mounters (for more detailed information consult their own documentation):
 
-#### rclone
+#### GeeseFS
 
-* Almost full POSIX compatibility (depends on caching mode)
+* Almost full POSIX compatibility
+* Good performance for both small and big files
 * Files can be viewed normally with any S3 client
 
 #### s3fs
 
-* Large subset of POSIX
+* Almost full POSIX compatibility
+* Good performance for big files, poor performance for small files
 * Files can be viewed normally with any S3 client
 
-#### goofys
+#### rclone
 
-* Weak POSIX compatibility
-* Performance first
+* Less POSIX compatible than s3fs
+* Bad performance for big files, okayish performance for small files
 * Files can be viewed normally with any S3 client
-* Does not support appends or random writes
+* Doesn't create directory objects like s3fs or GeeseFS
 
 #### s3backer (experimental*)
 
@@ -147,8 +149,6 @@ All mounters have different strengths and weaknesses depending on your use case.
 
 *s3backer is experimental at this point because volume corruption can occur pretty quickly in case of an unexpected shutdown of a Kubernetes node or CSI pod.
 The s3backer binary is not bundled with the normal docker image to keep that as small as possible. Use the `<version>-full` image tag for testing s3backer.
-
-Fore more detailed limitations consult the documentation of the different projects.
 
 ## Troubleshooting
 
