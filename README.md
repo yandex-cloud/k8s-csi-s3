@@ -113,7 +113,6 @@ The driver can be configured to use one of these mounters to mount buckets:
 * [geesefs](https://github.com/yandex-cloud/geesefs) (recommended and default)
 * [s3fs](https://github.com/s3fs-fuse/s3fs-fuse)
 * [rclone](https://rclone.org/commands/rclone_mount)
-* [s3backer](https://github.com/archiecobbs/s3backer)
 
 The mounter can be set as a parameter in the storage class. You can also create multiple storage classes for each mounter if you like.
 
@@ -137,18 +136,6 @@ Characteristics of different mounters (for more detailed information consult the
 * Bad performance for big files, okayish performance for small files
 * Files can be viewed normally with any S3 client
 * Doesn't create directory objects like s3fs or GeeseFS
-
-#### s3backer (experimental*)
-
-* Represents a block device stored on S3
-* Allows to use a real filesystem
-* Files are not readable with other S3 clients
-* Support appends
-* Supports compression before upload (Not yet implemented in this driver)
-* Supports encryption before upload (Not yet implemented in this driver)
-
-*s3backer is experimental at this point because volume corruption can occur pretty quickly in case of an unexpected shutdown of a Kubernetes node or CSI pod.
-The s3backer binary is not bundled with the normal docker image to keep that as small as possible. Use the `<version>-full` image tag for testing s3backer.
 
 ## Troubleshooting
 
