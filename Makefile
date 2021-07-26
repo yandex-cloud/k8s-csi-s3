@@ -18,21 +18,17 @@ REGISTRY_NAME=ctrox
 IMAGE_NAME=csi-s3
 VERSION ?= dev
 IMAGE_TAG=$(REGISTRY_NAME)/$(IMAGE_NAME):$(VERSION)
-FULL_IMAGE_TAG=$(IMAGE_TAG)-full
 TEST_IMAGE_TAG=$(REGISTRY_NAME)/$(IMAGE_NAME):test
 
 build:
 	CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o _output/s3driver ./cmd/s3driver
 test:
-	docker build -t $(FULL_IMAGE_TAG) -f cmd/s3driver/Dockerfile.full .
 	docker build -t $(TEST_IMAGE_TAG) -f test/Dockerfile .
 	docker run --rm --privileged -v $(PWD):$(PROJECT_DIR) --device /dev/fuse $(TEST_IMAGE_TAG)
 container:
 	docker build -t $(IMAGE_TAG) -f cmd/s3driver/Dockerfile .
-	docker build -t $(FULL_IMAGE_TAG) -f cmd/s3driver/Dockerfile.full .
 push: container
 	docker push $(IMAGE_TAG)
-	docker push $(FULL_IMAGE_TAG)
 clean:
 	go clean -r -x
 	-rm -rf _output
