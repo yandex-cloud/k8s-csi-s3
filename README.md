@@ -96,7 +96,7 @@ kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
   name: csi-s3-existing-bucket
-provisioner: ch.ctrox.csi.s3-driver
+provisioner: ru.yandex.s3.csi
 parameters:
   mounter: rclone
   bucket: some-existing-bucket-name

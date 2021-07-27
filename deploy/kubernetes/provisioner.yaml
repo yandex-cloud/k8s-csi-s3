@@ -80,11 +80,11 @@ spec:
             - "--v=4"
           env:
             - name: ADDRESS
-              value: /var/lib/kubelet/plugins/ch.ctrox.csi.s3-driver/csi.sock
+              value: /var/lib/kubelet/plugins/ru.yandex.s3.csi/csi.sock
           imagePullPolicy: "IfNotPresent"
           volumeMounts:
             - name: socket-dir
-              mountPath: /var/lib/kubelet/plugins/ch.ctrox.csi.s3-driver
+              mountPath: /var/lib/kubelet/plugins/ru.yandex.s3.csi
         - name: csi-s3
           image: csi-s3
           imagePullPolicy: IfNotPresent
@@ -94,14 +94,14 @@ spec:
             - "--v=4"
           env:
             - name: CSI_ENDPOINT
-              value: unix:///var/lib/kubelet/plugins/ch.ctrox.csi.s3-driver/csi.sock
+              value: unix:///var/lib/kubelet/plugins/ru.yandex.s3.csi/csi.sock
             - name: NODE_ID
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
           volumeMounts:
             - name: socket-dir
-              mountPath: /var/lib/kubelet/plugins/ch.ctrox.csi.s3-driver
+              mountPath: /var/lib/kubelet/plugins/ru.yandex.s3.csi
       volumes:
         - name: socket-dir
           emptyDir: {}

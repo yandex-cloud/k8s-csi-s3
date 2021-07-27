@@ -3,7 +3,7 @@ kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
   name: csi-s3
-provisioner: ch.ctrox.csi.s3-driver
+provisioner: ru.yandex.s3.csi
 parameters:
   mounter: geesefs
   # you can set mount options here, for example limit memory cache size (recommended)
