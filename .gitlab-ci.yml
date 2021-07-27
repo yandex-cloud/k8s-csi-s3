@@ -1,5 +1,5 @@
 image:
-  name: ctrox/csi-s3:test
+  name: yandex-cloud/csi-s3:test
   entrypoint: [""]
 
 variables:
@@ -21,4 +21,4 @@ test:
   services:
     - docker:dind
   script:
-    - docker run --rm --privileged -v $(pwd):/app --device /dev/fuse ctrox/csi-s3:test
+    - docker run --rm --privileged -v $(pwd):/app --device /dev/fuse yandex-cloud/csi-s3:test

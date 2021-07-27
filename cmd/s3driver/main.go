@@ -21,7 +21,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/ctrox/csi-s3/pkg/driver"
+	"github.com/yandex-cloud/csi-s3/pkg/driver"
 )
 
 func init() {

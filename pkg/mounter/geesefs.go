@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ctrox/csi-s3/pkg/s3"
+	"github.com/yandex-cloud/csi-s3/pkg/s3"
 )
 
 const (
