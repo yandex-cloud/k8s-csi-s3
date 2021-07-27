@@ -9,7 +9,6 @@ import (
 
 const (
 	geesefsCmd    = "geesefs"
-	defaultRegion = "us-east-1"
 )
 
 // Implements Mounter
@@ -22,15 +21,10 @@ type geesefsMounter struct {
 }
 
 func newGeeseFSMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
-	region := cfg.Region
-	// if endpoint is set we need a default region
-	if region == "" && cfg.Endpoint != "" {
-		region = defaultRegion
-	}
 	return &geesefsMounter{
 		meta:            meta,
 		endpoint:        cfg.Endpoint,
-		region:          region,
+		region:          cfg.Region,
 		accessKeyID:     cfg.AccessKeyID,
 		secretAccessKey: cfg.SecretAccessKey,
 	}, nil
