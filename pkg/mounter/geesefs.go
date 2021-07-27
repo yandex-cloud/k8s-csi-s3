@@ -50,9 +50,9 @@ func (geesefs *geesefsMounter) Mount(source string, target string) error {
 		"--endpoint", geesefs.endpoint,
 		"--region", geesefs.region,
 		"-o", "allow_other",
-		fullPath, target,
 	}
 	args = append(args, geesefs.meta.MountOptions...)
+	args = append(args, fullPath, target)
 	os.Setenv("AWS_ACCESS_KEY_ID", geesefs.accessKeyID)
 	os.Setenv("AWS_SECRET_ACCESS_KEY", geesefs.secretAccessKey)
 	return fuseMount(target, geesefsCmd, args)
