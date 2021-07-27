@@ -2,10 +2,6 @@
 
 This is a Container Storage Interface ([CSI](https://github.com/container-storage-interface/spec/blob/master/spec.md)) for S3 (or S3 compatible) storage. This can dynamically allocate buckets and mount them via a fuse mount into any container.
 
-## Status
-
-This is still very experimental and should not be used in any production environment. Unexpected data loss could occur depending on what mounter and S3 storage backend is being used.
-
 ## Kubernetes installation
 
 ### Requirements
@@ -98,7 +94,7 @@ metadata:
   name: csi-s3-existing-bucket
 provisioner: ru.yandex.s3.csi
 parameters:
-  mounter: rclone
+  mounter: geesefs
   bucket: some-existing-bucket-name
 ```
 
