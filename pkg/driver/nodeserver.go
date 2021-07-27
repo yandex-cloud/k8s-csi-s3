@@ -22,8 +22,8 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/ctrox/csi-s3/pkg/mounter"
-	"github.com/ctrox/csi-s3/pkg/s3"
+	"github.com/yandex-cloud/csi-s3/pkg/mounter"
+	"github.com/yandex-cloud/csi-s3/pkg/s3"
 	"github.com/golang/glog"
 	"golang.org/x/net/context"
 

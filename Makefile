@@ -14,7 +14,7 @@
 .PHONY: test build container push clean
 
 PROJECT_DIR=/app
-REGISTRY_NAME=ctrox
+REGISTRY_NAME=yandex-cloud
 IMAGE_NAME=csi-s3
 VERSION ?= dev
 IMAGE_TAG=$(REGISTRY_NAME)/$(IMAGE_NAME):$(VERSION)

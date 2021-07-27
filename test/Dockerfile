@@ -1,4 +1,4 @@
-FROM ctrox/csi-s3:dev
+FROM yandex-cloud/csi-s3:dev
 LABEL maintainers="Vitaliy Filippov <vitalif@yourcmc.ru>"
 LABEL description="csi-s3 testing image"
 
