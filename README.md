@@ -16,17 +16,16 @@ This is a Container Storage Interface ([CSI](https://github.com/container-storag
 apiVersion: v1
 kind: Secret
 metadata:
-  namespace: kube-system
   name: csi-s3-secret
   # Namespace depends on the configuration in the storageclass.yaml
   namespace: kube-system
 stringData:
   accessKeyID: <YOUR_ACCESS_KEY_ID>
-  secretAccessKey: <YOUR_SECRET_ACCES_KEY>
-  # For AWS set it to "https://s3.<region>.amazonaws.com"
-  endpoint: <S3_ENDPOINT_URL>
-  # If not on S3, set it to ""
-  region: <S3_REGION>
+  secretAccessKey: <YOUR_SECRET_ACCESS_KEY>
+  # For AWS set it to "https://s3.<region>.amazonaws.com", for example https://s3.eu-central-1.amazonaws.com
+  endpoint: https://storage.yandexcloud.net
+  # For AWS set it to AWS region
+  #region: ""
 ```
 
 The region can be empty if you are using some other S3 compatible storage.
