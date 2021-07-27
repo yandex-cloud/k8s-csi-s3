@@ -16,7 +16,7 @@ spec:
     namespace: default
     name: manualclaim
   csi:
-    driver: ch.ctrox.csi.s3-driver
+    driver: ru.yandex.s3.csi
     controllerPublishSecretRef:
       name: csi-s3-secret
       namespace: kube-system

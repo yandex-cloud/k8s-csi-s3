@@ -81,13 +81,13 @@ spec:
             - "--csi-address=$(ADDRESS)"
           env:
             - name: ADDRESS
-              value: /var/lib/kubelet/plugins/ch.ctrox.csi.s3-driver/csi.sock
+              value: /var/lib/kubelet/plugins/ru.yandex.s3.csi/csi.sock
           imagePullPolicy: "IfNotPresent"
           volumeMounts:
             - name: socket-dir
-              mountPath: /var/lib/kubelet/plugins/ch.ctrox.csi.s3-driver
+              mountPath: /var/lib/kubelet/plugins/ru.yandex.s3.csi
       volumes:
         - name: socket-dir
           hostPath:
-            path: /var/lib/kubelet/plugins/ch.ctrox.csi.s3-driver
+            path: /var/lib/kubelet/plugins/ru.yandex.s3.csi
             type: DirectoryOrCreate
