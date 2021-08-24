@@ -10,20 +10,12 @@ FROM debian:buster-slim
 LABEL maintainers="Vitaliy Filippov <vitalif@yourcmc.ru>"
 LABEL description="csi-s3 slim image"
 
-ADD geesefs /usr/bin/
-
 RUN apt-get update && \
   apt-get install -y ca-certificates && \
   rm -rf /var/lib/apt/lists/*
 
-# s3fs curl unzip
-## install rclone
-#ARG RCLONE_VERSION=v1.54.1
-#RUN cd /tmp \
-#  && curl -O https://downloads.rclone.org/${RCLONE_VERSION}/rclone-${RCLONE_VERSION}-linux-amd64.zip \
-#  && unzip /tmp/rclone-${RCLONE_VERSION}-linux-amd64.zip \
-#  && mv /tmp/rclone-*-linux-amd64/rclone /usr/bin \
-#  && rm -r /tmp/rclone*
+ADD https://github.com/yandex-cloud/geesefs/releases/latest/download/geesefs-linux-amd64 /usr/bin/geesefs
+RUN chmod 755 /usr/bin/geesefs
 
 COPY --from=gobuild /build/s3driver /s3driver
 ENTRYPOINT ["/s3driver"]
