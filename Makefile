@@ -14,11 +14,11 @@
 .PHONY: test build container push clean
 
 PROJECT_DIR=/app
-REGISTRY_NAME=yandex-cloud
+REGISTRY_NAME=cr.yandex/crp9ftr22d26age3hulg
 IMAGE_NAME=csi-s3
-VERSION ?= dev
+VERSION ?= 0.24.1
 IMAGE_TAG=$(REGISTRY_NAME)/$(IMAGE_NAME):$(VERSION)
-TEST_IMAGE_TAG=$(REGISTRY_NAME)/$(IMAGE_NAME):test
+TEST_IMAGE_TAG=$(IMAGE_NAME):test
 
 build:
 	CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o _output/s3driver ./cmd/s3driver
