@@ -5,7 +5,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/yandex-cloud/csi-s3/pkg/s3"
+	"github.com/yandex-cloud/k8s-csi-s3/pkg/s3"
 )
 
 // Implements Mounter
