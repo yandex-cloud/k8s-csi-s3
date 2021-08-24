@@ -28,7 +28,9 @@ test:
 container:
 	docker build -t $(IMAGE_TAG) -f cmd/s3driver/Dockerfile .
 push: container
+	docker tag $(IMAGE_TAG) $(REGISTRY_NAME)/$(IMAGE_NAME):latest
 	docker push $(IMAGE_TAG)
+	docker push $(REGISTRY_NAME)/$(IMAGE_NAME)
 clean:
 	go clean -r -x
 	-rm -rf _output

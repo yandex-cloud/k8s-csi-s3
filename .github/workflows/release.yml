@@ -1,0 +1,21 @@
+name: Release
+
+on:
+  push:
+    tags:
+    - "v*"
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Push Docker
+      run: (echo '${{ secrets.REGISTRY_KEY }}' | docker login --username json_key --password-stdin cr.yandex) && make push
+
+    - uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        prerelease: false
