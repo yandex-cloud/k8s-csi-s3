@@ -42,8 +42,11 @@ func (geesefs *geesefsMounter) Mount(source string, target string) error {
 	fullPath := fmt.Sprintf("%s:%s", geesefs.meta.BucketName, geesefs.meta.Prefix)
 	args := []string{
 		"--endpoint", geesefs.endpoint,
-		"--region", geesefs.region,
 		"-o", "allow_other",
+		"--log-file", "/dev/stderr",
+	}
+	if geesefs.region != "" {
+		args = append(args, "--region", geesefs.region)
 	}
 	args = append(args, geesefs.meta.MountOptions...)
 	args = append(args, fullPath, target)

@@ -47,10 +47,12 @@ func (rclone *rcloneMounter) Mount(source string, target string) error {
 		"--daemon",
 		"--s3-provider=AWS",
 		"--s3-env-auth=true",
-		fmt.Sprintf("--s3-region=%s", rclone.region),
 		fmt.Sprintf("--s3-endpoint=%s", rclone.url),
 		"--allow-other",
 		"--vfs-cache-mode=writes",
+	}
+	if rclone.region != "" {
+		args = append(args, fmt.Sprintf("--s3-region=%s", rclone.region))
 	}
 	args = append(args, rclone.meta.MountOptions...)
 	os.Setenv("AWS_ACCESS_KEY_ID", rclone.accessKeyID)
