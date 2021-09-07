@@ -114,7 +114,7 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 		return nil, err
 	}
 
-	glog.V(4).Infof("s3: volume %s successfuly mounted to %s", volumeID, targetPath)
+	glog.V(4).Infof("s3: volume %s successfully mounted to %s", volumeID, targetPath)
 
 	return &csi.NodePublishVolumeResponse{}, nil
 }
