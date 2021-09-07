@@ -45,9 +45,11 @@ func (s3fs *s3fsMounter) Mount(source string, target string) error {
 		target,
 		"-o", "use_path_request_style",
 		"-o", fmt.Sprintf("url=%s", s3fs.url),
-		"-o", fmt.Sprintf("endpoint=%s", s3fs.region),
 		"-o", "allow_other",
 		"-o", "mp_umask=000",
+	}
+	if s3fs.region != "" {
+		args = append(args, "-o", fmt.Sprintf("endpoint=%s", s3fs.region))
 	}
 	args = append(args, s3fs.meta.MountOptions...)
 	return fuseMount(target, s3fsCmd, args)
