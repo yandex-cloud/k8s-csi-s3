@@ -170,9 +170,8 @@ func (cs *controllerServer) ValidateVolumeCapabilities(ctx context.Context, req 
 		return nil, status.Error(codes.NotFound, fmt.Sprintf("bucket of volume with id %s does not exist", req.GetVolumeId()))
 	}
 
-	// We currently only support RWO
 	supportedAccessMode := &csi.VolumeCapability_AccessMode{
-		Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+		Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
 	}
 
 	for _, capability := range req.VolumeCapabilities {
