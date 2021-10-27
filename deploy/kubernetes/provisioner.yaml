@@ -86,7 +86,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/kubelet/plugins/ru.yandex.s3.csi
         - name: csi-s3
-          image: cr.yandex/crp9ftr22d26age3hulg/csi-s3:0.29.0
+          image: cr.yandex/crp9ftr22d26age3hulg/csi-s3:0.29.9
           imagePullPolicy: IfNotPresent
           args:
             - "--endpoint=$(CSI_ENDPOINT)"
