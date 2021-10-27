@@ -13,7 +13,6 @@
 # limitations under the License.
 .PHONY: test build container push clean
 
-PROJECT_DIR=/app
 REGISTRY_NAME=cr.yandex/crp9ftr22d26age3hulg
 IMAGE_NAME=csi-s3
 VERSION ?= 0.29.0
@@ -24,7 +23,7 @@ build:
 	CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o _output/s3driver ./cmd/s3driver
 test:
 	docker build -t $(TEST_IMAGE_TAG) -f test/Dockerfile .
-	docker run --rm --privileged -v $(PWD):$(PROJECT_DIR) --device /dev/fuse $(TEST_IMAGE_TAG)
+	docker run --rm --privileged -v $(PWD):/build --device /dev/fuse $(TEST_IMAGE_TAG)
 container:
 	docker build -t $(IMAGE_TAG) -f cmd/s3driver/Dockerfile .
 push: container
