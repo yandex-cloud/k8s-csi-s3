@@ -128,7 +128,7 @@ func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVol
 	var deleteErr error
 	if prefix == "" {
 		// prefix is empty, we delete the whole bucket
-		if err := client.RemoveBucket(bucketName); err != nil {
+		if err := client.RemoveBucket(bucketName); err != nil && err.Error() != "The specified bucket does not exist" {
 			deleteErr = err
 		}
 		glog.V(4).Infof("Bucket %s removed", bucketName)

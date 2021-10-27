@@ -1,33 +1,24 @@
-FROM yandex-cloud/k8s-csi-s3:dev
+FROM golang:1.16-buster
+
 LABEL maintainers="Vitaliy Filippov <vitalif@yourcmc.ru>"
 LABEL description="csi-s3 testing image"
 
-RUN apt-get update && \
-  apt-get install -y \
-  git wget make && \
-  rm -rf /var/lib/apt/lists/*
+# Minio download servers are TERRIBLY SLOW as of 2021-10-27
+#RUN wget https://dl.min.io/server/minio/release/linux-amd64/minio && \
+#    chmod +x minio && \
+#    mv minio /usr/local/bin
 
-ARG GOVERSION=1.16.3
-RUN wget -q https://golang.org/dl/go${GOVERSION}.linux-amd64.tar.gz && \
-  tar -xf go${GOVERSION}.linux-amd64.tar.gz && \
-  rm go${GOVERSION}.linux-amd64.tar.gz && \
-  mv go /usr/local
+RUN git clone --depth=1 https://github.com/minio/minio
+RUN cd minio && go build && mv minio /usr/local/bin
 
-ENV GOROOT /usr/local/go
-ENV GOPATH /go
-ENV PATH=$GOPATH/bin:$GOROOT/bin:$PATH
-
-RUN wget -q https://dl.min.io/server/minio/release/linux-amd64/minio && \
-  chmod +x minio &&\
-  mv minio /usr/local/bin
-
-WORKDIR /app
+WORKDIR /build
 
 # prewarm go mod cache
 COPY go.mod .
 COPY go.sum .
 RUN go mod download
 
-ADD test/test.sh /usr/local/bin
+RUN wget https://github.com/yandex-cloud/geesefs/releases/latest/download/geesefs-linux-amd64 \
+    -O /usr/bin/geesefs && chmod 755 /usr/bin/geesefs
 
-ENTRYPOINT ["/usr/local/bin/test.sh"]
+ENTRYPOINT ["/build/test/test.sh"]

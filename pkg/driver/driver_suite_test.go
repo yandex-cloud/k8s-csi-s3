@@ -5,7 +5,6 @@ import (
 	"os"
 
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/driver"
-	"github.com/yandex-cloud/k8s-csi-s3/pkg/mounter"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -67,7 +66,7 @@ var _ = Describe("S3Driver", func() {
 		})
 	})
 
-	Context("s3fs", func() {
+/*	Context("s3fs", func() {
 		socket := "/tmp/csi-s3fs.sock"
 		csiEndpoint := "unix://" + socket
 		if err := os.Remove(socket); err != nil && !os.IsNotExist(err) {
@@ -120,5 +119,5 @@ var _ = Describe("S3Driver", func() {
 			}
 			sanity.GinkgoTest(sanityCfg)
 		})
-	})
+	})*/
 })
