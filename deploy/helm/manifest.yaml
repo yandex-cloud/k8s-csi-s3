@@ -1,13 +1,13 @@
 helm_chart:
   name: cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-s3
-  tag: 0.30.4
+  tag: 0.30.6
 requirements:
   k8s_version: ">=1.13"
 images:
-  - full: cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-attacher:v2.2.0
-  - full: cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-node-driver-registrar:v1.2.0
-  - full: cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-provisioner:v2.1.0
-  - full: cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-s3-driver:0.30.4
+  - full: images.attacher
+  - full: images.registrar
+  - full: images.provisioner
+  - full: images.csi
 user_values:
   - name: storageClass.create
     title:
