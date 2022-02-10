@@ -1,6 +1,6 @@
 helm_chart:
   name: cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-s3
-  tag: 0.30.6
+  tag: 0.30.7
 requirements:
   k8s_version: ">=1.13"
 images:

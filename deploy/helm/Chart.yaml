@@ -1,9 +1,9 @@
 ---
 apiVersion: v1
-appVersion: 0.30.6
+appVersion: 0.30.7
 description: "Container Storage Interface (CSI) driver for S3 volumes"
 name: csi-s3
-version: 0.30.6
+version: 0.30.7
 keywords:
   - s3
 home: https://github.com/yandex-cloud/k8s-csi-s3
