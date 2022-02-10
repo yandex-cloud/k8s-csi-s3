@@ -47,8 +47,8 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 	prefix := ""
 
 	// check if bucket name is overridden
-	if nameOverride, ok := params[mounter.BucketKey]; ok {
-		bucketName = nameOverride
+	if params[mounter.BucketKey] != "" {
+		bucketName = params[mounter.BucketKey]
 		prefix = volumeID
 		volumeID = path.Join(bucketName, prefix)
 	}
