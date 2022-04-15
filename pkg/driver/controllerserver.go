@@ -210,7 +210,7 @@ func sanitizeVolumeID(volumeID string) string {
 func volumeIDToBucketPrefix(volumeID string) (string, string) {
 	// if the volumeID has a slash in it, this volume is
 	// stored under a certain prefix within the bucket.
-	splitVolumeID := strings.Split(volumeID, "/")
+	splitVolumeID := strings.SplitN(volumeID, "/", 2)
 	if len(splitVolumeID) > 1 {
 		return splitVolumeID[0], splitVolumeID[1]
 	}
