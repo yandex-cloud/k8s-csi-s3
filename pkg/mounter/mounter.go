@@ -32,6 +32,8 @@ const (
 	TypeKey             = "mounter"
 	BucketKey           = "bucket"
 	OptionsKey          = "options"
+	VolumePrefix        = "prefix"
+	UsePrefix           = "usePrefix"
 )
 
 // New returns a new mounter depending on the mounterType parameter

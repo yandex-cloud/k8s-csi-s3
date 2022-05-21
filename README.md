@@ -26,6 +26,10 @@ stringData:
   endpoint: https://storage.yandexcloud.net
   # For AWS set it to AWS region
   #region: ""
+  # 'usePrefix' must be true in order to enable the prefix feature and to avoid the removal of the prefix or bucket
+  usePrefix: "true"
+  # 'prefix' can be empty (it will mount on the root of the bucket), an existing prefix or a new one.
+  prefix: custom-prefix
 ```
 
 The region can be empty if you are using some other S3 compatible storage.

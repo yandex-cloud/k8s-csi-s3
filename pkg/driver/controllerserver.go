@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/mounter"
@@ -41,15 +42,26 @@ type controllerServer struct {
 
 func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
 	params := req.GetParameters()
+	secrets := req.GetSecrets()
 	capacityBytes := int64(req.GetCapacityRange().GetRequiredBytes())
 	volumeID := sanitizeVolumeID(req.GetName())
 	bucketName := volumeID
 	prefix := ""
+	usePrefix, usePrefixError := strconv.ParseBool(secrets[mounter.UsePrefix])
 
 	// check if bucket name is overridden
 	if params[mounter.BucketKey] != "" {
 		bucketName = params[mounter.BucketKey]
 		prefix = volumeID
+		volumeID = path.Join(bucketName, prefix)
+	}
+
+	// check if volume prefix is overridden
+	if usePrefixError == nil && usePrefix {
+		prefix = ""
+		if prefixOverride, ok := secrets[mounter.VolumePrefix]; ok && prefixOverride != "" {
+			prefix = prefixOverride
+		}
 		volumeID = path.Join(bucketName, prefix)
 	}
 
@@ -85,7 +97,9 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 	}
 
 	if err = client.CreatePrefix(bucketName, prefix); err != nil {
-		return nil, fmt.Errorf("failed to create prefix %s: %v", prefix, err)
+	  if usePrefixError != nil || !usePrefix {
+		  return nil, fmt.Errorf("failed to create prefix %s: %v", prefix, err)
+		}
 	}
 
 	glog.V(4).Infof("create volume %s", volumeID)
@@ -126,7 +140,12 @@ func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVol
 	}
 
 	var deleteErr error
-	if prefix == "" {
+	usePrefix, usePrefixError := strconv.ParseBool(req.GetSecrets()[mounter.UsePrefix])
+	if usePrefixError == nil && usePrefix {
+		// UsePrefix is true, we do not delete anything
+		glog.V(4).Infof("Nothing to remove for %s", bucketName)
+		return &csi.DeleteVolumeResponse{}, nil
+	} else if prefix == "" {
 		// prefix is empty, we delete the whole bucket
 		if err := client.RemoveBucket(bucketName); err != nil && err.Error() != "The specified bucket does not exist" {
 			deleteErr = err

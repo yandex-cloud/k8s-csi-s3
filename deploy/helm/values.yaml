@@ -37,3 +37,7 @@ secret:
   secretKey: ""
   # Endpoint
   endpoint: https://storage.yandexcloud.net
+  # 'usePrefix' must be true in order to enable the prefix feature and to avoid the removal of the prefix or bucket
+  usePrefix:
+  # 'prefix' can be empty (it will mount on the root of the bucket), an existing prefix or a new one.
+  prefix:
