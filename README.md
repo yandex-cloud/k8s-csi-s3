@@ -6,7 +6,7 @@ This is a Container Storage Interface ([CSI](https://github.com/container-storag
 
 ### Requirements
 
-* Kubernetes 1.13+ (CSI v1.0.0 compatibility)
+* Kubernetes 1.17+
 * Kubernetes has to allow privileged containers
 * Docker daemon must allow shared mounts (systemd flag `MountFlags=shared`)
 
@@ -101,36 +101,36 @@ If the bucket is specified, it will still be created if it does not exist on the
 
 ### Mounter
 
-As S3 is not a real file system there are some limitations to consider here. Depending on what mounter you are using, you will have different levels of POSIX compability. Also depending on what S3 storage backend you are using there are not always [consistency guarantees](https://github.com/gaul/are-we-consistent-yet#observed-consistency).
+We **strongly recommend** to use the default mounter which is [GeeseFS](https://github.com/yandex-cloud/geesefs).
 
-The driver can be configured to use one of these mounters to mount buckets:
-
-* [geesefs](https://github.com/yandex-cloud/geesefs) (recommended and default)
-* [s3fs](https://github.com/s3fs-fuse/s3fs-fuse)
-* [rclone](https://rclone.org/commands/rclone_mount)
+However there is also support for two other backends: [s3fs](https://github.com/s3fs-fuse/s3fs-fuse) and [rclone](https://rclone.org/commands/rclone_mount).
 
 The mounter can be set as a parameter in the storage class. You can also create multiple storage classes for each mounter if you like.
 
-Characteristics of different mounters (for more detailed information consult their own documentation):
+As S3 is not a real file system there are some limitations to consider here.
+Depending on what mounter you are using, you will have different levels of POSIX compability.
+Also depending on what S3 storage backend you are using there are not always [consistency guarantees](https://github.com/gaul/are-we-consistent-yet#observed-consistency).
+
+You can check POSIX compatibility matrix here: https://github.com/yandex-cloud/geesefs#posix-compatibility-matrix.
 
 #### GeeseFS
 
 * Almost full POSIX compatibility
 * Good performance for both small and big files
-* Files can be viewed normally with any S3 client
+* Does not store file permissions and custom modification times
 
 #### s3fs
 
 * Almost full POSIX compatibility
 * Good performance for big files, poor performance for small files
-* Files can be viewed normally with any S3 client
+* Very slow for directories with a large number of files
 
 #### rclone
 
-* Less POSIX compatible than s3fs
+* Poor POSIX compatibility
 * Bad performance for big files, okayish performance for small files
-* Files can be viewed normally with any S3 client
 * Doesn't create directory objects like s3fs or GeeseFS
+* May hang :-)
 
 ## Troubleshooting
 
