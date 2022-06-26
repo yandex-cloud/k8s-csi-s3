@@ -34,6 +34,7 @@ push: container
 	docker push $(IMAGE_TAG)
 	docker push $(REGISTRY_NAME)/$(IMAGE_NAME)
 	docker push $(REGISTRY_NAME)/$(IMAGE_NAME2)
+	docker push $(REGISTRY_NAME)/$(IMAGE_NAME2):$(VERSION)
 clean:
 	go clean -r -x
 	-rm -rf _output
