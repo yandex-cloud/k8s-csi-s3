@@ -26,6 +26,7 @@ The following table lists all configuration parameters and their default values.
 | `storageClass.create`        | Specifies whether the storage class should be created                  | true                                                   |
 | `storageClass.name`          | Storage class name                                                     | csi-s3                                                 |
 | `storageClass.singleBucket`  | Use a single bucket for all dynamically provisioned persistent volumes |                                                        |
+| `storageClass.mounter`       | Mounter to use. Either geesefs, s3fs or rclone. geesefs recommended    | geesefs                                                |
 | `storageClass.mountOptions`  | GeeseFS mount options                                                  | `--memory-limit 1000 --dir-mode 0777 --file-mode 0666` |
 | `storageClass.reclaimPolicy` | Volume reclaim policy                                                  | Delete                                                 |
 | `storageClass.annotations`   | Annotations for the storage class                                      |                                                        |
