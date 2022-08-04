@@ -52,6 +52,15 @@ spec:
       labels:
         app: csi-s3
     spec:
+      {{- if .Values.tolerations.create }}
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      - effect: NoExecute
+        operator: Exists
+      - effect: NoSchedule
+        operator: Exists
+      {{- end }}
       serviceAccount: csi-s3
       hostNetwork: true
       containers:

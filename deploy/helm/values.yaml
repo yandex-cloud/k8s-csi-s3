@@ -37,3 +37,7 @@ secret:
   secretKey: ""
   # Endpoint
   endpoint: https://storage.yandexcloud.net
+ 
+tolerations:
+  # Specifies whether the tolerations for Yandex Cloud should be created (CriticalAddonsOnly)
+  create: true
