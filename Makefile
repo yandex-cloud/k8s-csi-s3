@@ -26,7 +26,7 @@ test:
 	docker build -t $(TEST_IMAGE_TAG) -f test/Dockerfile .
 	docker run --rm --privileged -v $(PWD):/build --device /dev/fuse $(TEST_IMAGE_TAG)
 container:
-	docker build -t $(IMAGE_TAG) -f cmd/s3driver/Dockerfile .
+	docker build -t $(IMAGE_TAG) .
 push: container
 	docker tag $(IMAGE_TAG) $(REGISTRY_NAME)/$(IMAGE_NAME):latest
 	docker tag $(IMAGE_TAG) $(REGISTRY_NAME)/$(IMAGE_NAME2):$(VERSION)
