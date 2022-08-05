@@ -102,3 +102,12 @@ user_values:
       ru: Название секрета, который будет создан или использован для класса хранения
     string_value:
       default_value: csi-s3-secret
+  - name: tolerations.all
+    title:
+      en: Tolerate all taints
+      ru: Игнорировать все taint-ы
+    description:
+      en: Tolerate all taints by the CSI-S3 node driver (mounter)
+      ru: Игнорировать все taint-ы узлов кластера драйвером CSI-S3, монтирующим ФС на узлах
+    boolean_value:
+      default_value: false

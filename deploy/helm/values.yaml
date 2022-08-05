@@ -37,3 +37,8 @@ secret:
   secretKey: ""
   # Endpoint
   endpoint: https://storage.yandexcloud.net
+
+tolerations:
+  all: false
+  node: []
+  controller: []
