@@ -1,7 +1,9 @@
 FROM golang:1.16-alpine as gobuild
 
 WORKDIR /build
-ADD . /build
+ADD go.mod go.sum /build/
+ADD cmd /build/cmd
+ADD pkg /build/pkg
 
 RUN go get -d -v ./...
 RUN CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o ./s3driver ./cmd/s3driver
