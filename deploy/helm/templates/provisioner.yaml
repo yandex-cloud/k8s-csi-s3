@@ -56,6 +56,8 @@ kind: StatefulSet
 apiVersion: apps/v1
 metadata:
   name: csi-provisioner-s3
+  labels:
+    app: csi-provisioner-s3
   namespace: {{ .Release.Namespace }}
 spec:
   serviceName: "csi-provisioner-s3"
@@ -112,4 +114,6 @@ spec:
               mountPath: /var/lib/kubelet/plugins/ru.yandex.s3.csi
       volumes:
         - name: socket-dir
-          emptyDir: {}
+          hostPath:
+            path: /var/lib/kubelet/plugins/ru.yandex.s3.csi
+            type: DirectoryOrCreate

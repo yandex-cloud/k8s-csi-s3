@@ -79,6 +79,13 @@ spec:
       tolerations:
       - key: node-role.kubernetes.io/master
         operator: "Exists"
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                  app: csi-provisioner-s3
+            topologyKey: kubernetes.io/hostname
       containers:
         - name: csi-attacher
           image: {{ .Values.images.attacher }}
