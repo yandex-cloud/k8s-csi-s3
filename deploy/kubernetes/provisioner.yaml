@@ -104,4 +104,6 @@ spec:
               mountPath: /var/lib/kubelet/plugins/ru.yandex.s3.csi
       volumes:
         - name: socket-dir
-          emptyDir: {}
+          hostPath:
+            path: /var/lib/kubelet/plugins/ru.yandex.s3.csi
+            type: DirectoryOrCreate
