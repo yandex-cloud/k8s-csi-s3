@@ -84,6 +84,13 @@ spec:
         - operator: Exists
           effect: NoExecute
           tolerationSeconds: 300
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                  app: csi-provisioner-s3
+            topologyKey: kubernetes.io/hostname
       containers:
         - name: csi-attacher
           image: quay.io/k8scsi/csi-attacher:v3.0.1
