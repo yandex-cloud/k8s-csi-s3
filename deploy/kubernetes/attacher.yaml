@@ -81,9 +81,6 @@ spec:
           operator: Exists
         - key: CriticalAddonsOnly
           operator: Exists
-        - operator: Exists
-          effect: NoExecute
-          tolerationSeconds: 300
       containers:
         - name: csi-attacher
           image: quay.io/k8scsi/csi-attacher:v3.0.1

@@ -70,8 +70,10 @@ spec:
     spec:
       serviceAccount: csi-provisioner-sa
       tolerations:
-      - key: node-role.kubernetes.io/master
-        operator: "Exists"
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+        - key: CriticalAddonsOnly
+          operator: Exists
       containers:
         - name: csi-provisioner
           image: quay.io/k8scsi/csi-provisioner:v2.1.0
