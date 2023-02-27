@@ -14,6 +14,7 @@
 .PHONY: test build container push clean
 
 REGISTRY_NAME=cr.yandex/crp9ftr22d26age3hulg
+REGISTRY_NAME2=cr.il.nebius.cloud/crll7us9n6i5j3v4n92m
 IMAGE_NAME=csi-s3
 IMAGE_NAME2=yandex-cloud/csi-s3/csi-s3-driver
 VERSION ?= 0.34.4
