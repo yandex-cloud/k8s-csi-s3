@@ -22,7 +22,7 @@ import (
 type Mounter interface {
 	Stage(stagePath string) error
 	Unstage(stagePath string) error
-	Mount(source string, target string) error
+	Mount(source, target, volumeID string) error
 }
 
 const (

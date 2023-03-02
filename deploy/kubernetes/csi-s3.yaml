@@ -108,6 +108,8 @@ spec:
               mountPropagation: "Bidirectional"
             - name: fuse-device
               mountPath: /dev/fuse
+            - name: systemd-control
+              mountPath: /run/systemd
       volumes:
         - name: registration-dir
           hostPath:
@@ -124,3 +126,7 @@ spec:
         - name: fuse-device
           hostPath:
             path: /dev/fuse
+        - name: systemd-control
+          hostPath:
+            path: /run/systemd
+            type: DirectoryOrCreate

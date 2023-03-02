@@ -39,7 +39,7 @@ func (rclone *rcloneMounter) Unstage(stageTarget string) error {
 	return nil
 }
 
-func (rclone *rcloneMounter) Mount(source string, target string) error {
+func (rclone *rcloneMounter) Mount(source, target, volumeID string) error {
 	args := []string{
 		"mount",
 		fmt.Sprintf(":s3:%s", path.Join(rclone.meta.BucketName, rclone.meta.Prefix)),

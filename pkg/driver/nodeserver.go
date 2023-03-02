@@ -110,7 +110,7 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	if err != nil {
 		return nil, err
 	}
-	if err := mounter.Mount(stagingTargetPath, targetPath); err != nil {
+	if err := mounter.Mount(stagingTargetPath, targetPath, volumeID); err != nil {
 		return nil, err
 	}
 
