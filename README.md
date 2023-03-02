@@ -94,6 +94,7 @@ metadata:
 provisioner: ru.yandex.s3.csi
 parameters:
   mounter: geesefs
+  options: "--memory-limit 1000 --dir-mode 0777 --file-mode 0666"
   bucket: some-existing-bucket-name
 ```
 
@@ -124,6 +125,10 @@ You can check POSIX compatibility matrix here: https://github.com/yandex-cloud/g
 * Almost full POSIX compatibility
 * Good performance for both small and big files
 * Does not store file permissions and custom modification times
+* By default runs **outside** of the csi-s3 container using systemd, to not crash
+  mountpoints with "Transport endpoint is not connected" when csi-s3 is upgraded
+  or restarted. Add `--no-systemd` to `parameters.options` of the `StorageClass`
+  to disable this behaviour.
 
 #### s3fs
 
