@@ -93,6 +93,11 @@ func (geesefs *geesefsMounter) Mount(source, target, volumeID string) error {
 	if geesefs.region != "" {
 		args = append(args, "--region", geesefs.region)
 	}
+	args = append(
+		args,
+		"--setuid", "65534", // nobody. drop root privileges
+		"--setgid", "65534", // nogroup
+	)
 	useSystemd := true
 	for i := 0; i < len(geesefs.meta.MountOptions); i++ {
 		if geesefs.meta.MountOptions[i] == "--no-systemd" {
