@@ -19,6 +19,7 @@ package driver
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"regexp"
 	"strconv"
 
@@ -68,7 +69,6 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	volumeID := req.GetVolumeId()
 	targetPath := req.GetTargetPath()
 	stagingTargetPath := req.GetStagingTargetPath()
-	bucketName, prefix := volumeIDToBucketPrefix(volumeID)
 
 	// Check arguments
 	if req.GetVolumeCapability() == nil {
@@ -100,18 +100,12 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	glog.V(4).Infof("target %v\nreadonly %v\nvolumeId %v\nattributes %v\nmountflags %v\n",
 		targetPath, readOnly, volumeID, attrib, mountFlags)
 
-	s3, err := s3.NewClientFromSecret(req.GetSecrets())
+	cmd := exec.Command("mount", "--bind", stagingTargetPath, targetPath)
+	cmd.Stderr = os.Stderr
+	glog.V(3).Infof("Binding volume %v from %v to %v", volumeID, stagingTargetPath, targetPath)
+	out, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
-	}
-
-	meta := getMeta(bucketName, prefix, req.VolumeContext)
-	mounter, err := mounter.New(meta, s3.Config)
-	if err != nil {
-		return nil, err
-	}
-	if err := mounter.Mount(stagingTargetPath, targetPath, volumeID); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error running mount --bind %v %v: %s", stagingTargetPath, targetPath, out)
 	}
 
 	glog.V(4).Infof("s3: volume %s successfully mounted to %s", volumeID, targetPath)
@@ -131,7 +125,7 @@ func (ns *nodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpu
 		return nil, status.Error(codes.InvalidArgument, "Target path missing in request")
 	}
 
-	if err := mounter.FuseUnmount(targetPath); err != nil {
+	if err := mounter.Unmount(targetPath); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	glog.V(4).Infof("s3: volume %s has been unmounted.", volumeID)
@@ -174,7 +168,7 @@ func (ns *nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 	if err != nil {
 		return nil, err
 	}
-	if err := mounter.Stage(stagingTargetPath); err != nil {
+	if err := mounter.Mount(stagingTargetPath, volumeID); err != nil {
 		return nil, err
 	}
 
@@ -192,6 +186,22 @@ func (ns *nodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstag
 	if len(stagingTargetPath) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Target path missing in request")
 	}
+
+	proc, err := mounter.FindFuseMountProcess(stagingTargetPath)
+	if err != nil {
+		return nil, err
+	}
+	exists := false
+	if proc == nil {
+		exists, err = mounter.SystemdUnmount(volumeID)
+		if exists && err != nil {
+			return nil, err
+		}
+	}
+	if !exists {
+		err = mounter.FuseUnmount(stagingTargetPath)
+	}
+	glog.V(4).Infof("s3: volume %s has been unmounted from stage path %v.", volumeID, stagingTargetPath)
 
 	return &csi.NodeUnstageVolumeResponse{}, nil
 }

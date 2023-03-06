@@ -11,18 +11,18 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/yandex-cloud/k8s-csi-s3/pkg/s3"
+	systemd "github.com/coreos/go-systemd/v22/dbus"
 	"github.com/golang/glog"
 	"github.com/mitchellh/go-ps"
 	"k8s.io/kubernetes/pkg/util/mount"
+
+	"github.com/yandex-cloud/k8s-csi-s3/pkg/s3"
 )
 
 // Mounter interface which can be implemented
 // by the different mounter types
 type Mounter interface {
-	Stage(stagePath string) error
-	Unstage(stagePath string) error
-	Mount(source, target, volumeID string) error
+	Mount(target, volumeID string) error
 }
 
 const (
@@ -70,12 +70,40 @@ func fuseMount(path string, command string, args []string) error {
 	return waitForMount(path, 10*time.Second)
 }
 
+func Unmount(path string) error {
+	if err := mount.New("").Unmount(path); err != nil {
+		return err
+	}
+	return nil
+}
+
+func SystemdUnmount(volumeID string) (bool, error) {
+	conn, err := systemd.New()
+	if err != nil {
+		glog.Errorf("Failed to connect to systemd dbus service: %v", err)
+		return false, err
+	}
+	defer conn.Close()
+	unitName := "geesefs-"+systemd.PathBusEscape(volumeID)+".service"
+	units, err := conn.ListUnitsByNames([]string{ unitName })
+	glog.Errorf("Got %v", units)
+	if err != nil {
+		glog.Errorf("Failed to list systemd unit by name %v: %v", unitName, err)
+		return false, err
+	}
+	if len(units) == 0 || units[0].ActiveState == "inactive" || units[0].ActiveState == "failed" {
+		return true, nil
+	}
+	_, err = conn.StopUnit(unitName, "replace", nil)
+	return true, err
+}
+
 func FuseUnmount(path string) error {
 	if err := mount.New("").Unmount(path); err != nil {
 		return err
 	}
 	// as fuse quits immediately, we will try to wait until the process is done
-	process, err := findFuseMountProcess(path)
+	process, err := FindFuseMountProcess(path)
 	if err != nil {
 		glog.Errorf("Error getting PID of fuse mount: %s", err)
 		return nil
@@ -107,7 +135,7 @@ func waitForMount(path string, timeout time.Duration) error {
 	}
 }
 
-func findFuseMountProcess(path string) (*os.Process, error) {
+func FindFuseMountProcess(path string) (*os.Process, error) {
 	processes, err := ps.Processes()
 	if err != nil {
 		return nil, err

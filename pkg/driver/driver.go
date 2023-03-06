@@ -33,7 +33,7 @@ type driver struct {
 }
 
 var (
-	vendorVersion = "v1.2.0"
+	vendorVersion = "v1.34.6"
 	driverName    = "ru.yandex.s3.csi"
 )
 
