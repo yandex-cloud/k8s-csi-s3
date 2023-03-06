@@ -31,15 +31,7 @@ func newRcloneMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
 	}, nil
 }
 
-func (rclone *rcloneMounter) Stage(stageTarget string) error {
-	return nil
-}
-
-func (rclone *rcloneMounter) Unstage(stageTarget string) error {
-	return nil
-}
-
-func (rclone *rcloneMounter) Mount(source, target, volumeID string) error {
+func (rclone *rcloneMounter) Mount(target, volumeID string) error {
 	args := []string{
 		"mount",
 		fmt.Sprintf(":s3:%s", path.Join(rclone.meta.BucketName, rclone.meta.Prefix)),
