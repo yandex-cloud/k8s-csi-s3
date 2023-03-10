@@ -37,6 +37,10 @@ secret:
   secretKey: ""
   # Endpoint
   endpoint: https://storage.yandexcloud.net
+  # For AWS set it to AWS region
+  region: ""
+  # For S3-compatible set it to bucket lookup style (choices: Auto [default], DNS, Path)
+  bucketLookup: Auto
 
 tolerations:
   all: false

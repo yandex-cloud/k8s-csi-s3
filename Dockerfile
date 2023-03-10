@@ -1,4 +1,6 @@
-FROM golang:1.16-alpine as gobuild
+ARG ALPINE_VERSION="3.17"
+ARG GOLANG_VERSION="1.20"
+FROM docker.io/library/golang:${GOLANG_VERSION}-alpine${ALPINE_VERSION} as gobuild
 
 WORKDIR /build
 ADD go.mod go.sum /build/
@@ -8,7 +10,7 @@ ADD pkg /build/pkg
 RUN go get -d -v ./...
 RUN CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o ./s3driver ./cmd/s3driver
 
-FROM alpine:3.16
+FROM docker.io/library/alpine:${ALPINE_VERSION}
 LABEL maintainers="Vitaliy Filippov <vitalif@yourcmc.ru>"
 LABEL description="csi-s3 slim image"
 
