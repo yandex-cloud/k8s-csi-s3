@@ -104,7 +104,7 @@ spec:
             - name: plugin-dir
               mountPath: /csi
             - name: stage-dir
-              mountPath: /var/lib/kubelet/plugins/kubernetes.io/csi/ru.yandex.s3.csi
+              mountPath: /var/lib/kubelet/plugins/kubernetes.io/csi
               mountPropagation: "Bidirectional"
             - name: pods-mount-dir
               mountPath: /var/lib/kubelet/pods
@@ -124,7 +124,7 @@ spec:
             type: DirectoryOrCreate
         - name: stage-dir
           hostPath:
-            path: /var/lib/kubelet/plugins/kubernetes.io/csi/ru.yandex.s3.csi
+            path: /var/lib/kubelet/plugins/kubernetes.io/csi
             type: DirectoryOrCreate
         - name: pods-mount-dir
           hostPath:
