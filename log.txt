@@ -1,0 +1,1000 @@
+ 1006  k get pvc
+ 1007  k delete pvc elasticsearch-master-elasticsearch-master-1
+ 1008  k get pvc
+ 1009  k get pv
+ 1010  k get po
+ 1011  k delete statefulset elasticsearch-master 
+ 1012  k get po
+ 1013  k delete statefulsets.apps camunda-zeebe 
+ 1014  k get po
+ 1015  k get pvc
+ 1016  k delete pvc zeebe-broker-data-camunda-zeebe-0
+ 1017  k delete pvc zeebe-broker-data-camunda-zeebe-1
+ 1018  k delete pvc zeebe-broker-data-camunda-zeebe-2
+ 1019  k delete pvc elasticsearch-master-elasticsearch-master-0
+ 1020  k delete pvc elasticsearch-master-elasticsearch-master-1
+ 1021  k apply -k .
+ 1022  k get po
+ 1023  k delete deployments.apps customer-onboarding 
+ 1024  k get po
+ 1025  k rollout restart deploy camunda-operate 
+ 1026  k rollout restart deploy camunda-optimize 
+ 1027  k rollout restart deploy camunda-tasklist
+ 1028  k rollout restart deploy camunda-connectors 
+ 1029  k get pods
+ 1030  k delete pod elasticsearch-master-1
+ 1031  k cp camunda-operate-78fcbfb4d7-sk9j5:/usr/local/operate/lib/operate-webapp-8.1.8-exec.jar
+ 1032  k cp camunda-operate-78fcbfb4d7-sk9j5:/usr/local/operate/lib/operate-webapp-8.1.8-exec.jar operate-webapp-8.1.8-exec.jar
+ 1033  mkdir work
+ 1034  cd work
+ 1035  unzip ../operate-webapp-8.1.8-exec.jar 
+ 1036  cd BOOT-INF/lib
+ 1037  mkdir work
+ 1038  cd work
+ 1039  unzip ../operate-webjar-8.1.8.jar 
+ 1040  ls
+ 1041  jar cfM0 operate-webjar-8.1.8.jar META-INF
+ 1042  ls
+ 1043  mv operate-webjar-8.1.8.jar ../
+ 1044  cd ..
+ 1045  rm -rf work
+ 1046  cd ..
+ 1047  ls
+ 1048  cd ..
+ 1049  ls
+ 1050  jar cvfM0 operate-webapp-8.1.5-exec.jar BOOT-INF META-INF org
+ 1051  ls
+ 1052  rm operate-webapp-8.1.5-exec.jar 
+ 1053  jar cvfM0 operate-webapp-8.1.8-exec.jar BOOT-INF META-INF org
+ 1054  java -jar operate-webapp-8.1.8-exec.jar 
+ 1055  docker ps
+ 1056  docker cp operate-webapp-8.1.8-exec.jar 289e8426f83d:/usr/local/operate/lib/operate-webapp-8.1.8-exec.jar
+ 1057  docker commit 289e8426f83d camunda-docker-local.bin.swisscom.com/camunda/operate:8.1.8-patched
+ 1058  docker push camunda-docker-local.bin.swisscom.com/camunda/operate:8.1.8-patched
+ 1059  cd ..
+ 1060  cd -
+ 1061  cd /home/daniele/dev/camunda-platform-8
+ 1062  ls
+ 1063  k cp camunda-tasklist-69d7c4554f-8wqj6:/apps/libs/tasklist-webjar-8.1.8.jar tasklist-webjar-8.1.8.jar
+ 1064  k exec -it camunda-tasklist-69d7c4554f-8wqj6 -- sh
+ 1065  k cp camunda-tasklist-69d7c4554f-8wqj6:/apps/libs/tasklist-webjar-8.1.8.jar tasklist-webjar-8.1.8.jar
+ 1066  k exec -it camunda-tasklist-69d7c4554f-8wqj6 -- sh
+ 1067  k cp camunda-tasklist-69d7c4554f-8wqj6:/app/libs/tasklist-webjar-8.1.8.jar tasklist-webjar-8.1.8.jar
+ 1068  mkdir work
+ 1069  cd work
+ 1070  unzip ../tasklist-webjar-8.1.8.jar
+ 1071  jar cfM0 tasklist-webjar-8.1.8.jar META-INF
+ 1072  docker ps
+ 1073  docker cp tasklist-webjar-8.1.8.jar cb5201ec0a60:/app/libs/tasklist-webjar-8.1.8.jar
+ 1074  docker commit cb5201ec0a60 camunda-docker-local.bin.swisscom.com/camunda/tasklist:8.1.8-patched
+ 1075  docker push camunda-docker-local.bin.swisscom.com/camunda/operate:8.1.8-patched
+ 1076  docker cp tasklist-webjar-8.1.8.jar cb5201ec0a60:/app/libs/tasklist-webjar-8.1.8.jar
+ 1077  docker cp tasklist-webjar-8.1.81.jar cb5201ec0a60:/app/libs/tasklist-webjar-8.1.8.jar
+ 1078  docker cp tasklist-webjar-8.1.8.jar cb5201ec0a60:/app/libs/tasklist-webjar-8.1.8.jar
+ 1079  docker commit cb5201ec0a60 camunda-docker-local.bin.swisscom.com/camunda/tasklist:8.1.8-patched
+ 1080  docker push camunda-docker-local.bin.swisscom.com/camunda/operate:8.1.8-patched
+ 1081  ps -ef | grep java
+ 1082  kill 585489
+ 1083  kill -9 585489
+ 1084  sudo kill -9 585489
+ 1085  docker run camunda-docker-local.bin.swisscom.com/camunda/operate:8.1.8
+ 1086  docker run camunda-docker-local.bin.swisscom.com/camunda/tasklist:8.1.8
+ 1087  k get pods
+ 1088  k rollout restart deploy camunda-zeebe-gateway 
+ 1089  k get pods
+ 1090  k rollout restart deployment kibana
+ 1091  k rollout restart statefulset kibana 
+ 1092  k get pods
+ 1093  k logs kibana-0
+ 1094  k logs kibana-0 -f
+ 1095  k get po
+ 1096  kubens
+ 1097  k get pods -A
+ 1098  ls
+ 1099  k get po
+ 1100  docker images
+ 1101  docker push camunda-docker-local.bin.swisscom.com/camunda/tasklist:8.1.8
+ 1102  docker images
+ 1103  docker push camunda-docker-local.bin.swisscom.com/camunda/tasklist:8.1.8
+ 1104  docker push camunda-docker-local.bin.swisscom.com/camunda/tasklist:8.1.8-patched
+ 1105  docker images
+ 1106  docker push camunda-docker-local.bin.swisscom.com/camunda/connectors-bundle:0.16.1 
+ 1107  k port-forward svc/kafka 9092
+ 1108  k port-forward svc/hashicorp-vault 8200
+ 1109  k port-forward svc/kafka 9092
+ 1110  k port-forward svc/hashicorp-vault
+ 1111  k port-forward svc/hashicorp-vault 8200
+ 1112  git remote rename target origin
+ 1113  k apply -k .
+ 1114  k get pods
+ 1115  k delete deploy customer-onboarding 
+ 1116  k get pods
+ 1117  kpt fn render
+ 1118  k get PodMetrics
+ 1119  k port-forward svc/kafka 9072
+ 1120  k port-forward svc/kafka 9092
+ 1121  k port-forward svc/hashicorp-vault 8200
+ 1122  cd ..
+ 1123  mkdir camunda-on-aks
+ 1124  cd camunda
+ 1125  cd ..
+ 1126  cd camunda-on-aks/
+ 1127  echo "# camunda-on-aks" >> README.md
+ 1128  git init
+ 1129  git config --local user.name "bluebossa63"
+ 1130  git config --local user.email "daniele.ulrich@niceneasy.ch"
+ 1131  kpt pkg get https://github.com/camunda-community-hub/c8-kpt-kustomize.git@master .
+ 1132  kpt pkg get https://github.com/camunda-community-hub/c8-kpt-kustomize.git .
+ 1133  ls
+ 1134  rm -rf c8-kpt-kustomize/
+ 1135  cd ..
+ 1136  kpt pkg get https://github.com/camunda-community-hub/c8-kpt-kustomize.git camunda-on-aks
+ 1137  cd camunda-on-aks/
+ 1138  ls
+ 1139  istioctl
+ 1140  kubectx
+ 1141  k get pods
+ 1142  k get pods -A
+ 1143  k get svc -A
+ 1144  k get gw -A
+ 1145  k get gateways.networking.istio.io -A
+ 1146  kubens
+ 1147  k get all
+ 1148  k get gw
+ 1149  k get vs
+ 1150  k describe pod pod/istio-ingressgateway-6bd9cfd8-bv9dj
+ 1151  k describe pod/istio-ingressgateway-6bd9cfd8-bv9dj
+ 1152  kubectx
+ 1153  kubens
+ 1154  k describe pod helix-ingress-gateway-internal-camunda-5fcf97878-brsg2 
+ 1155  kubectx
+ 1156  k get svc -A
+ 1157  ls
+ 1158  cd c8-kpt-kustomize/
+ 1159  kpt fn render
+ 1160  kubectx
+ 1161  k apply -k .
+ 1162  kubectx
+ 1163  ls
+ 1164  k apply -f camunda8-dev-namespace.yaml 
+ 1165  kubens
+ 1166  kubectl create secret generic regcred     --from-file=.dockerconfigjson=/home/daniele/.docker/config.json     --type=kubernetes.io/dockerconfigjson
+ 1167  k get secrets regcred -o yaml > regcred.yaml
+ 1168  k apply -k .
+ 1169  k get pods
+ 1170  k get pods -A
+ 1171  cd ..
+ 1172  kpt pkg get https://git.swisscom.com/scm/hlx/kpt-pkg-helix.git@v1.4.1 camunda-on-aks
+ 1173  ls
+ 1174  cd camunda-on-aks/
+ 1175  lls
+ 1176  ls
+ 1177  cd kpt-pkg-helix/
+ 1178  ls
+ 1179  kubectx
+ 1180  istioctl uninstall --purge
+ 1181  kpt fn render
+ 1182  cp ../../helix/camunda-showcase/camunda8-dev/.env .
+ 1183  ls -la
+ 1184  vi .env
+ 1185  . .env
+ 1186  make apply
+ 1187  k get pods
+ 1188  k get pods -A
+ 1189  k get nodes
+ 1190  k get nodes -o wide
+ 1191  cd ..
+ 1192  ls
+ 1193  cd camunda-on-aks/
+ 1194  ls
+ 1195  cp -R ../helix/camunda-showcase/helix-ingress-gateway-internal-camunda/ .
+ 1196  ls
+ 1197  cd helix-ingress-gateway-internal-camunda/
+ 1198  ls
+ 1199  az init
+ 1200  az
+ 1201  make apply
+ 1202  . .env
+ 1203  make apply
+ 1204  kubens
+ 1205  kubectx
+ 1206  kubectl get pods
+ 1207  k get pods
+ 1208  kubectx
+ 1209  k get pods
+ 1210  get pods
+ 1211  k get pods
+ 1212  kubectx
+ 1213  k get pods
+ 1214  k login
+ 1215  k plugin list
+ 1216  k get po
+ 1217  vi ~/.kube/config
+ 1218  mv ~/.kube/config ~/.kube/config.old
+ 1219  k get po
+ 1220  ls
+ 1221  make apply
+ 1222  . .env
+ 1223  make apply
+ 1224  ls
+ 1225  mv ~/.kube/config ~/.kube/config.az
+ 1226  mv ~/.kube/config.old ~/.kube/config
+ 1227  kubectx
+ 1228  k get po
+ 1229  k get po -A
+ 1230  k get svc -A
+ 1231  k get pvc
+ 1232  k get pvc -A
+ 1233  k get pods
+ 1234  kubens
+ 1235  k get pods
+ 1236  k describe po keycloak-
+ 1237  k describe po keycloak-0
+ 1238  k get nods
+ 1239  k get nodes
+ 1240  k get pods
+ 1241  k delete po keycloak-
+ 1242  k delete po keycloak-0
+ 1243  k get po
+ 1244  k get nodes
+ 1245  cd ..
+ 1246  cd camunda-platform-8/
+ 1247  kubectx
+ 1248  k get pods
+ 1249  kubens
+ 1250  k get cm
+ 1251  k get cm istio -o yaml
+ 1252  k edit cm istio 
+ 1253  k get pod
+ 1254  k rollout restart deployment istiod 
+ 1255  k get pods
+ 1256  k logs istiod-66d9bff48d-xx8v7 
+ 1257  kubens
+ 1258  k get vs
+ 1259  k edit vs kafka-server 
+ 1260  kubens
+ 1261  k get gw
+ 1262  k edit gw internal-camunda
+ 1263  kubens
+ 1264  k edit svc kafka
+ 1265  istioctl analyze
+ 1266  kubens
+ 1267  k edit gw internal-camunda 
+ 1268  istioctl analyze
+ 1269  k edit gw internal-camunda 
+ 1270  istioctl analyze
+ 1271  k -n camunda8-dev edit svc kafka
+ 1272  k -n camunda8-dev edit vs kafka-server 
+ 1273  k -n camunda8-dev edit svc kafka
+ 1274  k get svc -A | grep 9092
+ 1275  k edit deploy helix-ingress-gateway-internal-camunda 
+ 1276  k rollout restart deploy helix-ingress-gateway-internal-camunda 
+ 1277  k get pods
+ 1278  k describe pod helix-ingress-gateway-internal-camunda-85df556547-c4zl4 
+ 1279  k get svc -A | grep 9092
+ 1280  k edit svc helix-ingress-gateway-internal-camunda 
+ 1281  istioctl analyze
+ 1282  k edit svc kafka -n camunda8-dev
+ 1283  k edit vs kafka-server -n camunda8-dev
+ 1284  istioctl analyze 
+ 1285  k edit deploy helix-ingress-gateway-internal-camunda 
+ 1286  k get RouteRule -A
+ 1287  k get DestinationRule
+ 1288  k get DestinationRule -A
+ 1289  k get PeerAuthentication -A
+ 1290  k get PeerAuthentication -A -o wide
+ 1291  kubens
+ 1292  istictl dashboard envoy helix-ingress-gateway-internal-camunda
+ 1293  istioctl dashboard envoy helix-ingress-gateway-internal-camunda
+ 1294  istioctl dashboard envoy helix-ingress-gateway-internal-camunda.helix-ingress-gateway-internal-camunda
+ 1295  k get pods
+ 1296  istioctl dashboard envoy helix-ingress-gateway-internal-camunda-85df556547-c4zl4.helix-ingress-gateway-internal-camunda
+ 1297  k get po
+ 1298  istioctl dashboard envoy kafka-0
+ 1299  curl -X POST http://localhost:15000/logging?level=trace
+ 1300  k logs kafka-0 istio-proxy -f
+ 1301  k logs kafka-0 istio-proxy -f > out1.log
+ 1302  k edit statefulsets.apps kafka
+ 1303  k get pods
+ 1304  k edit statefulsets.apps kafka-zookeeper 
+ 1305  k get pods
+ 1306  k delete po kafka-0
+ 1307  k get pods
+ 1308  istioctl analyze
+ 1309  k edit deploy kafka
+ 1310  k edit statefulsets.apps kafka
+ 1311  k get pods
+ 1312  kubens
+ 1313  k edit gw internal-camunda 
+ 1314  k edit svc helix-ingress-gateway-internal-camunda 
+ 1315  kubens
+ 1316  k edit vs kafka-server 
+ 1317  k edit svc kafka
+ 1318  istioctl analyze
+ 1319  k edit statefulset kafka
+ 1320  k get DestinationRule -A
+ 1321  k delete DestinationRule kafka-destination-rule -n helix-ingress-gateway-internal-camunda
+ 1322  k get PeerAuthentication -A
+ 1323  k delete PeerAuthentication kafka-auth -n helix-ingress-gateway-internal-camunda
+ 1324  kubens
+ 1325  k apply -f security/istio/kafka-authorization-policy.yaml 
+ 1326  k apply -f security/istio/kafka-destination-rule.yaml 
+ 1327  k apply -f security/istio/kafka-peer-authentication.yaml 
+ 1328  istioctl analyze
+ 1329  k describe pod kafka-0
+ 1330  k apply -f security/istio/kafka-peer-authentication.yaml 
+ 1331  k apply -f security/istio/kafka-authorization-policy.yaml 
+ 1332  istioctl analyze
+ 1333  k apply -f security/istio/kafka-authorization-policy.yaml 
+ 1334  k apply -f security/istio/kafka-peer-authentication.yaml 
+ 1335  istioctl analyze
+ 1336  k apply -f security/istio/kafka-authorization-policy.yaml 
+ 1337  istioctl analyze
+ 1338  k get se
+ 1339  k apply -f security/istio/kafka-authorization-policy.yaml 
+ 1340  k apply -f security/istio/kafka-peer-authentication.yaml 
+ 1341  k apply -f security/istio/kafka-destination-rule.yaml 
+ 1342  helm template i .
+ 1343  helmfile
+ 1344  helmfile template --environment dev1
+ 1345  cd ..
+ 1346  ls
+ 1347  helmfile template --environment dev1
+ 1348  helmfile template --environment dev1 --set activemq.volume.kind=PersistentVolumeClaim
+ 1349  helmfile template --environment dev1 --set activemq.volume.kind=PersistentVolumeClaim --set activemq.volume.pvc.name=activemq-pvc 
+ 1350  helmfile template --environment dev1 --set activemq.volume.kind=PersistentVolumeClaim --set activemq.volume.pvc.name=activemq-pvc --set activemq.volume.pvc.storage.min=5G --set activemq.volume.pvc.storage.max=50G
+ 1351  helmfile template --environment dev1
+ 1352  helmfile write-values
+ 1353  helmfile write-values --environment dev1
+ 1354  ls
+ 1355  cd helmfile-47c33cc9/
+ 1356  ls
+ 1357  less activemq.yaml 
+ 1358  ls
+ 1359  less deadletter-prints-to-messages.yaml 
+ 1360  cd ..
+ 1361  ls
+ 1362  rm -rf helmfile-47c33cc9/
+ 1363  ls
+ 1364  helmfile template --environment dev1 > ../../../incentage-helmfiles-master/render.yaml
+ 1365  docker pull eu.gcr.io/d-01-proj-001/ibp.imsgeneric:2021.11.1
+ 1366  ls
+ 1367  gzip incentage-helmfiles-master/
+ 1368  gzip incentage-helmfiles-master/*
+ 1369  gzip
+ 1370  gzip -h
+ 1371  gzip -r incentage-helmfiles-master
+ 1372  ls
+ 1373  ls -ltr
+ 1374  gzip -r incentage-helmfiles-master
+ 1375  gzip -rv incentage-helmfiles-master
+ 1376  guzip -rv incentage-helmfiles-master
+ 1377  gunzip -rv incentage-helmfiles-master
+ 1378  gzip -h
+ 1379  ls
+ 1380  tar cvf chart.tar.gz incentage-helmfiles-master/
+ 1381  ls
+ 1382  tar cvf chart.tar.gz incentage-helmfiles-master/ kustomize/
+ 1383  touch -help
+ 1384  touch --help
+ 1385  find . -exec touch  {} +\;
+ 1386  find . -exec touch 
+ 1387  find . -exec touch \;
+ 1388  find . -exec touch {}\;
+ 1389  find .  -exec touch {} \;
+ 1390  ls -la
+ 1391  rm chart.tar.gz 
+ 1392  find .  -exec touch -t 200512163333.33 {} \;
+ 1393  find .  -exec touch -tm 200512163333.33 {} \;
+ 1394  find .  -exec touch -t 200512163333.33 {} \;
+ 1395  find .  -exec touch -mt 200512163333.33 {} \;
+ 1396  find .  -exec touch -mt 20230330000000 {} \;
+ 1397  find .  -exec touch {} \;
+ 1398  ls -la
+ 1399  cd kustomize/
+ 1400  ks
+ 1401  ls 
+ 1402  ls -la
+ 1403  k edit se external-svc-https 
+ 1404  find . -exec touch {} \;
+ 1405  ls -la
+ 1406  tar cvf incentage.tar.gz incentage-helmfiles-master/ kustomize/
+ 1407  ls
+ 1408  cd incentage-helmfiles-master/
+ 1409  ls
+ 1410  helmfile write-values --environment dev1
+ 1411  helmfile write-values --environment dev1 deployment-helm
+ 1412  cd deployment-helm/
+ 1413  ls
+ 1414  helmfile write-values --environment dev1 helm
+ 1415  cd helm
+ 1416  helmfile write-values --environment dev1 
+ 1417  cd helmfile-47c33cc9/
+ 1418  ls
+ 1419  cat activemq.yaml 
+ 1420  helmfile
+ 1421  ls
+ 1422  cat * > ../values.yaml
+ 1423  k get pv
+ 1424  k get pv pvc-db013518-1235-4204-b11b-ee53828aef60
+ 1425  k get pv pvc-db013518-1235-4204-b11b-ee53828aef60 -o yaml
+ 1426  cd ..
+ 1427  helm repo add atlassian-data-center  https://atlassian.github.io/data-center-helm-charts
+ 1428  git clone git@github.com:atlassian/data-center-helm-charts.git
+ 1429  git clone https://github.com/atlassian/data-center-helm-charts.git
+ 1430  cd data-center-helm-charts/
+ 1431  ls
+ 1432  cd docs
+ 1433  ls
+ 1434  cd docs
+ 1435  ls
+ 1436  cd examples/
+ 1437  ls
+ 1438  cd storage/
+ 1439  ls
+ 1440  cd nfs
+ 1441  ls
+ 1442  cd nfs-server-example/
+ 1443  ls
+ 1444  helm template
+ 1445  helm template test
+ 1446  cd templates/
+ 1447  ls
+ 1448  less statefulset.yaml 
+ 1449  cd ..
+ 1450  ls
+ 1451  cd ..
+ 1452  ls
+ 1453  helm create test
+ 1454  ls
+ 1455  cd test
+ 1456  ls
+ 1457  cd ..
+ 1458  helm install nfs-servertemplate
+ 1459  helm install nfs-server nfs-servertemplate
+ 1460  ls
+ 1461  helm install nfs-server nfs-serverexample
+ 1462  helm install nfs-server nfs-server-example
+ 1463  kubens
+ 1464  k get pods
+ 1465  k describe pod nfs-server-nfs-server-example-0
+ 1466  k get pods
+ 1467  helm values nfs-server nfs-server-example
+ 1468  helm show values nfs-server nfs-server-example
+ 1469  helm show values nfs-server-example
+ 1470  helm template test nfs-server-example
+ 1471  helm template test nfs-server-example -> out.yaml
+ 1472  ls
+ 1473  helm template test nfs-server-example > nfs-server.yaml
+ 1474  ls
+ 1475  k get po
+ 1476  k apply -f nfs-server.yaml 
+ 1477  k get pod
+ 1478  k delete -f nfs-server.yaml 
+ 1479  k apply -f nfs-server.yaml 
+ 1480  k get pods
+ 1481  k delete deploy modeler-restapi 
+ 1482  k delete deploy modeler-webapp 
+ 1483  k delete deploy modeler-websockets 
+ 1484  k get po
+ 1485  k delete statefulset elasticsearch-master 
+ 1486  k delete statefulset camunda-zeebe 
+ 1487  k get po
+ 1488  k delete po nfs-server-nfs-server-example-perf-nfs
+ 1489  k delete po nfs-server-nfs-server-example-test-nfs
+ 1490  k get po
+ 1491  k apply -f nfs-server.yaml 
+ 1492  k get po
+ 1493  k describe po nfs-server-nfs-server-example-perf-nfs
+ 1494  k apply -f nfs-server.yaml 
+ 1495  k delete po nfs-server-nfs-server-example-perf-nfs 
+ 1496  k apply -f nfs-server.yaml 
+ 1497  k delete po nfs-server-nfs-server-example-test-nfs 
+ 1498  k apply -f nfs-server.yaml 
+ 1499  k get po
+ 1500  k describe pod nfs-server-nfs-server-example-perf-nfs 
+ 1501  k get po
+ 1502  k describe pod nfs-server-nfs-server-example-perf-nfs 
+ 1503  k get po
+ 1504  k get pv
+ 1505  k delete pvc camunda8-dev/data-nfs-server-nfs-server-example-0 
+ 1506  k delete pvc data-nfs-server-nfs-server-example-0 
+ 1507  k get po
+ 1508  k delete -f nfs-server.yaml 
+ 1509  k get pvc
+ 1510  k delete pvc data-test-nfs-server-example-0
+ 1511  k get pvc
+ 1512  k get pv
+ 1513  cd ..
+ 1514  cd camunda-platform-8
+ 1515  ls
+ 1516  k get AuthorizationPolicy
+ 1517  k delete AuthorizationPolicy tcp-policy-for-kafka
+ 1518  k apply -k .
+ 1519  k get po
+ 1520  k delete deploy customer-onboarding 
+ 1521  k get po
+ 1522  k delete po hashicorp-vault-agent-injector-7d498c48fb-5ktfl
+ 1523  k get po
+ 1524  k delete po kafka-0
+ 1525  k get po
+ 1526  k delete deploy minisite 
+ 1527  k get po
+ 1528  k delete deploy kibana
+ 1529  k delete statefulsets.apps kibana
+ 1530  k get pods
+ 1531  k get po
+ 1532  k rollout restart statefulset elasticsearch-master 
+ 1533  watch kubectl get po
+ 1534  k delete statefulsets.apps elasticsearch-master 
+ 1535  k get pvc
+ 1536  k delete pvc elasticsearch-master-elasticsearch-master-0
+ 1537  k delete pvc elasticsearch-master-elasticsearch-master-1
+ 1538  k get pv
+ 1539  k get pvc
+ 1540  k delete pvc kibana-data-kibana-0
+ 1541  k get pv | grep kibana
+ 1542  k get pv | grep elast
+ 1543  k get pv
+ 1544  k apply -k .
+ 1545  watch kubectl get po
+ 1546  k rollout restart statefulset camunda-keycloak 
+ 1547  watch kubectl get po
+ 1548  watch kubectl get po
+ 1549  k rollout restart deploy camunda-operate 
+ 1550  watch kubectl get po
+ 1551  k rollout restart deploy camunda-optimize
+ 1552  k rollout restart deploy camunda-connectors 
+ 1553  watch kubectl get po
+ 1554  k apply -k .
+ 1555  watch kubectl get po
+ 1556  k get po
+ 1557  k describe po kafka-0
+ 1558  k apply -k .
+ 1559  k get po
+ 1560  istioctl analyze 
+ 1561  k edit se internal-svc-tcp 
+ 1562  istioctl analyze 
+ 1563  k edit se internal-svc-tcp 
+ 1564  istioctl analyze 
+ 1565  k edit se internal-svc-tcp 
+ 1566  istioctl analyze 
+ 1567  k edit se internal-svc-tcp 
+ 1568  k get gw -A
+ 1569  k edit gw -n helix-ingress-gateway-internal-camunda helix-ingress-gateway-internal-camunda
+ 1570  k edit gw -n helix-ingress-gateway-internal-camunda internal-camunda
+ 1571  kubens
+ 1572  k edit gw internal-camunda 
+ 1573  k docker pull eu.gcr.io/d-01-proj-001/ibp.formserver:2021.11.1
+ 1574  docker pull eu.gcr.io/d-01-proj-001/ibp.formserver:2021.11.1
+ 1575  cd ..
+ 1576  git clone git@github.com:bitnami/containers.git
+ 1577  git clone https://github.com/bitnami/containers.git
+ 1578  cd bitnami/matomo/4/debian-11/
+ 1579  cd containers/bitnami/matomo/4/debian-11/
+ 1580  ls
+ 1581  docker build . --tag matomo:4.debian-11
+ 1582  docker build . --tag bitnami/matomo:4
+ 1583  history
+ 1584  cd ..
+ 1585  git clone https://github.com/yandex-cloud/k8s-csi-s3.git
+ 1586  cd k8s-csi-s3/
+ 1587  ls
+ 1588  make
+ 1589  ps -ef
+ 1590  ps -ef | grep make
+ 1591  make
+ 1592  sudo apt update
+ 1593  sudo apt upgrade
+ 1594  sudo reboot
+ 1595  sudo apt update
+ 1596  sudo do-release-upgrade
+ 1597  top
+ 1598  sudo apt update
+ 1599  sudo reboot
+ 1600  sudo do-release-upgrade
+ 1601  sudo apt autoremove
+ 1602  sudo dpkg --configure -a
+ 1603  sudo reboot
+ 1604  sudo apt upgrade
+ 1605  sudo apt autoremove
+ 1606  sudo apt autoclean
+ 1607  sudo apt update
+ 1608  sudo apt upgrace
+ 1609  sudo apt upgrade
+ 1610  make
+ 1611  k get pods
+ 1612  kubens
+ 1613  cd deploy/
+ 1614  cd kubernetes/
+ 1615  ls
+ 1616  k apply -f attacher.yaml 
+ 1617  k apply -f csi-s3.yaml 
+ 1618  k apply -f provisioner.yaml 
+ 1619  k get pods
+ 1620  k apply -f examples/secret.yaml 
+ 1621  k apply -f examples/storageclass.yaml 
+ 1622  k apply -f examples/pvc.yaml 
+ 1623  k apply -f examples/pod.yaml 
+ 1624  kubens default 
+ 1625  k get pods
+ 1626  k get pv
+ 1627  k get pod
+ 1628  k exec -it csi-s3-test-nginx -- sh
+ 1629  history
+ 1630  docker pull cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-attacher:v3.0.1
+ 1631  docker tag cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-attacher:v3.0.1 camunda-docker-local.bin.swisscom.com/yandex-cloud/csi-s3/csi-attacher:v3.0.1
+ 1632  docker push camunda-docker-local.bin.swisscom.com/yandex-cloud/csi-s3/csi-attacher:v3.0.1
+ 1633  docker pull cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-node-driver-registrar:v1.2.0
+ 1634  docker tag cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-node-driver-registrar:v1.2.0 camunda-docker-local.bin.swisscom.com/yandex-cloud/csi-s3/csi-node-driver-registrar:v1.2.0
+ 1635  docker push camunda-docker-local.bin.swisscom.com/yandex-cloud/csi-s3/csi-node-driver-registrar:v1.2.0
+ 1636  docker tag cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-provisioner:v2.1.0 camunda-docker-local.bin.swisscom.com/yandex-cloud/csi-s3/csi-provisioner:v2.1.0
+ 1637  docker pull cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-provisioner:v2.1.0 
+ 1638  docker tag cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-provisioner:v2.1.0 camunda-docker-local.bin.swisscom.com/yandex-cloud/csi-s3/csi-provisioner:v2.1.0
+ 1639  docker push camunda-docker-local.bin.swisscom.com/yandex-cloud/csi-s3/csi-provisioner:v2.1.0
+ 1640  docker pull cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-s3-driver:0.34.7
+ 1641  docker tag cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-s3-driver:0.34.7 camunda-docker-local.bin.swisscom.com/yandex-cloud/csi-s3/csi-s3-driver:0.34.7
+ 1642  docker push camunda-docker-local.bin.swisscom.com/yandex-cloud/csi-s3/csi-s3-driver:0.34.7
+ 1643  history
+ 1644  docker images
+ 1645  history
+ 1646  mkdir ~/dev/s3-provisioner
+ 1647  history
+ 1648  cd ..
+ 1649  ls -ltr
+ 1650  cd k8s-csi-s3/
+ 1651  ls
+ 1652  cd deploy/
+ 1653  ls
+ 1654  cd helm
+ 1655  ls
+ 1656  cd ..
+ 1657  cd s3-provisioner/
+ 1658  ls
+ 1659  cd ..
+ 1660  cd s3-provisioner/
+ 1661  cd sample/
+ 1662  ls
+ 1663  cd ..
+ 1664  history
+ 1665  docker pull cr.yandex/crp9ftr22d26age3hulg/csi-s3:0.34.7
+ 1666  history
+ 1667  docker tag cr.yandex/crp9ftr22d26age3hulg/csi-s3:0.34.7 camunda-docker-local.bin.swisscom.com/yandex-cloud/csi-s3:0.34.7
+ 1668  docker push camunda-docker-local.bin.swisscom.com/yandex-cloud/csi-s3:0.34.7
+ 1669  docker tag cr.yandex/crp9ftr22d26age3hulg/csi-s3:0.34.7 camunda-docker-local.bin.swisscom.com/yandex-cloud/csi-s3/csi-s3:0.34.7
+ 1670  docker push camunda-docker-local.bin.swisscom.com/yandex-cloud/csi-s3/csi-s3:0.34.7
+ 1671  docker pull nginx
+ 1672  docker pull nginx:1.24
+ 1673  docker pull nginx:1.23
+ 1674  docker tag nginx:1.23 camunda-docker-local.bin.swisscom.com/nginx/nginx:1.23
+ 1675  docker push camunda-docker-local.bin.swisscom.com/nginx/nginx:1.23
+ 1676  kustomize build .
+ 1677  aws login
+ 1678  sudo apt install awscli
+ 1679  aws install
+ 1680  aws login
+ 1681  curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+ 1682  sudo mv /tmp/eksctl /usr/local/bin
+ 1683  eksctl version
+ 1684  aws configure
+ 1685  aws eks
+ 1686  aws eks list
+ 1687  aws eks list-clusters
+ 1688  aws configure
+ 1689  aws eks list-clusters
+ 1690  aws configure
+ 1691  aws eks list-clusters
+ 1692  aws eks update-kubeconfig --name cloudtrailtext
+ 1693  aws eks update-kubeconfig --name cloudtrailtest
+ 1694  kubectx
+ 1695  k get po
+ 1696  aws sts get-session-token --serial-number arn:aws:iam::429853594617:mfa/taaulda1 
+ 1697  aws sts get-session-token --serial-number arn:aws:iam::429853594617:mfa/taaulda1 --token-code 345655
+ 1698  aws sts get-session-token --serial-number arn:aws:iam::429853594617:user/taaulda1 --token-code 345655
+ 1699  aws sts get-session-token --serial-number arn:aws:iam::429853594617:mfa/taaulda1 --token-code 345655
+ 1700  aws sts get-session-token --serial-number arn:aws:iam::429853594617:mfa/taaulda1 --token-code 222352
+ 1701  aws sts get-session-token --serial-number arn:aws:iam::429853594617:mfa/daniele.ulrich@outlook.com --token-code 072774
+ 1702  aws sts get-session-token --serial-number arn:aws:iam::429853594617:mfa/authy_1 --token-code 149826
+ 1703  export SESSION_TOKEN="FwoGZXIvYXdzEGcaDEoTeO8jBz3FuTaenyKGAT/MTYFS1QNjzYLNARzo8MdSZNsPsOprqg9OiiV5I7F5aDhjZO9y5nNie24wM2e7LIBbF9SZQ5nECmgqvPTA1U01lx7TtE0sjTZUslPIRCPFhElpPfj5uhVxAilXshXz7x73iSO23LQkALW+GapCu7FerPQvt1JF345/f4jmRCGe0ZiDwbeQKJ23hqEGMihwc7FQevgEfBx80/d6lb1FiXW6FhjovMOLU3UWXYMnniUKpm9DL59J"
+ 1704  export AWS_SESSION_TOKEN="FwoGZXIvYXdzEGcaDEoTeO8jBz3FuTaenyKGAT/MTYFS1QNjzYLNARzo8MdSZNsPsOprqg9OiiV5I7F5aDhjZO9y5nNie24wM2e7LIBbF9SZQ5nECmgqvPTA1U01lx7TtE0sjTZUslPIRCPFhElpPfj5uhVxAilXshXz7x73iSO23LQkALW+GapCu7FerPQvt1JF345/f4jmRCGe0ZiDwbeQKJ23hqEGMihwc7FQevgEfBx80/d6lb1FiXW6FhjovMOLU3UWXYMnniUKpm9DL59J"
+ 1705  k get po
+ 1706  aws eks update-kubeconfig --name cloudtrailtest
+ 1707  k get po
+ 1708  eksctl get po
+ 1709  eksctl get cluster
+ 1710  kubectx
+ 1711  k get po
+ 1712  less ~/.kube/config
+ 1713  export AWS_ACCESS_KEY_ID=ASIAWIFKFKP47EJJTBEU
+ 1714  export AWS_SECRET_ACCESS_KEY="su6leMWQE88m3nFhn8fpMPTHWpaQi4SJpMaJjRYt"
+ 1715  export AWS_SESSION_TOKEN="FwoGZXIvYXdzEGcaDEoTeO8jBz3FuTaenyKGAT/MTYFS1QNjzYLNARzo8MdSZNsPsOprqg9OiiV5I7F5aDhjZO9y5nNie24wM2e7LIBbF9SZQ5nECmgqvPTA1U01lx7TtE0sjTZUslPIRCPFhElpPfj5uhVxAilXshXz7x73iSO23LQkALW+GapCu7FerPQvt1JF345/f4jmRCGe0ZiDwbeQKJ23hqEGMihwc7FQevgEfBx80/d6lb1FiXW6FhjovMOLU3UWXYMnniUKpm9DL59J"
+ 1716  aws eks update-kubeconfig --name cloudtrailtest
+ 1717  k get po
+ 1718  export AWS_SESSION_TOKEN=FwoGZXIvYXdzEGcaDEoTeO8jBz3FuTaenyKGAT/MTYFS1QNjzYLNARzo8MdSZNsPsOprqg9OiiV5I7F5aDhjZO9y5nNie24wM2e7LIBbF9SZQ5nECmgqvPTA1U01lx7TtE0sjTZUslPIRCPFhElpPfj5uhVxAilXshXz7x73iSO23LQkALW+GapCu7FerPQvt1JF345/f4jmRCGe0ZiDwbeQKJ23hqEGMihwc7FQevgEfBx80/d6lb1FiXW6FhjovMOLU3UWXYMnniUKpm9DL59J
+ 1719  k get po
+ 1720  aws sts get-session-token --serial-number arn:aws:iam::429853594617:mfa/authy_1 --token-code 584205
+ 1721  k get po
+ 1722  kubectx
+ 1723  k get po
+ 1724  tanzu cluster delete dev1
+ 1725  kubectx
+ 1726  k get po
+ 1727  aws sts get-session-token --serial-number arn:aws:iam::429853594617:mfa/authy_1 --token-code 944271
+ 1728  aws sts get-session-token --serial-number arn:aws:iam::429853594617:mfa/daniele.ulrich@outlook.com --token-code 772756
+ 1729  aws sts
+ 1730  aws sts help
+ 1731  cd ..
+ 1732  ls -la
+ 1733  cd .aws
+ 1734  ls
+ 1735  cat credentials 
+ 1736  :q
+ 1737  ls
+ 1738  cat config 
+ 1739  cd ..
+ 1740  aws eks list-cluster
+ 1741  aws eks list-clusters
+ 1742  ls
+ 1743  cd ..
+ 1744  cd awspoc/
+ 1745  ls
+ 1746  cat cluster.yaml 
+ 1747  cat ~/.ssh/id_rsa.pub
+ 1748  ls ~/.ssh/
+ 1749  ls ~/.ssh/
+ 1750  cd ..
+ 1751  cd awspoc/
+ 1752  eksctl create cluster cluster.yaml 
+ 1753  eksctl create cluster --help
+ 1754  eksctl create cluster -f cluster.yaml 
+ 1755  aws sts get-session-token --serial-number arn:aws:iam::429853594617:mfa/authy_1 --token-code 121193
+ 1756  export AWS_ACCESS_KEY_ID=ASIAWIFKFKP47ZB625HD
+ 1757  aws eks  update-kubeconfig --name alertingtest
+ 1758  export AWS_SECRET_ACCESS_KEY=GQ1/oDER1bbGukcu7cWRK0H8R1mqcsnqcpKfEsjA
+ 1759  export AWS_SESSION_TOKEN=FwoGZXIvYXdzEG8aDId7tD8sYz9vifO0jiKGAQLMONfSPZAZtBWF3BktocDDEwZA6JsVt4ABkFBUWWesH7mbaCZgSKRvAxbPzXRahc48D48+uwThy/NFRUR7H/gbdRmQR1zYfp+eX4+LTrayqHkMFz5N1aWwteKyQRa13bncT2wFhaqYxa1xAb00z7IR3wZCOnSt/bwAoLVT/sNvUTioaD+wKOGjiKEGMijvPg+COleL3UXV3YsExeDm9hIGFpyUHdCdkK+HfVft962h0M/bOnxF
+ 1760  aws eks  update-kubeconfig --name alertingtest
+ 1761  kubectx
+ 1762  k get po
+ 1763  k get po -A
+ 1764  aws eks --help
+ 1765  aws eks help
+ 1766  aws eks update-kubeconfig help
+ 1767  eksctl delete cluster alertingtest
+ 1768  eksctl utils update-cluster-logging --enable-types={SPECIFY-YOUR-LOG-TYPES-HERE (e.g. all)} --region=us-east-1 --cluster=alertingtest'
+ 1769  eksctl utils update-cluster-logging --enable-types={SPECIFY-YOUR-LOG-TYPES-HERE (e.g. all)} --region=us-east-1 --cluster=alertingtest
+ 1770  eksctl utils update-cluster-logging --enable-types={all} --region=us-east-1 --cluster=alertingtest
+ 1771  eksctl utils update-cluster-logging --enable-types=all --region=us-east-1 --cluster=alertingtest
+ 1772  k config get-contexts
+ 1773  k config delete-context arn:aws:eks:us-east-1:429853594617:cluster/cloudtrailtest
+ 1774  k config delete-context arn:aws:eks:us-east-1:429853594617:cluster/alertingtest
+ 1775  k config delete-context camunda-aks-1
+ 1776  k config delete-context tanzu-cli-dev1@dev1
+ 1777  k config delete-context dev1-admin@dev1
+ 1778  k config get-clusters
+ 1779  k config delete-cluster arn:aws:eks:us-east-1:429853594617:cluster/alertingtest
+ 1780  k config delete-cluster arn:aws:eks:us-east-1:429853594617:cluster/cloudtrailtest
+ 1781  k config delete-cluster camunda-aks-1
+ 1782  k config delete-cluster dev1
+ 1783  k config get-clusters
+ 1784  k config get-users
+ 1785  k config delete-user arn:aws:eks:us-east-1:429853594617:cluster/alertingtest
+ 1786  k config delete-user arn:aws:eks:us-east-1:429853594617:cluster/cloudtrailtest
+ 1787  k config delete-user clusterUser_AKS-1_camunda-aks-1
+ 1788  k config delete-user dev1-admin
+ 1789  k config delete-user tanzu-cli-dev1
+ 1790  k config get-users
+ 1791  k config get-contexts
+ 1792  kubectx
+ 1793  history
+ 1794  history > log.txt
+ 1795  eksctl utils update-cluster-logging --enable-types=all --region=us-east-1 --cluster=alertingtest
+ 1796  export values = '{
+ 1797      "Credentials": {
+ 1798          "AccessKeyId": "ASIAWIFKFKP47ZB625HD",
+ 1799          "SecretAccessKey": "GQ1/oDER1bbGukcu7cWRK0H8R1mqcsnqcpKfEsjA",
+ 1800          "SessionToken": "FwoGZXIvYXdzEG8aDId7tD8sYz9vifO0jiKGAQLMONfSPZAZtBWF3BktocDDEwZA6JsVt4ABkFBUWWesH7mbaCZgSKRvAxbPzXRahc48D48+uwThy/NFRUR7H/gbdRmQR1zYfp+eX4+LTrayqHkMFz5N1aWwteKyQRa13bncT2wFhaqYxa1xAb00z7IR3wZCOnSt/bwAoLVT/sNvUTioaD+wKOGjiKEGMijvPg+COleL3UXV3YsExeDm9hIGFpyUHdCdkK+HfVft962h0M/bOnxF",
+ 1801          "Expiration": "2023-03-28T10:00:01Z"
+ 1802      }
+ 1803  }'
+ 1804  vi values.json
+ 1805  export values = cat values.json
+ 1806  export values= cat values.json
+ 1807  export values=eval( cat values.json )
+ 1808  export values="`cat values.json`"
+ 1809  echo $values
+ 1810  for s in $(echo $values | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]" ); do     export $s; done
+ 1811  env
+ 1812  for s in $(echo $Credentials | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]" ); do     export $s; done
+ 1813  env
+ 1814  less log.txt 
+ 1815  vi createvars.sh
+ 1816  jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]"
+ 1817  echo $values | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]"
+ 1818  echo $values | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.Credentials.[]"
+ 1819  echo $values | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.Credentials[]"
+ 1820  echo $values | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.Credentials"
+ 1821  echo $values | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]"
+ 1822  echo $values | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")"
+ 1823  echo $values | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]"
+ 1824  echo $values | jq -r "select(.Credentials) |to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]"
+ 1825  echo $values | jq -r "select(.Credential) |to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]"
+ 1826  echo $values | jq -r "select(.Credentials.) |to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]"
+ 1827  echo $values | jq -r "select(.Credentials) |to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]"
+ 1828  echo $values | jq -r "select(any(.Credentials)) |to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]"
+ 1829  echo $values | jq -r "select(any(.Credentials,true)) |to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]"
+ 1830  echo $values |   jq -r .Credentials
+ 1831  echo $values |   jq -r .Credentials | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]"
+ 1832  echo $values |   jq -r .Credentials.AccessKeyId | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]"
+ 1833  echo $values |   jq -r .Credentials['AccessKeyId'] | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]"
+ 1834  echo $values |   jq -r .Credentials/AccessKeyId | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]"
+ 1835  echo $values |   jq -r .Credentials.AccessKeyId | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]"
+ 1836  echo $values |   jq -r .Credentials | jq -r .AccessKeyId | jq -r "to_entries|map(\"\(.key)=\(.value|tostring)\")|.[]"
+ 1837  echo $values |   jq -r .Credentials | jq -r .AccessKeyId "
+ 1838  echo $values |   jq -r .Credentials | jq -r .AccessKeyId 
+ 1839  echo $values |   jq -r .Credentials.AccessKeyId 
+ 1840  export AWS_ACCESS_KEY_ID="`echo $values |   jq -r .Credentials.AccessKeyId`"
+ 1841  echo $AWS_ACCESS_KEY_ID
+ 1842  chmod +x login.sh 
+ 1843  ./login.sh 887585
+ 1844  ls
+ 1845  less values.json 
+ 1846  unset AWS_ACCESS_KEY_ID
+ 1847  unset AWS_SESSION_TOKEN
+ 1848  ./login.sh 146784
+ 1849  cat values.json 
+ 1850  jq -r .Credentials.SessionToken values.json
+ 1851  ./login.sh 791729
+ 1852  env
+ 1853  export AWS_ACCESS_KEY_ID="`jq -r .Credentials.AccessKeyId values.json`"
+ 1854  env
+ 1855  export AWS_SECRET_ACCESS_KEY="`jq -r .Credentials.SecretAccessKey values.json`"
+ 1856  export AWS_SESSION_TOKEN="`jq -r .Credentials.SessionToken values.json`"
+ 1857  env
+ 1858  chmod +x logout.sh 
+ 1859  ./logout.sh
+ 1860  echo $AWS_SESSION_TOKEN
+ 1861  env
+ 1862  ./login.sh 051416
+ 1863  env
+ 1864  ./login.sh 05
+ 1865  env
+ 1866  ls
+ 1867  cat values.json 
+ 1868  ./login.sh 05 -X
+ 1869  ./login.sh 05 
+ 1870  ./login.sh  -x
+ 1871  env
+ 1872  ./login.sh  -x
+ 1873  ./login.sh  
+ 1874  ./login.sh  -x
+ 1875  env
+ 1876  ./login.sh  -x
+ 1877  env
+ 1878  . .login.sh
+ 1879  ls
+ 1880  . login.sh
+ 1881  env
+ 1882  . logout.sh
+ 1883  env
+ 1884  . login.sh 413146
+ 1885  env
+ 1886  cd ..
+ 1887  cd awspoc/
+ 1888  . logout.sh 
+ 1889  . login.sh 760187
+ 1890  . login.sh 433816
+ 1891  . login.sh 819395
+ 1892  . login.sh 613231
+ 1893  aws configure
+ 1894  . login.sh 435045
+ 1895  eksctl create cluster -f cluster.yaml 
+ 1896  eksctl delete cluster alertingtest 
+ 1897  wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | sudo tee /usr/share/keyrings/hashicorp-archive-keyring.gpg
+ 1898  echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+ 1899  sudo apt update && sudo apt install terraform
+ 1900  git clone https://github.com/hashicorp/learn-terraform-lambda-api-gateway.git
+ 1901  ls
+ 1902  cd poc
+ 1903  tf init
+ 1904  terraform init
+ 1905  terraform plan
+ 1906  terraform apply
+ 1907  cd ..
+ 1908  . logout.sh
+ 1909  . login.sh 600847
+ 1910  terraform apply
+ 1911  ls
+ 1912  cd terraform/poc/
+ 1913  terraform apply
+ 1914  terraform delete
+ 1915  terraform -help
+ 1916  terraform validate
+ 1917  terraform destroy
+ 1918  cd ..
+ 1919  git clone https://github.com/hashicorp/learn-terraform-provision-eks-cluster
+ 1920  aws eks describe-addon-configuration
+ 1921  aws eks list-addons
+ 1922  aws eks describe-addon-configuration help
+ 1923  aws eks describe-addon help
+ 1924  aws eks describe-addon 
+ 1925  cd poc
+ 1926  terraform validate
+ 1927  terraform apply
+ 1928  cd ..
+ 1929  git clone ssh://git@git.swisscom.com:7999/hlx/helix-infra.git
+ 1930  cd awspoc
+ 1931  . login.sh 673727
+ 1932  terraform destroy
+ 1933  cd terraform/poc/
+ 1934  terraform destroy
+ 1935  cd ..
+ 1936  cd helix-infra/aws/pocs/Lamdba-SNS-to-MS-Teams-or-Opsgenie/
+ 1937  ls
+ 1938  terraform init
+ 1939  terraform apply
+ 1940  terraform destroy
+ 1941  terraform apply
+ 1942  terraform destroy
+ 1943  terraform apply
+ 1944  terraform destroy
+ 1945  terraform validate
+ 1946  terraform apply
+ 1947  terraform validate
+ 1948  terraform apply
+ 1949  terraform destroy
+ 1950  terraform apply
+ 1951  terraform validate
+ 1952  terraform apply
+ 1953  terraform destroy
+ 1954  terraform apply
+ 1955  terraform destroy
+ 1956  terraform validate
+ 1957  terraform apply
+ 1958  aws sns publish --topic-arn arn:aws:sns:eu-central-1:300415135742:sns-lambda-poc-topic-2 --message "Hello World!"
+ 1959  terraform destroy
+ 1960  terraform apply
+ 1961  git pull
+ 1962  git pull origin master
+ 1963  git push -u origin ABPCEJ-381
+ 1964  git commit --amend
+ 1965  git push -u origin ABPCEJ-381
+ 1966  git commit --amend
+ 1967  git push -u origin ABPCEJ-381
+ 1968  terraform destroy
+ 1969  sleep 10
+ 1970  sleep 10 && echo "test"
+ 1971  terraform apply
+ 1972  git push -u origin ABPCEJ-381
+ 1973  git commit --amend
+ 1974  git push -u origin ABPCEJ-381
+ 1975  git commit --amend
+ 1976  git push -u origin ABPCEJ-381
+ 1977  git config pull.rebase false
+ 1978  git pull origin master
+ 1979  git push origin master
+ 1980  git commit --append
+ 1981  git commit -append
+ 1982  git commit -ammend
+ 1983  git commit --ammend
+ 1984  git commit --amend
+ 1985  git push origin master
+ 1986  git pull origin master
+ 1987  git fetch
+ 1988  ssh-agent
+ 1989  ssh-add /home/daniele/.ssh/id_ed25519
+ 1990  git pull origin master
+ 1991  git fetch
+ 1992  git push origin master
+ 1993  docker images
+ 1994  docker pull quay.io/k8scsi/csi-attacher:v4.2.0
+ 1995  docker pull registry.k8s.io/sig-storage/csi-attacher:v4.2.0
+ 1996  docker pull registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.6.3
+ 1997  docker pull registry.k8s.io/sig-storage/csi-provisioner:v3.4.0
+ 1998  docker image
+ 1999  docker images
+ 2000  docker tag registry.k8s.io/sig-storage/csi-provisioner:v3.4.0 camunda-docker-local.bin.swisscom.com/sig-storage/csi-provisioner:v3.4.0
+ 2001  docker push camunda-docker-local.bin.swisscom.com/sig-storage/csi-provisioner:v3.4.0
+ 2002  docker login camunda-docker-local.bin.swisscom.com
+ 2003  docker push camunda-docker-local.bin.swisscom.com/sig-storage/csi-provisioner:v3.4.0
+ 2004  history -> log.txt
+ 2005  history > log.txt

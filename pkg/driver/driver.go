@@ -19,17 +19,20 @@ package driver
 import (
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/golang/glog"
-
-	csicommon "github.com/kubernetes-csi/drivers/pkg/csi-common"
 )
 
 type driver struct {
-	driver   *csicommon.CSIDriver
+	ids *IdentityServer
+	cs  *ControllerServer
+	name    string
+	nodeID  string
+	version string
+
 	endpoint string
 
-	ids *identityServer
-	ns  *nodeServer
-	cs  *controllerServer
+	ns *NodeServer
+	cap   []*csi.VolumeCapability_AccessMode
+	cscap []*csi.ControllerServiceCapability
 }
 
 var (
@@ -39,50 +42,58 @@ var (
 
 // New initializes the driver
 func New(nodeID string, endpoint string) (*driver, error) {
-	d := csicommon.NewCSIDriver(driverName, vendorVersion, nodeID)
-	if d == nil {
-		glog.Fatalln("Failed to initialize CSI Driver.")
-	}
+	glog.Infof("Driver: %v version: %v", driverName, vendorVersion)
 
-	s3Driver := &driver{
+	d := &driver{
+		name:     driverName,
+		version:  vendorVersion,
+		nodeID:   nodeID,
 		endpoint: endpoint,
-		driver:   d,
 	}
-	return s3Driver, nil
+	return d, nil
 }
 
-func (s3 *driver) newIdentityServer(d *csicommon.CSIDriver) *identityServer {
-	return &identityServer{
-		DefaultIdentityServer: csicommon.NewDefaultIdentityServer(d),
+	
+func (d *driver) AddVolumeCapabilityAccessModes(vc []csi.VolumeCapability_AccessMode_Mode) []*csi.VolumeCapability_AccessMode {
+	var vca []*csi.VolumeCapability_AccessMode
+	for _, c := range vc {
+		glog.Infof("Enabling volume access mode: %v", c.String())
+		vca = append(vca, &csi.VolumeCapability_AccessMode{Mode: c})
 	}
+	d.cap = vca
+	return vca
 }
 
-func (s3 *driver) newControllerServer(d *csicommon.CSIDriver) *controllerServer {
-	return &controllerServer{
-		DefaultControllerServer: csicommon.NewDefaultControllerServer(d),
-	}
-}
+func (d *driver) AddControllerServiceCapabilities(cl []csi.ControllerServiceCapability_RPC_Type) {
+	var csc []*csi.ControllerServiceCapability
 
-func (s3 *driver) newNodeServer(d *csicommon.CSIDriver) *nodeServer {
-	return &nodeServer{
-		DefaultNodeServer: csicommon.NewDefaultNodeServer(d),
+	for _, c := range cl {
+		glog.Infof("Enabling controller service capability: %v", c.String())
+		csc = append(csc, NewControllerServiceCapability(c))
 	}
+
+	d.cscap = csc
+
+	return
 }
 
 func (s3 *driver) Run() {
+
 	glog.Infof("Driver: %v ", driverName)
 	glog.Infof("Version: %v ", vendorVersion)
 	// Initialize default library driver
 
-	s3.driver.AddControllerServiceCapabilities([]csi.ControllerServiceCapability_RPC_Type{csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME})
-	s3.driver.AddVolumeCapabilityAccessModes([]csi.VolumeCapability_AccessMode_Mode{csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER})
+	s3.AddControllerServiceCapabilities([]csi.ControllerServiceCapability_RPC_Type{csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME})
+	s3.AddVolumeCapabilityAccessModes([]csi.VolumeCapability_AccessMode_Mode{csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER})
 
 	// Create GRPC servers
-	s3.ids = s3.newIdentityServer(s3.driver)
-	s3.ns = s3.newNodeServer(s3.driver)
-	s3.cs = s3.newControllerServer(s3.driver)
-
-	s := csicommon.NewNonBlockingGRPCServer()
-	s.Start(s3.endpoint, s3.ids, s3.cs, s3.ns)
+	s3.ids = NewDefaultIdentityServer(s3)
+	s3.ns = NewNodeServer(s3)
+	s3.cs = NewControllerServer(s3)
+	s := NewNonBlockingGRPCServer()
+	s.Start(s3.endpoint,
+		s3.ids,
+		s3.cs,
+		s3.ns)
 	s.Wait()
 }

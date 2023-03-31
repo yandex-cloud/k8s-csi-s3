@@ -1,0 +1,20 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../s3-provisioner"
+		},
+		{
+			"path": "../camunda-platform-8"
+		},
+		{
+			"path": "../csi-driver-iscsi"
+		},
+		{
+			"path": "../geesefs"
+		}
+	],
+	"settings": {}
+}
