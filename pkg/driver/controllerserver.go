@@ -23,14 +23,12 @@ import (
 	"io"
 	"path"
 	"strings"
-
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/mounter"
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/s3"
 	"github.com/golang/glog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
 	"github.com/container-storage-interface/spec/lib/go/csi"
 )
 
