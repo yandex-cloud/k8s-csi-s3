@@ -14,7 +14,7 @@ import (
 	systemd "github.com/coreos/go-systemd/v22/dbus"
 	"github.com/golang/glog"
 	"github.com/mitchellh/go-ps"
-	"k8s.io/kubernetes/pkg/util/mount"
+	"k8s.io/mount-utils"
 
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/s3"
 )
@@ -120,11 +120,11 @@ func waitForMount(path string, timeout time.Duration) error {
 	var elapsed time.Duration
 	var interval = 10 * time.Millisecond
 	for {
-		notMount, err := mount.New("").IsNotMountPoint(path)
+		mount, err := mount.New("").IsMountPoint(path)
 		if err != nil {
 			return err
 		}
-		if !notMount {
+		if mount {
 			return nil
 		}
 		time.Sleep(interval)
