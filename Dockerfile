@@ -7,6 +7,16 @@ ADD cmd /build/cmd
 ADD pkg /build/pkg
 RUN CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static"' -o ./s3driver ./cmd/s3driver
 
+FROM alpine:3.17 AS downloader
+
+WORKDIR /work
+
+RUN apk add --no-cache curl
+
+ARG TARGETPLATFORM
+RUN ARCH=$(echo $TARGETPLATFORM | sed -e 's/^linux\///g') && \
+    curl https://github.com/yandex-cloud/geesefs/releases/latest/download/geesefs-linux-$ARCH -LfSso /work/geesefs
+
 FROM alpine:3.17
 LABEL maintainers="Vitaliy Filippov <vitalif@yourcmc.ru>"
 LABEL description="csi-s3 slim image"
@@ -14,7 +24,7 @@ LABEL description="csi-s3 slim image"
 RUN apk add --no-cache fuse mailcap rclone
 RUN apk add --no-cache -X http://dl-cdn.alpinelinux.org/alpine/edge/community s3fs-fuse
 
-ADD https://github.com/yandex-cloud/geesefs/releases/latest/download/geesefs-linux-amd64 /usr/bin/geesefs
+COPY --from=downloader /work/geesefs /usr/bin/geesefs
 RUN chmod 755 /usr/bin/geesefs
 
 COPY --from=gobuild /build/s3driver /s3driver
