@@ -5,15 +5,51 @@ on:
     tags:
     - "v*"
 
+env:
+  REGISTRY_NAME: cr.yandex/crp9ftr22d26age3hulg
+  REGISTRY_NAME2: cr.il.nebius.cloud/crll7us9n6i5j3v4n92m
+  IMAGE_NAME: csi-s3
+  IMAGE_NAME2: yandex-cloud/csi-s3/csi-s3-driver
+
 jobs:
 
   build:
     runs-on: ubuntu-latest
     steps:
+    - name: Set IMAGE_TAG env
+      # GITHUB_REF value: refs/heads/v*
+      run: echo "VERSION=$(echo ${GITHUB_REF:11})" >> $GITHUB_ENV
+
     - uses: actions/checkout@v2
 
-    - name: Push Docker
-      run: (echo '${{ secrets.REGISTRY_KEY }}' | docker login --username json_key --password-stdin cr.yandex) && make push
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: all
+    - name: Set up Docker Buildx
+      id: buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Show available platforms
+      run: echo ${{ steps.buildx.outputs.platforms }}
+
+    - name: Login to Registry
+      uses: docker/login-action@v2
+      with:
+        registry: cr.yandex
+        username: json_key
+        password: ${{ secrets.REGISTRY_KEY }}
+
+    - name: Build and push
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: true
+        platforms: linux/amd64
+        tags: |
+          ${{ env.REGISTRY_NAME }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+          ${{ env.REGISTRY_NAME }}/${{ env.IMAGE_NAME }}:latest
+          ${{ env.REGISTRY_NAME }}/${{ env.IMAGE_NAME2 }}:${{ env.VERSION }}
+          ${{ env.REGISTRY_NAME }}/${{ env.IMAGE_NAME2 }}:latest
 
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
