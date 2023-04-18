@@ -28,6 +28,7 @@ type Config struct {
 	Region          string
 	Endpoint        string
 	Mounter         string
+	BucketLookup    string
 }
 
 type FSMeta struct {
@@ -41,6 +42,11 @@ type FSMeta struct {
 func NewClient(cfg *Config) (*s3Client, error) {
 	var client = &s3Client{}
 
+	bucketLookup, err := ParseBucketLookup(cfg.BucketLookup)
+	if err != nil {
+		return nil, err
+	}
+
 	client.Config = cfg
 	u, err := url.Parse(client.Config.Endpoint)
 	if err != nil {
@@ -52,8 +58,10 @@ func NewClient(cfg *Config) (*s3Client, error) {
 		endpoint = u.Hostname() + ":" + u.Port()
 	}
 	minioClient, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(client.Config.AccessKeyID, client.Config.SecretAccessKey, client.Config.Region),
-		Secure: ssl,
+		Creds:        credentials.NewStaticV4(client.Config.AccessKeyID, client.Config.SecretAccessKey, ""),
+		Secure:       ssl,
+		Region:       client.Config.Region,
+		BucketLookup: bucketLookup,
 	})
 	if err != nil {
 		return nil, err
@@ -70,7 +78,8 @@ func NewClientFromSecret(secret map[string]string) (*s3Client, error) {
 		Region:          secret["region"],
 		Endpoint:        secret["endpoint"],
 		// Mounter is set in the volume preferences, not secrets
-		Mounter: "",
+		Mounter:      "",
+		BucketLookup: secret["bucketLookup"],
 	})
 }
 
@@ -219,4 +228,17 @@ func (client *s3Client) removeObjectsOneByOne(bucketName, prefix string) error {
 	}
 
 	return nil
+}
+
+func ParseBucketLookup(bucketLookup string) (minio.BucketLookupType, error) {
+	switch bucketLookup {
+	case "", "Auto":
+		return minio.BucketLookupAuto, nil
+	case "DNS":
+		return minio.BucketLookupDNS, nil
+	case "Path":
+		return minio.BucketLookupPath, nil
+	default:
+		return -1, fmt.Errorf("failed to parse BucketLookup: %s", bucketLookup)
+	}
 }

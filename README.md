@@ -26,6 +26,8 @@ stringData:
   endpoint: https://storage.yandexcloud.net
   # For AWS set it to AWS region
   #region: ""
+  # For S3-compatible set it to bucket lookup style (choices: Auto [default], DNS, Path)
+  #bucketLookup: ""
 ```
 
 The region can be empty if you are using some other S3 compatible storage.
