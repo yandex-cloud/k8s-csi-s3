@@ -191,6 +191,10 @@ func (cs *controllerServer) ValidateVolumeCapabilities(ctx context.Context, req 
 	}, nil
 }
 
+func (cs *controllerServer) ControllerGetVolume(ctx context.Context, req *csi.ControllerGetVolumeRequest) (*csi.ControllerGetVolumeResponse, error) {
+	return &csi.ControllerGetVolumeResponse{}, status.Error(codes.Unimplemented, "ControllerGetVolume is not implemented")
+}
+
 func (cs *controllerServer) ControllerExpandVolume(ctx context.Context, req *csi.ControllerExpandVolumeRequest) (*csi.ControllerExpandVolumeResponse, error) {
 	return &csi.ControllerExpandVolumeResponse{}, status.Error(codes.Unimplemented, "ControllerExpandVolume is not implemented")
 }

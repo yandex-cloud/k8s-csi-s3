@@ -1,6 +1,7 @@
 package mounter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -22,7 +23,7 @@ import (
 // Mounter interface which can be implemented
 // by the different mounter types
 type Mounter interface {
-	Mount(target, volumeID string) error
+	Mount(ctx context.Context, target, volumeID string) error
 }
 
 const (
