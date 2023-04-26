@@ -3,6 +3,7 @@ package mounter
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	systemd "github.com/coreos/go-systemd/v22/dbus"
@@ -92,10 +93,30 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 	)
 	useSystemd := true
 	for i := 0; i < len(geesefs.meta.MountOptions); i++ {
-		if geesefs.meta.MountOptions[i] == "--no-systemd" {
+		opt := geesefs.meta.MountOptions[i]
+		if opt == "--no-systemd" {
 			useSystemd = false
-		} else {
-			args = append(args, geesefs.meta.MountOptions[i])
+		} else if len(opt) > 0 && opt[0] == '-' {
+			// Remove unsafe options
+			s := 1
+			if len(opt) > 1 && opt[1] == '-' {
+				s++
+			}
+			key := opt[s:]
+			e := strings.Index(opt, "=")
+			if e >= 0 {
+				key = opt[s:e]
+			}
+			if key == "log-file" || key == "shared-config" || key == "cache" {
+				// Skip options accessing local FS
+				if e < 0 {
+					i++
+				}
+			} else if key != "" {
+				args = append(args, opt)
+			}
+		} else if len(opt) > 0 {
+			args = append(args, opt)
 		}
 	}
 	args = append(args, fullPath, target)
@@ -118,6 +139,7 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 		pluginDir = "/var/lib/kubelet/plugins/ru.yandex.s3.csi"
 	}
 	args = append([]string{pluginDir+"/geesefs", "-f", "-o", "allow_other", "--endpoint", geesefs.endpoint}, args...)
+	glog.Info("Starting geesefs using systemd: "+strings.Join(args, " "))
 	unitName := "geesefs-"+systemd.PathBusEscape(volumeID)+".service"
 	newProps := []systemd.Property{
 		systemd.Property{
