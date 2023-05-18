@@ -42,3 +42,5 @@ tolerations:
   all: false
   node: []
   controller: []
+
+kubeletPath: {{ .Values.kubeletPath }}
