@@ -80,6 +80,12 @@ func (geesefs *geesefsMounter) MountDirect(target string, args []string) error {
 	return fuseMount(target, geesefsCmd, args)
 }
 
+type execCmd struct {
+	Path             string
+	Args             []string
+	UncleanIsFailure bool
+}
+
 func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 	fullPath := fmt.Sprintf("%s:%s", geesefs.meta.BucketName, geesefs.meta.Prefix)
 	var args []string
@@ -147,6 +153,11 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 			Value: dbus.MakeVariant("GeeseFS mount for Kubernetes volume "+volumeID),
 		},
 		systemd.PropExecStart(args, false),
+		systemd.Property{
+			Name: "ExecStopPost",
+			// force & lazy unmount to cleanup possibly dead mountpoints
+			Value: dbus.MakeVariant([]execCmd{ execCmd{ "/bin/umount", []string{ "/bin/umount", "-f", "-l", target }, false } }),
+		},
 		systemd.Property{
 			Name: "Environment",
 			Value: dbus.MakeVariant([]string{ "AWS_ACCESS_KEY_ID="+geesefs.accessKeyID, "AWS_SECRET_ACCESS_KEY="+geesefs.secretAccessKey }),
