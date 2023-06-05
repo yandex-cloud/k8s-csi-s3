@@ -75,9 +75,11 @@ func (geesefs *geesefsMounter) MountDirect(target string, args []string) error {
 		"-o", "allow_other",
 		"--log-file", "/dev/stderr",
 	}, args...)
-	os.Setenv("AWS_ACCESS_KEY_ID", geesefs.accessKeyID)
-	os.Setenv("AWS_SECRET_ACCESS_KEY", geesefs.secretAccessKey)
-	return fuseMount(target, geesefsCmd, args)
+	envs := []string{
+		"AWS_ACCESS_KEY_ID=" + geesefs.accessKeyID,
+		"AWS_SECRET_ACCESS_KEY=" + geesefs.secretAccessKey,
+	}
+	return fuseMount(target, geesefsCmd, args, envs)
 }
 
 type execCmd struct {
