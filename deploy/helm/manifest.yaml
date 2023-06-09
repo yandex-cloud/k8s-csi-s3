@@ -4,7 +4,6 @@ helm_chart:
 requirements:
   k8s_version: ">=1.13"
 images:
-  - full: images.attacher
   - full: images.registrar
   - full: images.provisioner
   - full: images.csi

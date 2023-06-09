@@ -1,7 +1,5 @@
 ---
 images:
-  # Source: quay.io/k8scsi/csi-attacher:v3.0.1
-  attacher: cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-attacher:v3.0.1
   # Source: quay.io/k8scsi/csi-node-driver-registrar:v1.2.0
   registrar: cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-node-driver-registrar:v1.2.0
   # Source: quay.io/k8scsi/csi-provisioner:v2.1.0
