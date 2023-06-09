@@ -35,7 +35,7 @@ The region can be empty if you are using some other S3 compatible storage.
 ```bash
 cd deploy/kubernetes
 kubectl create -f provisioner.yaml
-kubectl create -f attacher.yaml
+kubectl create -f driver.yaml
 kubectl create -f csi-s3.yaml
 ```
 
