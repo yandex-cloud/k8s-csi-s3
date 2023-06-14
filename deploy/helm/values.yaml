@@ -43,4 +43,4 @@ tolerations:
   node: []
   controller: []
 
-kubeletPath: {{ .Values.kubeletPath }}
+kubeletPath: /var/lib/kubelet
