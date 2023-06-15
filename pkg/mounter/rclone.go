@@ -2,7 +2,6 @@ package mounter
 
 import (
 	"fmt"
-	"os"
 	"path"
 
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/s3"
