@@ -9,7 +9,7 @@ metadata:
 {{- end }}
 provisioner: ru.yandex.s3.csi
 parameters:
-  mounter: geesefs
+  mounter: "{{ .Values.storageClass.mounter }}"
   options: "{{ .Values.storageClass.mountOptions }}"
 {{- if .Values.storageClass.singleBucket }}
   bucket: "{{ .Values.storageClass.singleBucket }}"
