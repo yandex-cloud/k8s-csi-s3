@@ -77,6 +77,10 @@ spec:
         {{- with .Values.tolerations.controller }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: csi-provisioner
           image: {{ .Values.images.provisioner }}
