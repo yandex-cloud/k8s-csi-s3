@@ -43,4 +43,6 @@ tolerations:
   node: []
   controller: []
 
+nodeSelector: {}
+
 kubeletPath: /var/lib/kubelet
