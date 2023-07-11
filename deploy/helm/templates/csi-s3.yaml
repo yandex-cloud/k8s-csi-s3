@@ -94,6 +94,9 @@ spec:
           volumeMounts:
             - name: plugin-dir
               mountPath: /csi
+            - name: stage-dir
+              mountPath: {{ .Values.kubeletPath }}/plugins/kubernetes.io/csi
+              mountPropagation: "Bidirectional"
             - name: pods-mount-dir
               mountPath: {{ .Values.kubeletPath }}/pods
               mountPropagation: "Bidirectional"
@@ -109,6 +112,10 @@ spec:
         - name: plugin-dir
           hostPath:
             path: {{ .Values.kubeletPath }}/plugins/ru.yandex.s3.csi
+            type: DirectoryOrCreate
+        - name: stage-dir
+          hostPath:
+            path: {{ .Values.kubeletPath }}/plugins/kubernetes.io/csi
             type: DirectoryOrCreate
         - name: pods-mount-dir
           hostPath:
