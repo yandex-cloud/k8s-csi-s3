@@ -94,11 +94,16 @@ spec:
           volumeMounts:
             - name: plugin-dir
               mountPath: /csi
+            - name: stage-dir
+              mountPath: {{ .Values.kubeletPath }}/plugins/kubernetes.io/csi
+              mountPropagation: "Bidirectional"
             - name: pods-mount-dir
               mountPath: {{ .Values.kubeletPath }}/pods
               mountPropagation: "Bidirectional"
             - name: fuse-device
               mountPath: /dev/fuse
+            - name: systemd-control
+              mountPath: /run/systemd
       volumes:
         - name: registration-dir
           hostPath:
@@ -108,6 +113,10 @@ spec:
           hostPath:
             path: {{ .Values.kubeletPath }}/plugins/ru.yandex.s3.csi
             type: DirectoryOrCreate
+        - name: stage-dir
+          hostPath:
+            path: {{ .Values.kubeletPath }}/plugins/kubernetes.io/csi
+            type: DirectoryOrCreate
         - name: pods-mount-dir
           hostPath:
             path: {{ .Values.kubeletPath }}/pods
@@ -115,3 +124,7 @@ spec:
         - name: fuse-device
           hostPath:
             path: /dev/fuse
+        - name: systemd-control
+          hostPath:
+            path: /run/systemd
+            type: DirectoryOrCreate
