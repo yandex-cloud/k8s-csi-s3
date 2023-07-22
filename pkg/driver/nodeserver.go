@@ -84,7 +84,28 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 		return nil, status.Error(codes.InvalidArgument, "Target path missing in request")
 	}
 
-	notMnt, err := checkMount(targetPath)
+	notMnt, err := checkMount(stagingTargetPath)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	if notMnt {
+		// Staged mount is dead by some reason. Revive it
+		bucketName, prefix := volumeIDToBucketPrefix(volumeID)
+		s3, err := s3.NewClientFromSecret(req.GetSecrets())
+		if err != nil {
+			return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
+		}
+		meta := getMeta(bucketName, prefix, req.VolumeContext)
+		mounter, err := mounter.New(meta, s3.Config)
+		if err != nil {
+			return nil, err
+		}
+		if err := mounter.Mount(stagingTargetPath, volumeID); err != nil {
+			return nil, err
+		}
+	}
+
+	notMnt, err = checkMount(targetPath)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

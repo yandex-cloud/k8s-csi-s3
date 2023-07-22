@@ -44,7 +44,7 @@ func (s3fs *s3fsMounter) Mount(target, volumeID string) error {
 		args = append(args, "-o", fmt.Sprintf("endpoint=%s", s3fs.region))
 	}
 	args = append(args, s3fs.meta.MountOptions...)
-	return fuseMount(target, s3fsCmd, args)
+	return fuseMount(target, s3fsCmd, args, nil)
 }
 
 func writes3fsPass(pwFileContent string) error {

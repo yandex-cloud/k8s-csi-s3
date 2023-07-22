@@ -3,6 +3,7 @@ package mounter
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	systemd "github.com/coreos/go-systemd/v22/dbus"
@@ -74,9 +75,17 @@ func (geesefs *geesefsMounter) MountDirect(target string, args []string) error {
 		"-o", "allow_other",
 		"--log-file", "/dev/stderr",
 	}, args...)
-	os.Setenv("AWS_ACCESS_KEY_ID", geesefs.accessKeyID)
-	os.Setenv("AWS_SECRET_ACCESS_KEY", geesefs.secretAccessKey)
-	return fuseMount(target, geesefsCmd, args)
+	envs := []string{
+		"AWS_ACCESS_KEY_ID=" + geesefs.accessKeyID,
+		"AWS_SECRET_ACCESS_KEY=" + geesefs.secretAccessKey,
+	}
+	return fuseMount(target, geesefsCmd, args, envs)
+}
+
+type execCmd struct {
+	Path             string
+	Args             []string
+	UncleanIsFailure bool
 }
 
 func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
@@ -92,10 +101,30 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 	)
 	useSystemd := true
 	for i := 0; i < len(geesefs.meta.MountOptions); i++ {
-		if geesefs.meta.MountOptions[i] == "--no-systemd" {
+		opt := geesefs.meta.MountOptions[i]
+		if opt == "--no-systemd" {
 			useSystemd = false
-		} else {
-			args = append(args, geesefs.meta.MountOptions[i])
+		} else if len(opt) > 0 && opt[0] == '-' {
+			// Remove unsafe options
+			s := 1
+			if len(opt) > 1 && opt[1] == '-' {
+				s++
+			}
+			key := opt[s:]
+			e := strings.Index(opt, "=")
+			if e >= 0 {
+				key = opt[s:e]
+			}
+			if key == "log-file" || key == "shared-config" || key == "cache" {
+				// Skip options accessing local FS
+				if e < 0 {
+					i++
+				}
+			} else if key != "" {
+				args = append(args, opt)
+			}
+		} else if len(opt) > 0 {
+			args = append(args, opt)
 		}
 	}
 	args = append(args, fullPath, target)
@@ -118,6 +147,7 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 		pluginDir = "/var/lib/kubelet/plugins/ru.yandex.s3.csi"
 	}
 	args = append([]string{pluginDir+"/geesefs", "-f", "-o", "allow_other", "--endpoint", geesefs.endpoint}, args...)
+	glog.Info("Starting geesefs using systemd: "+strings.Join(args, " "))
 	unitName := "geesefs-"+systemd.PathBusEscape(volumeID)+".service"
 	newProps := []systemd.Property{
 		systemd.Property{
@@ -125,6 +155,11 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 			Value: dbus.MakeVariant("GeeseFS mount for Kubernetes volume "+volumeID),
 		},
 		systemd.PropExecStart(args, false),
+		systemd.Property{
+			Name: "ExecStopPost",
+			// force & lazy unmount to cleanup possibly dead mountpoints
+			Value: dbus.MakeVariant([]execCmd{ execCmd{ "/bin/umount", []string{ "/bin/umount", "-f", "-l", target }, false } }),
+		},
 		systemd.Property{
 			Name: "Environment",
 			Value: dbus.MakeVariant([]string{ "AWS_ACCESS_KEY_ID="+geesefs.accessKeyID, "AWS_SECRET_ACCESS_KEY="+geesefs.secretAccessKey }),

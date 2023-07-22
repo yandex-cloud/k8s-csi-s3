@@ -2,7 +2,6 @@ package mounter
 
 import (
 	"fmt"
-	"os"
 	"path"
 
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/s3"
@@ -47,7 +46,9 @@ func (rclone *rcloneMounter) Mount(target, volumeID string) error {
 		args = append(args, fmt.Sprintf("--s3-region=%s", rclone.region))
 	}
 	args = append(args, rclone.meta.MountOptions...)
-	os.Setenv("AWS_ACCESS_KEY_ID", rclone.accessKeyID)
-	os.Setenv("AWS_SECRET_ACCESS_KEY", rclone.secretAccessKey)
-	return fuseMount(target, rcloneCmd, args)
+	envs := []string{
+		"AWS_ACCESS_KEY_ID=" + rclone.accessKeyID,
+		"AWS_SECRET_ACCESS_KEY=" + rclone.secretAccessKey,
+	}
+	return fuseMount(target, rcloneCmd, args, envs)
 }

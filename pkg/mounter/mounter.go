@@ -57,9 +57,11 @@ func New(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
 	}
 }
 
-func fuseMount(path string, command string, args []string) error {
+func fuseMount(path string, command string, args []string, envs []string) error {
 	cmd := exec.Command(command, args...)
 	cmd.Stderr = os.Stderr
+	// cmd.Environ() returns envs inherited from the current process
+	cmd.Env = append(cmd.Environ(), envs...)
 	glog.V(3).Infof("Mounting fuse with command: %s and args: %s", command, args)
 
 	out, err := cmd.Output()
