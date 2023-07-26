@@ -14,7 +14,7 @@ user_values:
       ru: Создать класс хранения
     description:
       en: Specifies whether the storage class should be created
-      ru: 'Если "да", при установке будет создан класс хранения S3'
+      ru: Выберите, чтобы создать новый S3-класс хранения при развёртывании приложения.
     boolean_value:
       default_value: true
   - name: secret.create
@@ -23,7 +23,7 @@ user_values:
       ru: Создать секрет
     description:
       en: Specifies whether the secret should be created
-      ru: 'Если "да", при установке будет создан секрет, иначе для класса хранения будет использован существующий'
+      ru: Выберите, чтобы создать новый секрет для класса хранения при установке приложения, а не использовать существующий.
     boolean_value:
       default_value: true
   - name: secret.accessKey
@@ -32,7 +32,7 @@ user_values:
       ru: Идентификатор ключа S3
     description:
       en: S3 Access Key ID
-      ru: Идентификатор ключа S3
+      ru: Идентификатор ключа S3.
     string_value:
       default_value: ""
   - name: secret.secretKey
@@ -41,7 +41,7 @@ user_values:
       ru: Секретный ключ S3
     description:
       en: S3 Secret Key
-      ru: Секретный ключ S3
+      ru: Секретный ключ S3.
     string_value:
       default_value: ""
   - name: storageClass.singleBucket
@@ -50,7 +50,7 @@ user_values:
       ru: Общий бакет S3 для томов
     description:
       en: Single S3 bucket to use for all dynamically provisioned persistent volumes
-      ru: Общий бакет S3, в котором будут создаваться все динамически распределяемые тома. Если пусто, под каждый том будет создаваться новый бакет
+      ru: Общий бакет S3, в котором будут создаваться все динамически распределяемые тома. Если пусто, под каждый том будет создаваться новый бакет.
     string_value:
       default_value: ""
   - name: secret.endpoint
@@ -59,7 +59,7 @@ user_values:
       ru: Адрес S3-сервиса
     description:
       en: S3 service endpoint to use
-      ru: Адрес S3-сервиса, который будет использоваться
+      ru: Адрес S3-сервиса, который будет использоваться.
     string_value:
       default_value: "https://storage.yandexcloud.net"
   - name: storageClass.mountOptions
@@ -67,8 +67,8 @@ user_values:
       en: GeeseFS mount options
       ru: Опции монтирования GeeseFS
     description:
-      en: GeeseFS mount options to use. Consult GeeseFS (https://github.com/yandex-cloud/geesefs) help for the full option list
-      ru: Опции монтирования GeeseFS. Смотрите справку GeeseFS (https://github.com/yandex-cloud/geesefs) для полного перечня опций
+      en: GeeseFS mount options to use. Refer to `geesefs --help` command output for the whole list of options (https://github.com/yandex-cloud/geesefs).
+      ru: Опции монтирования GeeseFS. Полный перечень и описание опций смотрите в выводе команды `geesefs --help` (https://github.com/yandex-cloud/geesefs).
     string_value:
       default_value: "--memory-limit 1000 --dir-mode 0777 --file-mode 0666"
   - name: storageClass.reclaimPolicy
@@ -77,7 +77,7 @@ user_values:
       ru: Политика очистки томов
     description:
       en: Volume reclaim policy for the storage class (Retain or Delete)
-      ru: Политика очистки PV, связанных с PVC (Retain - сохранять при удалении PVC, Delete - удалять при удалении PVC)
+      ru: Выберите политику очистки томов PersistentVolume при удалении PersistentVolumeClaim. Retain — сохранять том, Delete — удалять том.
     string_selector_value:
       default_value: Delete
       values:
@@ -89,7 +89,7 @@ user_values:
       ru: Название класса хранения
     description:
       en: Name of the storage class that will be created
-      ru: Название класса хранения, который будет создан при установке
+      ru: Название класса хранения, который будет создан при установке.
     string_value:
       default_value: csi-s3
   - name: secret.name
@@ -98,7 +98,7 @@ user_values:
       ru: Название секрета
     description:
       en: Name of the secret to create or use for the storage class
-      ru: Название секрета, который будет создан или использован для класса хранения
+      ru: Название секрета, который будет создан или использован для класса хранения.
     string_value:
       default_value: csi-s3-secret
   - name: tolerations.all
@@ -107,6 +107,6 @@ user_values:
       ru: Игнорировать все политики taint
     description:
       en: Tolerate all taints by the CSI-S3 node driver (mounter)
-      ru: Игнорировать все политики taint узлов кластера драйвером CSI-S3, монтирующим ФС на узлах
+      ru: Выберите, чтобы драйвер CSI, который монтирует файловую систему на узлах, игнорировал все политики taint для узлов кластера.
     boolean_value:
       default_value: false
