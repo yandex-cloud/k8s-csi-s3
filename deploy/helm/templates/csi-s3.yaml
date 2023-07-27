@@ -50,7 +50,6 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       serviceAccount: csi-s3
-      hostNetwork: true
       containers:
         - name: driver-registrar
           image: {{ .Values.images.registrar }}

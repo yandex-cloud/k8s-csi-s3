@@ -43,7 +43,6 @@ spec:
           effect: NoExecute
           tolerationSeconds: 300
       serviceAccount: csi-s3
-      hostNetwork: true
       containers:
         - name: driver-registrar
           image: quay.io/k8scsi/csi-node-driver-registrar:v1.2.0
