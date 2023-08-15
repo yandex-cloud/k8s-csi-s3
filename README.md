@@ -82,8 +82,8 @@ kubectl create -f examples/storageclass.yaml
     ```bash
     $ kubectl exec -ti csi-s3-test-nginx bash
     $ mount | grep fuse
-    s3fs on /var/lib/www/html type fuse.s3fs (rw,nosuid,nodev,relatime,user_id=0,group_id=0,allow_other)
-    $ touch /var/lib/www/html/hello_world
+    pvc-035763df-0488-4941-9a34-f637292eb95c: on /usr/share/nginx/html/s3 type fuse.geesefs (rw,nosuid,nodev,relatime,user_id=65534,group_id=0,default_permissions,allow_other)
+    $ touch /usr/share/nginx/html/s3/hello_world
     ```
 
 If something does not work as expected, check the troubleshooting section below.
