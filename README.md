@@ -10,7 +10,19 @@ This is a Container Storage Interface ([CSI](https://github.com/container-storag
 * Kubernetes has to allow privileged containers
 * Docker daemon must allow shared mounts (systemd flag `MountFlags=shared`)
 
-### 1. Create a secret with your S3 credentials
+### Helm chart
+
+Helm chart is published at `https://yandex-cloud.github.io/k8s-csi-s3`:
+
+```
+helm repo add yandex-s3 https://yandex-cloud.github.io/k8s-csi-s3/charts
+
+helm install csi-s3 yandex-s3/csi-s3
+```
+
+### Manual installation
+
+#### 1. Create a secret with your S3 credentials
 
 ```yaml
 apiVersion: v1
@@ -30,7 +42,7 @@ stringData:
 
 The region can be empty if you are using some other S3 compatible storage.
 
-### 2. Deploy the driver
+#### 2. Deploy the driver
 
 ```bash
 cd deploy/kubernetes
@@ -47,13 +59,13 @@ wget https://raw.githubusercontent.com/yandex-cloud/k8s-csi-s3/v0.35.5/deploy/ku
 kubectl delete -f attacher.yaml
 ```
 
-### 3. Create the storage class
+#### 3. Create the storage class
 
 ```bash
 kubectl create -f examples/storageclass.yaml
 ```
 
-### 4. Test the S3 driver
+#### 4. Test the S3 driver
 
 1. Create a pvc using the new storage class:
 
