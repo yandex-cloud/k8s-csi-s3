@@ -171,7 +171,7 @@ func (client *s3Client) removeObjects(bucketName, prefix string) error {
 // will delete files one by one without file lock
 func (client *s3Client) removeObjectsOneByOne(bucketName, prefix string) error {
 	parallelism := 16
-	objectsCh := make(chan minio.ObjectInfo, 1)
+	objectsCh := make(chan minio.ObjectInfo, parallelism)
 	guardCh := make(chan int, parallelism)
 	var listErr error
 	var totalObjects int64 = 0
