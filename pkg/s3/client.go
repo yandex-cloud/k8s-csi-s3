@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"sync/atomic"
 
 	"github.com/golang/glog"
 	"github.com/minio/minio-go/v7"
@@ -173,8 +174,8 @@ func (client *s3Client) removeObjectsOneByOne(bucketName, prefix string) error {
 	objectsCh := make(chan minio.ObjectInfo, 1)
 	guardCh := make(chan int, parallelism)
 	var listErr error
-	totalObjects := 0
-	removeErrors := 0
+	var totalObjects int64 = 0
+	var removeErrors int64 = 0
 
 	go func() {
 		defer close(objectsCh)
@@ -185,7 +186,7 @@ func (client *s3Client) removeObjectsOneByOne(bucketName, prefix string) error {
 				listErr = object.Err
 				return
 			}
-			totalObjects++
+			atomic.AddInt64(&totalObjects, 1)
 			objectsCh <- object
 		}
 	}()
@@ -202,7 +203,7 @@ func (client *s3Client) removeObjectsOneByOne(bucketName, prefix string) error {
 				minio.RemoveObjectOptions{VersionID: obj.VersionID})
 			if err != nil {
 				glog.Errorf("Failed to remove object %s, error: %s", obj.Key, err)
-				removeErrors++
+				atomic.AddInt64(&removeErrors, 1)
 			}
 			<- guardCh
 		}(object)
