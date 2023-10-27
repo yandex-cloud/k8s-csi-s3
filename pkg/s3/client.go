@@ -197,15 +197,15 @@ func (client *s3Client) removeObjectsOneByOne(bucketName, prefix string) error {
 
 	for object := range objectsCh {
 		guardCh <- 1
-		go func() {
-			err := client.minio.RemoveObject(client.ctx, bucketName, object.Key,
-				minio.RemoveObjectOptions{VersionID: object.VersionID})
+		go func(obj minio.ObjectInfo) {
+			err := client.minio.RemoveObject(client.ctx, bucketName, obj.Key,
+				minio.RemoveObjectOptions{VersionID: obj.VersionID})
 			if err != nil {
-				glog.Errorf("Failed to remove object %s, error: %s", object.Key, err)
+				glog.Errorf("Failed to remove object %s, error: %s", obj.Key, err)
 				removeErrors++
 			}
 			<- guardCh
-		}()
+		}(object)
 	}
 	for i := 0; i < parallelism; i++ {
 		guardCh <- 1
