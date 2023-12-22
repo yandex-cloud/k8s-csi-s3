@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	geesefsCmd    = "geesefs"
+	geesefsCmd = "geesefs"
 )
 
 // Implements Mounter
@@ -146,26 +146,26 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 	if pluginDir == "" {
 		pluginDir = "/var/lib/kubelet/plugins/ru.yandex.s3.csi"
 	}
-	args = append([]string{pluginDir+"/geesefs", "-f", "-o", "allow_other", "--endpoint", geesefs.endpoint}, args...)
-	glog.Info("Starting geesefs using systemd: "+strings.Join(args, " "))
-	unitName := "geesefs-"+systemd.PathBusEscape(volumeID)+".service"
+	args = append([]string{pluginDir + "/geesefs", "-f", "-o", "allow_other", "--endpoint", geesefs.endpoint}, args...)
+	glog.Info("Starting geesefs using systemd: " + strings.Join(args, " "))
+	unitName := "geesefs-" + systemd.PathBusEscape(volumeID) + ".service"
 	newProps := []systemd.Property{
 		systemd.Property{
-			Name: "Description",
-			Value: dbus.MakeVariant("GeeseFS mount for Kubernetes volume "+volumeID),
+			Name:  "Description",
+			Value: dbus.MakeVariant("GeeseFS mount for Kubernetes volume " + volumeID),
 		},
 		systemd.PropExecStart(args, false),
+		// systemd.Property{
+		// 	Name: "ExecStopPost",
+		// 	// force & lazy unmount to cleanup possibly dead mountpoints
+		// 	Value: dbus.MakeVariant([]execCmd{execCmd{"/bin/umount", []string{"/bin/umount", "-f", "-l", target}, false}}),
+		// },
 		systemd.Property{
-			Name: "ExecStopPost",
-			// force & lazy unmount to cleanup possibly dead mountpoints
-			Value: dbus.MakeVariant([]execCmd{ execCmd{ "/bin/umount", []string{ "/bin/umount", "-f", "-l", target }, false } }),
+			Name:  "Environment",
+			Value: dbus.MakeVariant([]string{"AWS_ACCESS_KEY_ID=" + geesefs.accessKeyID, "AWS_SECRET_ACCESS_KEY=" + geesefs.secretAccessKey}),
 		},
 		systemd.Property{
-			Name: "Environment",
-			Value: dbus.MakeVariant([]string{ "AWS_ACCESS_KEY_ID="+geesefs.accessKeyID, "AWS_SECRET_ACCESS_KEY="+geesefs.secretAccessKey }),
-		},
-		systemd.Property{
-			Name: "CollectMode",
+			Name:  "CollectMode",
 			Value: dbus.MakeVariant("inactive-or-failed"),
 		},
 	}
@@ -185,7 +185,7 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 			if curPath != target {
 				return fmt.Errorf(
 					"GeeseFS for volume %v is already mounted on host, but"+
-					" in a different directory. We want %v, but it's in %v",
+						" in a different directory. We want %v, but it's in %v",
 					volumeID, target, curPath,
 				)
 			}
