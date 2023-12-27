@@ -183,6 +183,7 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 				}
 			}
 			if curPath != target {
+				// FIXME This may mean that the same bucket&path are used for multiple PVs. Support it somehow
 				return fmt.Errorf(
 					"GeeseFS for volume %v is already mounted on host, but"+
 					" in a different directory. We want %v, but it's in %v",
@@ -198,6 +199,15 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 		}
 	}
 	_, err = conn.StartTransientUnit(unitName, "replace", newProps, nil)
+	if err != nil && strings.Index(err.Error(), "Cannot set property ExecStopPost") >= 0 {
+		// Maybe this is an old systemd where it's named StopPost
+		for i := range newProps {
+			if newProps[i].Name == "ExecStopPost" {
+				newProps[i].Name = "StopPost"
+			}
+		}
+		_, err = conn.StartTransientUnit(unitName, "replace", newProps, nil)
+	}
 	if err != nil {
 		return fmt.Errorf("Error starting systemd unit %s on host: %v", unitName, err)
 	}
