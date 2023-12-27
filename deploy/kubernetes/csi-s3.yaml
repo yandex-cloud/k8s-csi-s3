@@ -70,7 +70,7 @@ spec:
             capabilities:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: cr.yandex/crp9ftr22d26age3hulg/csi-s3:0.38.3
+          image: cr.yandex/crp9ftr22d26age3hulg/csi-s3:0.40.0
           imagePullPolicy: IfNotPresent
           args:
             - "--endpoint=$(CSI_ENDPOINT)"
