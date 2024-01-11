@@ -86,6 +86,8 @@ spec:
           env:
             - name: CSI_ENDPOINT
               value: unix:///csi/csi.sock
+            - name: PLUGIN_DIR           
+              value: {{ .Values.kubeletPath }}/plugins/ru.yandex.s3.csi
             - name: NODE_ID
               valueFrom:
                 fieldRef:
