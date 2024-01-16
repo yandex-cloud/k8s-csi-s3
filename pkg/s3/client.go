@@ -28,14 +28,15 @@ type Config struct {
 	Region          string
 	Endpoint        string
 	Mounter         string
+	Minio           string
 }
 
 type FSMeta struct {
-	BucketName    string `json:"Name"`
-	Prefix        string `json:"Prefix"`
-	Mounter       string `json:"Mounter"`
+	BucketName    string   `json:"Name"`
+	Prefix        string   `json:"Prefix"`
+	Mounter       string   `json:"Mounter"`
 	MountOptions  []string `json:"MountOptions"`
-	CapacityBytes int64  `json:"CapacityBytes"`
+	CapacityBytes int64    `json:"CapacityBytes"`
 }
 
 func NewClient(cfg *Config) (*s3Client, error) {
@@ -69,6 +70,7 @@ func NewClientFromSecret(secret map[string]string) (*s3Client, error) {
 		SecretAccessKey: secret["secretAccessKey"],
 		Region:          secret["region"],
 		Endpoint:        secret["endpoint"],
+		Minio:           secret["minio"],
 		// Mounter is set in the volume preferences, not secrets
 		Mounter: "",
 	})
@@ -204,14 +206,14 @@ func (client *s3Client) removeObjectsOneByOne(bucketName, prefix string) error {
 				glog.Errorf("Failed to remove object %s, error: %s", object.Key, err)
 				removeErrors++
 			}
-			<- guardCh
+			<-guardCh
 		}()
 	}
 	for i := 0; i < parallelism; i++ {
 		guardCh <- 1
 	}
 	for i := 0; i < parallelism; i++ {
-		<- guardCh
+		<-guardCh
 	}
 
 	if removeErrors > 0 {

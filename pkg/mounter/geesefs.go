@@ -24,6 +24,7 @@ type geesefsMounter struct {
 	region          string
 	accessKeyID     string
 	secretAccessKey string
+	minio           string
 }
 
 func newGeeseFSMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
@@ -33,6 +34,7 @@ func newGeeseFSMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
 		region:          cfg.Region,
 		accessKeyID:     cfg.AccessKeyID,
 		secretAccessKey: cfg.SecretAccessKey,
+		minio:           cfg.Minio,
 	}, nil
 }
 
@@ -70,6 +72,9 @@ func (geesefs *geesefsMounter) CopyBinary(from, to string) error {
 }
 
 func (geesefs *geesefsMounter) MountDirect(target string, args []string) error {
+	if geesefs.minio == "enable" {
+		geesefs.endpoint = "http://" + os.Getenv("MY_POD_HOST_IP") + ":" + os.Getenv("MINIO_PORT")
+	}
 	args = append([]string{
 		"--endpoint", geesefs.endpoint,
 		"-o", "allow_other",
@@ -146,6 +151,12 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 	if pluginDir == "" {
 		pluginDir = "/var/lib/kubelet/plugins/ru.yandex.s3.csi"
 	}
+
+	if geesefs.minio == "enable" {
+		geesefs.endpoint = "http://" + os.Getenv("MY_POD_HOST_IP") + ":" + os.Getenv("MINIO_PORT")
+		glog.Info("minio url: ", geesefs.endpoint)
+	}
+
 	args = append([]string{pluginDir + "/geesefs", "-f", "-o", "allow_other", "--endpoint", geesefs.endpoint}, args...)
 	glog.Info("Starting geesefs using systemd: " + strings.Join(args, " "))
 	unitName := "geesefs-" + systemd.PathBusEscape(volumeID) + ".service"
