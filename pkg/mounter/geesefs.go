@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	geesefsCmd    = "geesefs"
+	geesefsCmd = "geesefs"
 )
 
 // Implements Mounter
@@ -146,26 +146,26 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 	if pluginDir == "" {
 		pluginDir = "/var/lib/kubelet/plugins/ru.yandex.s3.csi"
 	}
-	args = append([]string{pluginDir+"/geesefs", "-f", "-o", "allow_other", "--endpoint", geesefs.endpoint}, args...)
-	glog.Info("Starting geesefs using systemd: "+strings.Join(args, " "))
-	unitName := "geesefs-"+systemd.PathBusEscape(volumeID)+".service"
+	args = append([]string{pluginDir + "/geesefs", "-f", "-o", "allow_other", "--endpoint", geesefs.endpoint}, args...)
+	glog.Info("Starting geesefs using systemd: " + strings.Join(args, " "))
+	unitName := "geesefs-" + systemd.PathBusEscape(volumeID) + ".service"
 	newProps := []systemd.Property{
 		systemd.Property{
-			Name: "Description",
-			Value: dbus.MakeVariant("GeeseFS mount for Kubernetes volume "+volumeID),
+			Name:  "Description",
+			Value: dbus.MakeVariant("GeeseFS mount for Kubernetes volume " + volumeID),
 		},
 		systemd.PropExecStart(args, false),
 		systemd.Property{
 			Name: "ExecStopPost",
 			// force & lazy unmount to cleanup possibly dead mountpoints
-			Value: dbus.MakeVariant([]execCmd{ execCmd{ "/bin/umount", []string{ "/bin/umount", "-f", "-l", target }, false } }),
+			Value: dbus.MakeVariant([]execCmd{execCmd{"/bin/umount", []string{"/bin/umount", "-f", "-l", target}, false}}),
 		},
 		systemd.Property{
-			Name: "Environment",
-			Value: dbus.MakeVariant([]string{ "AWS_ACCESS_KEY_ID="+geesefs.accessKeyID, "AWS_SECRET_ACCESS_KEY="+geesefs.secretAccessKey }),
+			Name:  "Environment",
+			Value: dbus.MakeVariant([]string{"AWS_ACCESS_KEY_ID=" + geesefs.accessKeyID, "AWS_SECRET_ACCESS_KEY=" + geesefs.secretAccessKey}),
 		},
 		systemd.Property{
-			Name: "CollectMode",
+			Name:  "CollectMode",
 			Value: dbus.MakeVariant("inactive-or-failed"),
 		},
 	}
@@ -186,7 +186,7 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 				// FIXME This may mean that the same bucket&path are used for multiple PVs. Support it somehow
 				return fmt.Errorf(
 					"GeeseFS for volume %v is already mounted on host, but"+
-					" in a different directory. We want %v, but it's in %v",
+						" in a different directory. We want %v, but it's in %v",
 					volumeID, target, curPath,
 				)
 			}
@@ -199,14 +199,39 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 		}
 	}
 	_, err = conn.StartTransientUnit(unitName, "replace", newProps, nil)
+
 	if err != nil && strings.Index(err.Error(), "Cannot set property ExecStopPost") >= 0 {
-		// Maybe this is an old systemd where it's named StopPost
-		for i := range newProps {
-			if newProps[i].Name == "ExecStopPost" {
-				newProps[i].Name = "StopPost"
+		// Create a new slice to save filtered attributes
+		var propsWithoutExecStopPost []systemd.Property
+		for _, prop := range newProps {
+			if prop.Name != "ExecStopPost" {
+				propsWithoutExecStopPost = append(propsWithoutExecStopPost, prop)
 			}
 		}
-		_, err = conn.StartTransientUnit(unitName, "replace", newProps, nil)
+
+		_, err = conn.StartTransientUnit(unitName, "replace", propsWithoutExecStopPost, nil)
+
+		systedfile := "/run/systemd/system/" + unitName + ".d/" + "50-ExecStart.conf"
+		file, err := os.OpenFile(systedfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			fmt.Println("Error opening file:", err)
+		}
+		defer file.Close()
+
+		execStopPost := fmt.Sprintf("ExecStopPost=%q %q %q %q", "/bin/umount", "-f", "-l", target)
+
+		_, err = file.WriteString(execStopPost)
+		if err != nil {
+			fmt.Errorf("Error writing to file:", err)
+		}
+
+		err = conn.Reload()
+
+		if err != nil {
+			fmt.Errorf("systemctl daemon-reload Failed "+unitName, err)
+		}
+		glog.V(4).Infof("systemctl daemon-reload Success")
+
 	}
 	if err != nil {
 		return fmt.Errorf("Error starting systemd unit %s on host: %v", unitName, err)
