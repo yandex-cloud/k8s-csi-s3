@@ -211,16 +211,34 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 	}
 	_, err = conn.StartTransientUnit(unitName, "replace", newProps, nil)
 
-	if err != nil && strings.Index(err.Error(), "Cannot set property ExecStopPost") >= 0 {
-		// Create a new slice to save filtered attributes
-		var propsWithoutExecStopPost []systemd.Property
-		for _, prop := range newProps {
-			if prop.Name != "ExecStopPost" {
-				propsWithoutExecStopPost = append(propsWithoutExecStopPost, prop)
+	var propsWithoutExecStopPost []systemd.Property
+	var propsWithoutCollectMode []systemd.Property
+	//copiedProps := make([]systemd.Property, len(newProps))
+	//copy(copiedProps, newProps)
+	for {
+		if err != nil && strings.Index(err.Error(), "Cannot set property") >= 0 {
+			if err != nil && strings.Index(err.Error(), "Cannot set property ExecStopPost") >= 0 {
+				for _, prop := range newProps {
+					if prop.Name != "ExecStopPost" {
+						propsWithoutExecStopPost = append(propsWithoutExecStopPost, prop)
+					}
+				}
+				glog.V(4).Infof("delete property ExecStopPost")
+				_, err = conn.StartTransientUnit(unitName, "replace", propsWithoutExecStopPost, nil)
+			}
+
+			fmt.Println(propsWithoutExecStopPost)
+			if err != nil && strings.Index(err.Error(), "Cannot set property CollectMode") >= 0 {
+				for _, prop := range propsWithoutExecStopPost {
+					if prop.Name != "CollectMode" {
+						propsWithoutCollectMode = append(propsWithoutCollectMode, prop)
+					}
+				}
+				glog.V(4).Infof("delete property CollectMode")
+				fmt.Println(propsWithoutCollectMode)
+				_, err = conn.StartTransientUnit(unitName, "replace", propsWithoutCollectMode, nil)
 			}
 		}
-
-		_, err = conn.StartTransientUnit(unitName, "replace", propsWithoutExecStopPost, nil)
 
 		systedfile := "/run/systemd/system/" + unitName + ".d/" + "50-ExecStart.conf"
 		file, err := os.OpenFile(systedfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
@@ -243,7 +261,60 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 		}
 		glog.V(4).Infof("systemctl daemon-reload Success")
 
+		if err == nil {
+			break
+		}
 	}
+	//if err != nil && strings.Index(err.Error(), "Cannot set property") >= 0 {
+	//// Create a new slice to save filtered attributes
+	//
+	//if err != nil && strings.Index(err.Error(), "Cannot set property ExecStopPost") >= 0 {
+	//	for _, prop := range a {
+	//		if prop.Name != "ExecStopPost" {
+	//			propsWithoutExecStopPost = append(propsWithoutExecStopPost, prop)
+	//		}
+	//	}
+	//	glog.V(4).Infof("delete property ExecStopPost")
+	//}
+	//
+	//fmt.Println(propsWithoutExecStopPost)
+	//
+	//_, err = conn.StartTransientUnit(unitName, "replace", propsWithoutExecStopPost, nil)
+	//propsWithoutCollectMode := propsWithoutExecStopPost
+	//if err != nil && strings.Index(err.Error(), "Cannot set property CollectMode") >= 0 {
+	//	for _, prop := range propsWithoutCollectMode {
+	//		if prop.Name != "CollectMode" {
+	//			propsWithoutCollectMode = append(propsWithoutCollectMode, prop)
+	//		}
+	//	}
+	//	glog.V(4).Infof("delete property CollectMode")
+	//}
+	//fmt.Println(propsWithoutCollectMode)
+
+	//_, err = conn.StartTransientUnit(unitName, "replace", propsWithoutCollectMode, nil)
+
+	//	systedfile := "/run/systemd/system/" + unitName + ".d/" + "50-ExecStart.conf"
+	//	file, err := os.OpenFile(systedfile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	//	if err != nil {
+	//		fmt.Println("Error opening file:", err)
+	//	}
+	//	defer file.Close()
+	//
+	//	execStopPost := fmt.Sprintf("ExecStopPost=%q %q %q %q", "/bin/umount", "-f", "-l", target)
+	//
+	//	_, err = file.WriteString(execStopPost)
+	//	if err != nil {
+	//		fmt.Errorf("Error writing to file:", err)
+	//	}
+	//
+	//	err = conn.Reload()
+	//
+	//	if err != nil {
+	//		fmt.Errorf("systemctl daemon-reload Failed "+unitName, err)
+	//	}
+	//	glog.V(4).Infof("systemctl daemon-reload Success")
+	//
+	//}
 	if err != nil {
 		return fmt.Errorf("Error starting systemd unit %s on host: %v", unitName, err)
 	}
