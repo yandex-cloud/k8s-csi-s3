@@ -156,11 +156,6 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 		},
 		systemd.PropExecStart(args, false),
 		systemd.Property{
-			Name: "ExecStopPost",
-			// force & lazy unmount to cleanup possibly dead mountpoints
-			Value: dbus.MakeVariant([]execCmd{ execCmd{ "/bin/umount", []string{ "/bin/umount", "-f", "-l", target }, false } }),
-		},
-		systemd.Property{
 			Name: "Environment",
 			Value: dbus.MakeVariant([]string{ "AWS_ACCESS_KEY_ID="+geesefs.accessKeyID, "AWS_SECRET_ACCESS_KEY="+geesefs.secretAccessKey }),
 		},
@@ -198,15 +193,17 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 			conn.ResetFailedUnit(unitName)
 		}
 	}
-	_, err = conn.StartTransientUnit(unitName, "replace", newProps, nil)
-	if err != nil && strings.Index(err.Error(), "Cannot set property ExecStopPost") >= 0 {
-		// Maybe this is an old systemd where it's named StopPost
-		for i := range newProps {
-			if newProps[i].Name == "ExecStopPost" {
-				newProps[i].Name = "StopPost"
-			}
+	err = os.Mkdir("/run/systemd/system/" + unitName + ".d", 0755)
+	if err == nil {
+		// force & lazy unmount to cleanup possibly dead mountpoints
+		err = os.WriteFile(
+			"/run/systemd/system/" + unitName + ".d/50-ExecStopPost.conf",
+			[]byte("[Service]\nExecStopPost=/bin/umount -f -l "+target+"\n"),
+			0600,
+		)
+		if err == nil {
+			_, err = conn.StartTransientUnit(unitName, "replace", newProps[0:len(newProps)-1], nil)
 		}
-		_, err = conn.StartTransientUnit(unitName, "replace", newProps, nil)
 	}
 	if err != nil {
 		return fmt.Errorf("Error starting systemd unit %s on host: %v", unitName, err)
