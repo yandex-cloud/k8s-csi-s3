@@ -62,6 +62,15 @@ user_values:
       ru: Адрес S3-сервиса, который будет использоваться.
     string_value:
       default_value: "https://storage.yandexcloud.net"
+  - name: secret.region
+    title:
+      en: S3 region
+      ru: S3 регион
+    description:
+      en: S3 service region to use
+      ru: Регион используемого сервиса S3.
+    string_value:
+      default_value: ""
   - name: storageClass.mountOptions
     title:
       en: GeeseFS mount options

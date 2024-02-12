@@ -37,6 +37,8 @@ secret:
   secretKey: ""
   # Endpoint
   endpoint: https://storage.yandexcloud.net
+  # Region
+  region: ""
 
 tolerations:
   all: false
