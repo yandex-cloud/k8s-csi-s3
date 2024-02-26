@@ -3,8 +3,11 @@ package s3
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"fmt"
+	"net/http"
 	"net/url"
+	"strconv"
 	"sync/atomic"
 
 	"github.com/golang/glog"
@@ -29,14 +32,15 @@ type Config struct {
 	Region          string
 	Endpoint        string
 	Mounter         string
+	Insecure        bool
 }
 
 type FSMeta struct {
-	BucketName    string `json:"Name"`
-	Prefix        string `json:"Prefix"`
-	Mounter       string `json:"Mounter"`
+	BucketName    string   `json:"Name"`
+	Prefix        string   `json:"Prefix"`
+	Mounter       string   `json:"Mounter"`
 	MountOptions  []string `json:"MountOptions"`
-	CapacityBytes int64  `json:"CapacityBytes"`
+	CapacityBytes int64    `json:"CapacityBytes"`
 }
 
 func NewClient(cfg *Config) (*s3Client, error) {
@@ -52,10 +56,18 @@ func NewClient(cfg *Config) (*s3Client, error) {
 	if u.Port() != "" {
 		endpoint = u.Hostname() + ":" + u.Port()
 	}
+
+	var transport = &http.Transport{}
+	if client.Config.Insecure {
+		tlsConfig := &tls.Config{}
+		tlsConfig.InsecureSkipVerify = true
+		transport.TLSClientConfig = tlsConfig
+	}
 	minioClient, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(client.Config.AccessKeyID, client.Config.SecretAccessKey, ""),
-		Region: client.Config.Region,
-		Secure: ssl,
+		Transport: transport,
+		Creds:     credentials.NewStaticV4(client.Config.AccessKeyID, client.Config.SecretAccessKey, ""),
+		Region:    client.Config.Region,
+		Secure:    ssl,
 	})
 	if err != nil {
 		return nil, err
@@ -66,13 +78,15 @@ func NewClient(cfg *Config) (*s3Client, error) {
 }
 
 func NewClientFromSecret(secret map[string]string) (*s3Client, error) {
+	insecure, _ := strconv.ParseBool(secret["insecure"])
 	return NewClient(&Config{
 		AccessKeyID:     secret["accessKeyID"],
 		SecretAccessKey: secret["secretAccessKey"],
 		Region:          secret["region"],
 		Endpoint:        secret["endpoint"],
 		// Mounter is set in the volume preferences, not secrets
-		Mounter: "",
+		Mounter:  "",
+		Insecure: insecure,
 	})
 }
 
@@ -206,14 +220,14 @@ func (client *s3Client) removeObjectsOneByOne(bucketName, prefix string) error {
 				glog.Errorf("Failed to remove object %s, error: %s", obj.Key, err)
 				atomic.AddInt64(&removeErrors, 1)
 			}
-			<- guardCh
+			<-guardCh
 		}(object)
 	}
 	for i := 0; i < parallelism; i++ {
 		guardCh <- 1
 	}
 	for i := 0; i < parallelism; i++ {
-		<- guardCh
+		<-guardCh
 	}
 
 	if removeErrors > 0 {
