@@ -193,7 +193,7 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 			conn.ResetFailedUnit(unitName)
 		}
 	}
-	err = os.Mkdir("/run/systemd/system/" + unitName + ".d", 0755)
+	err = os.MkdirAll("/run/systemd/system/" + unitName + ".d", 0755)
 	if err == nil {
 		// force & lazy unmount to cleanup possibly dead mountpoints
 		err = os.WriteFile(
