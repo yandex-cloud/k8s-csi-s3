@@ -54,6 +54,7 @@ func NewClient(cfg *Config) (*s3Client, error) {
 	}
 	minioClient, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(client.Config.AccessKeyID, client.Config.SecretAccessKey, ""),
+		Region: client.Config.Region,
 		Secure: ssl,
 	})
 	if err != nil {
