@@ -185,8 +185,8 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 					volumeID, target, curPath,
 				)
 			}
-			// Already mounted at right location
-			return nil
+			// Already mounted at right location, wait for mount
+			return waitForMount(target, 30*time.Second)
 		} else {
 			// Stop and garbage collect the unit if automatic collection didn't work for some reason
 			conn.StopUnit(unitName, "replace", nil)
@@ -211,5 +211,5 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 	if err != nil {
 		return fmt.Errorf("Error starting systemd unit %s on host: %v", unitName, err)
 	}
-	return waitForMount(target, 10*time.Second)
+	return waitForMount(target, 30*time.Second)
 }
