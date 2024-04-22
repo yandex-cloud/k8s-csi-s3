@@ -117,9 +117,6 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 			}
 			if key == "log-file" || key == "shared-config" || key == "cache" {
 				// Skip options accessing local FS
-				if e < 0 {
-					i++
-				}
 			} else if key != "" {
 				args = append(args, opt)
 			}
