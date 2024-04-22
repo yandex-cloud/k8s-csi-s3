@@ -51,12 +51,29 @@ kubectl create -f driver.yaml
 kubectl create -f csi-s3.yaml
 ```
 
-If you're upgrading from a previous version which had `attacher.yaml` you
-can safely delete all resources created from that file:
+##### Upgrading
+
+If you're upgrading from <= 0.35.5 - delete all resources from `attacher.yaml`:
 
 ```
 wget https://raw.githubusercontent.com/yandex-cloud/k8s-csi-s3/v0.35.5/deploy/kubernetes/attacher.yaml
 kubectl delete -f attacher.yaml
+```
+
+If you're upgrading from <= 0.40.6 - delete all resources from old `provisioner.yaml`:
+
+```bash
+wget -O old-provisioner.yaml https://raw.githubusercontent.com/yandex-cloud/k8s-csi-s3/v0.40.6/deploy/kubernetes/provisioner.yaml
+kubectl delete -f old-provisioner.yaml
+```
+
+Then reapply `csi-s3.yaml`, `driver.yaml` and `provisioner.yaml`:
+
+```bash
+cd deploy/kubernetes
+kubectl apply -f provisioner.yaml
+kubectl apply -f driver.yaml
+kubectl apply -f csi-s3.yaml
 ```
 
 #### 3. Create the storage class
