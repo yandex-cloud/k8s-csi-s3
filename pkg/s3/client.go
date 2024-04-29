@@ -65,8 +65,10 @@ func NewClient(cfg *Config) (*s3Client, error) {
 		transport.TLSClientConfig = tlsConfig
 	}
 	minioClient, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(client.Config.AccessKeyID, client.Config.SecretAccessKey, ""),
-		Secure: ssl,
+		Transport: transport,
+		Creds:     credentials.NewStaticV4(client.Config.AccessKeyID, client.Config.SecretAccessKey, ""),
+		Region:    client.Config.Region,
+		Secure:    ssl,
 	})
 	if err != nil {
 		return nil, err
@@ -86,6 +88,7 @@ func NewClientFromSecret(secret map[string]string) (*s3Client, error) {
 		// Mounter is set in the volume preferences, not secrets
 		Mounter:  "",
 		Insecure: insecure,
+		Minio:    secret["minio"],
 	})
 }
 
