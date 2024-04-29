@@ -84,6 +84,13 @@ spec:
             - "--nodeid=$(NODE_ID)"
             - "--v=4"
           env:
+            - name: MY_POD_HOST_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.hostIP
+            - name: MINIO_PORT
+              value: "{{ .Values.minio.port }}"
             - name: CSI_ENDPOINT
               value: unix:///csi/csi.sock
             - name: NODE_ID

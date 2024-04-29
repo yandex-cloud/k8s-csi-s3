@@ -39,6 +39,8 @@ secret:
   endpoint: https://storage.yandexcloud.net
   # Region
   region: ""
+  # Minio
+  minio: disable
 
 tolerations:
   all: false
@@ -48,3 +50,6 @@ tolerations:
 nodeSelector: {}
 
 kubeletPath: /var/lib/kubelet
+
+minio:
+  port: 30080

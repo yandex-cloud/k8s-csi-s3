@@ -33,6 +33,7 @@ type Config struct {
 	Endpoint        string
 	Mounter         string
 	Insecure        bool
+	Minio           string
 }
 
 type FSMeta struct {
@@ -64,10 +65,8 @@ func NewClient(cfg *Config) (*s3Client, error) {
 		transport.TLSClientConfig = tlsConfig
 	}
 	minioClient, err := minio.New(endpoint, &minio.Options{
-		Transport: transport,
-		Creds:     credentials.NewStaticV4(client.Config.AccessKeyID, client.Config.SecretAccessKey, ""),
-		Region:    client.Config.Region,
-		Secure:    ssl,
+		Creds:  credentials.NewStaticV4(client.Config.AccessKeyID, client.Config.SecretAccessKey, ""),
+		Secure: ssl,
 	})
 	if err != nil {
 		return nil, err
