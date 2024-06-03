@@ -27,9 +27,10 @@ type driver struct {
 	driver   *csicommon.CSIDriver
 	endpoint string
 
-	ids *identityServer
-	ns  *nodeServer
-	cs  *controllerServer
+	ids    *identityServer
+	ns     *nodeServer
+	cs     *controllerServer
+	server csicommon.NonBlockingGRPCServer
 }
 
 var (
@@ -82,7 +83,15 @@ func (s3 *driver) Run() {
 	s3.ns = s3.newNodeServer(s3.driver)
 	s3.cs = s3.newControllerServer(s3.driver)
 
-	s := csicommon.NewNonBlockingGRPCServer()
-	s.Start(s3.endpoint, s3.ids, s3.cs, s3.ns)
-	s.Wait()
+	s3.server = csicommon.NewNonBlockingGRPCServer()
+	s3.server.Start(s3.endpoint, s3.ids, s3.cs, s3.ns)
+	s3.server.Wait()
+}
+
+func (s3 *driver) Stop() {
+	if s3.server == nil {
+		return
+	}
+
+	s3.server.Stop()
 }
