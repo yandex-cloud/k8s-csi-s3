@@ -99,6 +99,7 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 		"--setuid", "65534", // nobody. drop root privileges
 		"--setgid", "65534", // nogroup
 	)
+	var unsafeArgs []string
 	useSystemd := true
 	for i := 0; i < len(geesefs.meta.MountOptions); i++ {
 		opt := geesefs.meta.MountOptions[i]
@@ -117,12 +118,21 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 			}
 			if key == "log-file" || key == "shared-config" || key == "cache" {
 				// Skip options accessing local FS
+				unsafeArgs = append(unsafeArgs, opt)
+				i++
+				if i < len(geesefs.meta.MountOptions) {
+					unsafeArgs = append(unsafeArgs, geesefs.meta.MountOptions[i])
+				}
 			} else if key != "" {
 				args = append(args, opt)
 			}
 		} else if len(opt) > 0 {
 			args = append(args, opt)
 		}
+	}
+	if !useSystemd {
+		// Unsafe options are allowed when running inside the container
+		args = append(args, unsafeArgs...)
 	}
 	args = append(args, fullPath, target)
 	// Try to start geesefs using systemd so it doesn't get killed when the container exits
