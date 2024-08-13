@@ -96,8 +96,20 @@ func SystemdUnmount(volumeID string) (bool, error) {
 	if len(units) == 0 || units[0].ActiveState == "inactive" || units[0].ActiveState == "failed" {
 		return true, nil
 	}
-	_, err = conn.StopUnit(unitName, "replace", nil)
-	return true, err
+
+	resCh := make(chan string)
+	defer close(resCh)
+
+	_, err = conn.StopUnit(unitName, "replace", resCh)
+	if err != nil {
+		glog.Errorf("Failed to stop systemd unit (%s): %v", unitName, err)
+		return false, err
+	}
+
+	res := <-resCh // wait until is stopped
+	glog.Infof("Systemd unit is stopped with result (%s): %s", unitName, res)
+
+	return true, nil
 }
 
 func FuseUnmount(path string) error {
