@@ -207,8 +207,8 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 	}
 	// force & lazy unmount to cleanup possibly dead mountpoints
 	err = os.WriteFile(
-		unitPath+"/50-ExecStopPost.conf",
-		[]byte("[Service]\nExecStopPost=/bin/umount -f -l "+target+"\n"),
+		unitPath+"/50-StopProps.conf",
+		[]byte("[Service]\nExecStopPost=/bin/umount -f -l "+target+"\nTimeoutStopSec=20\n"),
 		0600,
 	)
 	if err != nil {
