@@ -7,6 +7,9 @@ images:
   # Main image
   csi: cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-s3-driver:0.41.1
 
+# Image pull secrets for Docker images
+imagePullSecrets: []
+
 storageClass:
   # Specifies whether the storage class should be created
   create: true
