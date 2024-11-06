@@ -21,27 +21,28 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"k8s.io/klog/v2"
 	"path"
 	"strings"
 
+	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/mounter"
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/s3"
-	"github.com/golang/glog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/container-storage-interface/spec/lib/go/csi"
-	csicommon "github.com/kubernetes-csi/drivers/pkg/csi-common"
 )
 
 type controllerServer struct {
-	*csicommon.DefaultControllerServer
+	d *CSIDriver
+	csi.UnimplementedControllerServer
 }
+
+var _ csi.ControllerServer = &controllerServer{}
 
 func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVolumeRequest) (*csi.CreateVolumeResponse, error) {
 	params := req.GetParameters()
-	capacityBytes := int64(req.GetCapacityRange().GetRequiredBytes())
+	capacityBytes := req.GetCapacityRange().GetRequiredBytes()
 	volumeID := sanitizeVolumeID(req.GetName())
 	bucketName := volumeID
 	prefix := ""
@@ -53,8 +54,8 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 		volumeID = path.Join(bucketName, prefix)
 	}
 
-	if err := cs.Driver.ValidateControllerServiceRequest(csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME); err != nil {
-		glog.V(3).Infof("invalid create volume req: %v", req)
+	if err := cs.d.ValidateControllerServiceRequest(csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME); err != nil {
+		klog.V(3).Infof("invalid create volume req: %v", req)
 		return nil, err
 	}
 
@@ -66,7 +67,7 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 		return nil, status.Error(codes.InvalidArgument, "Volume Capabilities missing in request")
 	}
 
-	glog.V(4).Infof("Got a request to create volume %s", volumeID)
+	klog.V(4).Infof("Got a request to create volume %s", volumeID)
 
 	client, err := s3.NewClientFromSecret(req.GetSecrets())
 	if err != nil {
@@ -88,20 +89,26 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 		return nil, fmt.Errorf("failed to create prefix %s: %v", prefix, err)
 	}
 
-	glog.V(4).Infof("create volume %s", volumeID)
+	klog.V(4).Infof("create volume %s", volumeID)
 	// DeleteVolume lacks VolumeContext, but publish&unpublish requests have it,
 	// so we don't need to store additional metadata anywhere
-	context := make(map[string]string)
+	volumeCtx := make(map[string]string)
 	for k, v := range params {
-		context[k] = v
+		volumeCtx[k] = v
 	}
-	context["capacity"] = fmt.Sprintf("%v", capacityBytes)
+	volumeCtx["capacity"] = fmt.Sprintf("%v", capacityBytes)
 	return &csi.CreateVolumeResponse{
 		Volume: &csi.Volume{
 			VolumeId:      volumeID,
 			CapacityBytes: capacityBytes,
-			VolumeContext: context,
+			VolumeContext: volumeCtx,
 		},
+	}, nil
+}
+
+func (cs *controllerServer) ControllerGetCapabilities(context.Context, *csi.ControllerGetCapabilitiesRequest) (*csi.ControllerGetCapabilitiesResponse, error) {
+	return &csi.ControllerGetCapabilitiesResponse{
+		Capabilities: cs.d.Cap,
 	}, nil
 }
 
@@ -114,11 +121,11 @@ func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVol
 		return nil, status.Error(codes.InvalidArgument, "Volume ID missing in request")
 	}
 
-	if err := cs.Driver.ValidateControllerServiceRequest(csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME); err != nil {
-		glog.V(3).Infof("Invalid delete volume req: %v", req)
+	if err := cs.d.ValidateControllerServiceRequest(csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME); err != nil {
+		klog.V(3).Infof("Invalid delete volume req: %v", req)
 		return nil, err
 	}
-	glog.V(4).Infof("Deleting volume %s", volumeID)
+	klog.V(4).Infof("Deleting volume %s", volumeID)
 
 	client, err := s3.NewClientFromSecret(req.GetSecrets())
 	if err != nil {
@@ -131,12 +138,12 @@ func (cs *controllerServer) DeleteVolume(ctx context.Context, req *csi.DeleteVol
 		if err := client.RemoveBucket(bucketName); err != nil && err.Error() != "The specified bucket does not exist" {
 			deleteErr = err
 		}
-		glog.V(4).Infof("Bucket %s removed", bucketName)
+		klog.V(4).Infof("Bucket %s removed", bucketName)
 	} else {
 		if err := client.RemovePrefix(bucketName, prefix); err != nil {
 			deleteErr = fmt.Errorf("unable to remove prefix: %w", err)
 		}
-		glog.V(4).Infof("Prefix %s removed", prefix)
+		klog.V(4).Infof("Prefix %s removed", prefix)
 	}
 
 	if deleteErr != nil {
@@ -189,10 +196,6 @@ func (cs *controllerServer) ValidateVolumeCapabilities(ctx context.Context, req 
 			},
 		},
 	}, nil
-}
-
-func (cs *controllerServer) ControllerExpandVolume(ctx context.Context, req *csi.ControllerExpandVolumeRequest) (*csi.ControllerExpandVolumeResponse, error) {
-	return &csi.ControllerExpandVolumeResponse{}, status.Error(codes.Unimplemented, "ControllerExpandVolume is not implemented")
 }
 
 func sanitizeVolumeID(volumeID string) string {

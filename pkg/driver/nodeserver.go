@@ -17,7 +17,10 @@ limitations under the License.
 package driver
 
 import (
+	"context"
 	"fmt"
+	"k8s.io/klog/v2"
+	"k8s.io/mount-utils"
 	"os"
 	"os/exec"
 	"regexp"
@@ -25,19 +28,15 @@ import (
 
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/mounter"
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/s3"
-	"github.com/golang/glog"
-	"golang.org/x/net/context"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"k8s.io/kubernetes/pkg/util/mount"
-
-	csicommon "github.com/kubernetes-csi/drivers/pkg/csi-common"
 )
 
 type nodeServer struct {
-	*csicommon.DefaultNodeServer
+	d *CSIDriver
+	csi.UnimplementedNodeServer
 }
 
 func getMeta(bucketName, prefix string, context map[string]string) *s3.FSMeta {
@@ -50,7 +49,7 @@ func getMeta(bucketName, prefix string, context map[string]string) *s3.FSMeta {
 		for _, opt := range re.FindAll([]byte(mountOptStr), -1) {
 			// Unquote options
 			opt = re2.ReplaceAllFunc(opt, func(q []byte) []byte {
-				return re3.ReplaceAll(q[1 : len(q)-1], []byte("$1"))
+				return re3.ReplaceAll(q[1:len(q)-1], []byte("$1"))
 			})
 			mountOptions = append(mountOptions, string(opt))
 		}
@@ -91,16 +90,16 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	if notMnt {
 		// Staged mount is dead by some reason. Revive it
 		bucketName, prefix := volumeIDToBucketPrefix(volumeID)
-		s3, err := s3.NewClientFromSecret(req.GetSecrets())
+		s3Client, err := s3.NewClientFromSecret(req.GetSecrets())
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
 		}
 		meta := getMeta(bucketName, prefix, req.VolumeContext)
-		mounter, err := mounter.New(meta, s3.Config)
+		mnter, err := mounter.New(meta, s3Client.Config)
 		if err != nil {
 			return nil, err
 		}
-		if err := mounter.Mount(stagingTargetPath, volumeID); err != nil {
+		if err := mnter.Mount(ctx, stagingTargetPath, volumeID); err != nil {
 			return nil, err
 		}
 	}
@@ -118,18 +117,18 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	mountFlags := req.GetVolumeCapability().GetMount().GetMountFlags()
 	attrib := req.GetVolumeContext()
 
-	glog.V(4).Infof("target %v\nreadonly %v\nvolumeId %v\nattributes %v\nmountflags %v\n",
+	klog.V(4).Infof("target %v\nreadonly %v\nvolumeId %v\nattributes %v\nmountflags %v\n",
 		targetPath, readOnly, volumeID, attrib, mountFlags)
 
 	cmd := exec.Command("mount", "--bind", stagingTargetPath, targetPath)
 	cmd.Stderr = os.Stderr
-	glog.V(3).Infof("Binding volume %v from %v to %v", volumeID, stagingTargetPath, targetPath)
+	klog.V(3).Infof("Binding volume %v from %v to %v", volumeID, stagingTargetPath, targetPath)
 	out, err := cmd.Output()
 	if err != nil {
-		return nil, fmt.Errorf("Error running mount --bind %v %v: %s", stagingTargetPath, targetPath, out)
+		return nil, fmt.Errorf("error running mount --bind %v %v: %s", stagingTargetPath, targetPath, out)
 	}
 
-	glog.V(4).Infof("s3: volume %s successfully mounted to %s", volumeID, targetPath)
+	klog.V(4).Infof("s3: volume %s successfully mounted to %s", volumeID, targetPath)
 
 	return &csi.NodePublishVolumeResponse{}, nil
 }
@@ -149,7 +148,7 @@ func (ns *nodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpu
 	if err := mounter.Unmount(targetPath); err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	glog.V(4).Infof("s3: volume %s has been unmounted.", volumeID)
+	klog.V(4).Infof("s3: volume %s has been unmounted.", volumeID)
 
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
@@ -185,11 +184,11 @@ func (ns *nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 	}
 
 	meta := getMeta(bucketName, prefix, req.VolumeContext)
-	mounter, err := mounter.New(meta, client.Config)
+	mnter, err := mounter.New(meta, client.Config)
 	if err != nil {
 		return nil, err
 	}
-	if err := mounter.Mount(stagingTargetPath, volumeID); err != nil {
+	if err := mnter.Mount(ctx, stagingTargetPath, volumeID); err != nil {
 		return nil, err
 	}
 
@@ -222,31 +221,17 @@ func (ns *nodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstag
 	if !exists {
 		err = mounter.FuseUnmount(stagingTargetPath)
 	}
-	glog.V(4).Infof("s3: volume %s has been unmounted from stage path %v.", volumeID, stagingTargetPath)
+	klog.V(4).Infof("s3: volume %s has been unmounted from stage path %v.", volumeID, stagingTargetPath)
 
 	return &csi.NodeUnstageVolumeResponse{}, nil
 }
 
 // NodeGetCapabilities returns the supported capabilities of the node server
 func (ns *nodeServer) NodeGetCapabilities(ctx context.Context, req *csi.NodeGetCapabilitiesRequest) (*csi.NodeGetCapabilitiesResponse, error) {
-	// currently there is a single NodeServer capability according to the spec
-	nscap := &csi.NodeServiceCapability{
-		Type: &csi.NodeServiceCapability_Rpc{
-			Rpc: &csi.NodeServiceCapability_RPC{
-				Type: csi.NodeServiceCapability_RPC_STAGE_UNSTAGE_VOLUME,
-			},
-		},
-	}
-
+	klog.V(4)
 	return &csi.NodeGetCapabilitiesResponse{
-		Capabilities: []*csi.NodeServiceCapability{
-			nscap,
-		},
+		Capabilities: ns.d.NSCap,
 	}, nil
-}
-
-func (ns *nodeServer) NodeExpandVolume(ctx context.Context, req *csi.NodeExpandVolumeRequest) (*csi.NodeExpandVolumeResponse, error) {
-	return &csi.NodeExpandVolumeResponse{}, status.Error(codes.Unimplemented, "NodeExpandVolume is not implemented")
 }
 
 func checkMount(targetPath string) (bool, error) {
@@ -262,4 +247,10 @@ func checkMount(targetPath string) (bool, error) {
 		}
 	}
 	return notMnt, nil
+}
+
+func (ns *nodeServer) NodeGetInfo(context.Context, *csi.NodeGetInfoRequest) (*csi.NodeGetInfoResponse, error) {
+	return &csi.NodeGetInfoResponse{
+		NodeId: ns.d.NodeID,
+	}, nil
 }
