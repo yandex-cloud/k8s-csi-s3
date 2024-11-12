@@ -18,15 +18,12 @@ package main
 
 import (
 	"flag"
+	"k8s.io/klog/v2"
 	"log"
 	"os"
 
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/driver"
 )
-
-func init() {
-	flag.Set("logtostderr", "true")
-}
 
 var (
 	endpoint = flag.String("endpoint", "unix://tmp/csi.sock", "CSI endpoint")
@@ -34,12 +31,14 @@ var (
 )
 
 func main() {
+	klog.InitFlags(flag.CommandLine)
+	flag.Set("logtostderr", "true")
 	flag.Parse()
 
-	driver, err := driver.New(*nodeID, *endpoint)
+	d, err := driver.New(*nodeID, *endpoint)
 	if err != nil {
 		log.Fatal(err)
 	}
-	driver.Run()
+	d.Run()
 	os.Exit(0)
 }
