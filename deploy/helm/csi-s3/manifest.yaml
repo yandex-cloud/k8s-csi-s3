@@ -44,6 +44,7 @@ user_values:
       ru: Секретный ключ S3.
     string_value:
       default_value: ""
+      secret: true
   - name: storageClass.singleBucket
     title:
       en: Single S3 bucket for volumes
