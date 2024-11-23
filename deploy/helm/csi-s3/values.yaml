@@ -47,4 +47,6 @@ tolerations:
 
 nodeSelector: {}
 
+priorityClassName: ""
+
 kubeletPath: /var/lib/kubelet
