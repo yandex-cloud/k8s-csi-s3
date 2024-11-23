@@ -2,19 +2,19 @@ package mounter
 
 import (
 	"fmt"
+	"golang.org/x/net/context"
+	"k8s.io/klog/v2"
 	"os"
 	"strings"
 	"time"
 
 	systemd "github.com/coreos/go-systemd/v22/dbus"
 	dbus "github.com/godbus/dbus/v5"
-	"github.com/golang/glog"
-
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/s3"
 )
 
 const (
-	geesefsCmd    = "geesefs"
+	geesefsCmd = "geesefs"
 )
 
 // Implements Mounter
@@ -88,7 +88,7 @@ type execCmd struct {
 	UncleanIsFailure bool
 }
 
-func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
+func (geesefs *geesefsMounter) Mount(ctx context.Context, target, volumeID string) error {
 	fullPath := fmt.Sprintf("%s:%s", geesefs.meta.BucketName, geesefs.meta.Prefix)
 	var args []string
 	if geesefs.region != "" {
@@ -141,7 +141,7 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 	}
 	conn, err := systemd.New()
 	if err != nil {
-		glog.Errorf("Failed to connect to systemd dbus service: %v, starting geesefs directly", err)
+		klog.Errorf("Failed to connect to systemd dbus service: %v, starting geesefs directly", err)
 		return geesefs.MountDirect(target, args)
 	}
 	defer conn.Close()
@@ -153,25 +153,25 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 	if pluginDir == "" {
 		pluginDir = "/var/lib/kubelet/plugins/ru.yandex.s3.csi"
 	}
-	args = append([]string{pluginDir+"/geesefs", "-f", "-o", "allow_other", "--endpoint", geesefs.endpoint}, args...)
-	glog.Info("Starting geesefs using systemd: "+strings.Join(args, " "))
-	unitName := "geesefs-"+systemd.PathBusEscape(volumeID)+".service"
+	args = append([]string{pluginDir + "/geesefs", "-f", "-o", "allow_other", "--endpoint", geesefs.endpoint}, args...)
+	klog.Info("Starting geesefs using systemd: " + strings.Join(args, " "))
+	unitName := "geesefs-" + systemd.PathBusEscape(volumeID) + ".service"
 	newProps := []systemd.Property{
-		systemd.Property{
-			Name: "Description",
-			Value: dbus.MakeVariant("GeeseFS mount for Kubernetes volume "+volumeID),
+		{
+			Name:  "Description",
+			Value: dbus.MakeVariant("GeeseFS mount for Kubernetes volume " + volumeID),
 		},
 		systemd.PropExecStart(args, false),
-		systemd.Property{
-			Name: "Environment",
-			Value: dbus.MakeVariant([]string{ "AWS_ACCESS_KEY_ID="+geesefs.accessKeyID, "AWS_SECRET_ACCESS_KEY="+geesefs.secretAccessKey }),
+		{
+			Name:  "Environment",
+			Value: dbus.MakeVariant([]string{"AWS_ACCESS_KEY_ID=" + geesefs.accessKeyID, "AWS_SECRET_ACCESS_KEY=" + geesefs.secretAccessKey}),
 		},
-		systemd.Property{
-			Name: "CollectMode",
+		{
+			Name:  "CollectMode",
 			Value: dbus.MakeVariant("inactive-or-failed"),
 		},
 	}
-	unitProps, err := conn.GetAllProperties(unitName)
+	unitProps, err := conn.GetAllPropertiesContext(ctx, unitName)
 	if err == nil {
 		// Unit already exists
 		if s, ok := unitProps["ActiveState"].(string); ok && (s == "active" || s == "activating" || s == "reloading") {
@@ -188,7 +188,7 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 				// FIXME This may mean that the same bucket&path are used for multiple PVs. Support it somehow
 				return fmt.Errorf(
 					"GeeseFS for volume %v is already mounted on host, but"+
-					" in a different directory. We want %v, but it's in %v",
+						" in a different directory. We want %v, but it's in %v",
 					volumeID, target, curPath,
 				)
 			}

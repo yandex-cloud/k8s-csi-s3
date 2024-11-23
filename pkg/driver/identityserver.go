@@ -17,9 +17,49 @@ limitations under the License.
 package driver
 
 import (
-	csicommon "github.com/kubernetes-csi/drivers/pkg/csi-common"
+	"context"
+	"github.com/container-storage-interface/spec/lib/go/csi"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 )
 
 type identityServer struct {
-	*csicommon.DefaultIdentityServer
+	d *CSIDriver
+	csi.UnimplementedIdentityServer
+}
+
+func (i *identityServer) GetPluginInfo(context.Context, *csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse, error) {
+	if i.d.Name == "" {
+		return nil, status.Error(codes.Unavailable, "Driver name not configured")
+	}
+
+	if i.d.Version == "" {
+		return nil, status.Error(codes.Unavailable, "Driver is missing version")
+	}
+
+	return &csi.GetPluginInfoResponse{
+		Name:          i.d.Name,
+		VendorVersion: i.d.Version,
+	}, nil
+}
+
+func (i *identityServer) GetPluginCapabilities(context.Context, *csi.GetPluginCapabilitiesRequest) (*csi.GetPluginCapabilitiesResponse, error) {
+	return &csi.GetPluginCapabilitiesResponse{
+		Capabilities: []*csi.PluginCapability{
+			{
+				Type: &csi.PluginCapability_Service_{
+					Service: &csi.PluginCapability_Service{
+						Type: csi.PluginCapability_Service_CONTROLLER_SERVICE,
+					},
+				},
+			},
+		},
+	}, nil
+}
+
+func (i *identityServer) Probe(context.Context, *csi.ProbeRequest) (*csi.ProbeResponse, error) {
+	return &csi.ProbeResponse{
+		Ready: wrapperspb.Bool(true),
+	}, nil
 }
