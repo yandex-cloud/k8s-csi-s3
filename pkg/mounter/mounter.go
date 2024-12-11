@@ -31,7 +31,7 @@ const (
 	rcloneMounterType   = "rclone"
 	TypeKey             = "mounter"
 	BucketKey           = "bucket"
-	OptionsKey          = "options"
+        OptionsKey          = "options"
 )
 
 // New returns a new mounter depending on the mounterType parameter
@@ -73,7 +73,15 @@ func fuseMount(path string, command string, args []string, envs []string) error 
 }
 
 func Unmount(path string) error {
-	if err := mount.New("").Unmount(path); err != nil {
+	mounter := mount.New("")
+	isNotMountPoint, err := mounter.IsNotMountPoint(path)
+
+	if isNotMountPoint || err != nil {
+		glog.Warningf("Skip Unmount since path (%s) may not a valid mount point: %v", path, err)
+		return nil
+	}
+
+	if err := mounter.Unmount(path); err != nil {
 		return err
 	}
 	return nil
