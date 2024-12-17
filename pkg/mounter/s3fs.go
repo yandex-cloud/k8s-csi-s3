@@ -52,7 +52,7 @@ func (s3fs *s3fsMounter) Mount(target, volumeID string) error {
 
 func writes3fsPass(pwFileContent string) (string, error) {
 	tempDir := os.TempDir()
-    uuid := uuid.New()
+	uuid := uuid.New()
 	pwFileName := fmt.Sprintf("%s/%s", tempDir, uuid)
 	pwFile, err := os.OpenFile(pwFileName, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
