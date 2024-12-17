@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/s3"
+	"github.com/google/uuid"
 )
 
 // Implements Mounter
@@ -29,7 +30,8 @@ func newS3fsMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
 }
 
 func (s3fs *s3fsMounter) Mount(target, volumeID string) error {
-	if err := writes3fsPass(s3fs.pwFileContent); err != nil {
+	pwFileName, err := writes3fsPass(s3fs.pwFileContent)
+	if err != nil {
 		return err
 	}
 	args := []string{
@@ -39,6 +41,7 @@ func (s3fs *s3fsMounter) Mount(target, volumeID string) error {
 		"-o", fmt.Sprintf("url=%s", s3fs.url),
 		"-o", "allow_other",
 		"-o", "mp_umask=000",
+		"-o", fmt.Sprintf("passwd_file=%s", pwFileName),
 	}
 	if s3fs.region != "" {
 		args = append(args, "-o", fmt.Sprintf("endpoint=%s", s3fs.region))
@@ -47,16 +50,18 @@ func (s3fs *s3fsMounter) Mount(target, volumeID string) error {
 	return fuseMount(target, s3fsCmd, args, nil)
 }
 
-func writes3fsPass(pwFileContent string) error {
-	pwFileName := fmt.Sprintf("%s/.passwd-s3fs", os.Getenv("HOME"))
+func writes3fsPass(pwFileContent string) (string, error) {
+	tempDir := os.TempDir()
+    uuid := uuid.New()
+	pwFileName := fmt.Sprintf("%s/%s", tempDir, uuid)
 	pwFile, err := os.OpenFile(pwFileName, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
-		return err
+		return "OpenFile Failed", err
 	}
 	_, err = pwFile.WriteString(pwFileContent)
 	if err != nil {
-		return err
+		return "WriteString failed", err
 	}
 	pwFile.Close()
-	return nil
+	return pwFileName, nil
 }
