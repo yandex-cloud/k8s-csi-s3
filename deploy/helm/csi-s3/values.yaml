@@ -47,6 +47,6 @@ tolerations:
 
 nodeSelector: {}
 
-priorityClassName: ""
+priorityClassName: "system-node-critical"
 
 kubeletPath: /var/lib/kubelet
