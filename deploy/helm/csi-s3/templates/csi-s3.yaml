@@ -1,3 +1,4 @@
+{{- if .Values.csiS3.create -}}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -127,3 +128,4 @@ spec:
           hostPath:
             path: /run/systemd
             type: DirectoryOrCreate
+{{- end -}}
