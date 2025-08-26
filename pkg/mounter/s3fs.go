@@ -2,6 +2,7 @@ package mounter
 
 import (
 	"fmt"
+	"golang.org/x/net/context"
 	"os"
 
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/s3"
@@ -28,7 +29,7 @@ func newS3fsMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
 	}, nil
 }
 
-func (s3fs *s3fsMounter) Mount(target, volumeID string) error {
+func (s3fs *s3fsMounter) Mount(ctx context.Context, target, volumeID string) error {
 	if err := writes3fsPass(s3fs.pwFileContent); err != nil {
 		return err
 	}
