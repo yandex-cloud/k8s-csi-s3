@@ -87,6 +87,9 @@ spec:
           args:
             - "--csi-address=$(ADDRESS)"
             - "--v=4"
+          {{- range .Values.provisioner.extraArgs }}
+            - {{ . | quote }}
+          {{- end }}
           env:
             - name: ADDRESS
               value: {{ .Values.kubeletPath }}/plugins/ru.yandex.s3.csi/csi.sock
