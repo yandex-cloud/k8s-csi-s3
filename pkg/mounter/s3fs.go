@@ -13,6 +13,7 @@ type s3fsMounter struct {
 	url           string
 	region        string
 	pwFileContent string
+	insecure      bool
 }
 
 const (
@@ -25,6 +26,7 @@ func newS3fsMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
 		url:           cfg.Endpoint,
 		region:        cfg.Region,
 		pwFileContent: cfg.AccessKeyID + ":" + cfg.SecretAccessKey,
+		insecure:      cfg.Insecure,
 	}, nil
 }
 
@@ -42,6 +44,9 @@ func (s3fs *s3fsMounter) Mount(target, volumeID string) error {
 	}
 	if s3fs.region != "" {
 		args = append(args, "-o", fmt.Sprintf("endpoint=%s", s3fs.region))
+	}
+	if s3fs.insecure {
+		args = append(args, "-o", "no_check_certificate")
 	}
 	args = append(args, s3fs.meta.MountOptions...)
 	return fuseMount(target, s3fsCmd, args, nil)
