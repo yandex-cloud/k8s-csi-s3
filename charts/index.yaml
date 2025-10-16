@@ -3,9 +3,9 @@ entries:
   csi-s3:
   - apiVersion: v1
     appVersion: 0.43.2
-    created: "2025-08-26T09:33:59.905757343Z"
+    created: "2025-10-16T12:43:43.35746922Z"
     description: Container Storage Interface (CSI) driver for S3 volumes
-    digest: ef15c2e8850ff989c356198b1cc2bb615c67fb01877239cc4cd77e7f1cc1a5a0
+    digest: a98d739c426e43814269e8d50afe42391f474227620b175a0b6d71ce68d6f345
     home: https://github.com/yandex-cloud/k8s-csi-s3
     icon: https://raw.githubusercontent.com/yandex-cloud/geesefs/master/doc/geesefs.png
     keywords:
@@ -181,4 +181,4 @@ entries:
     urls:
     - https://yandex-cloud.github.io/k8s-csi-s3/charts/csi-s3-0.37.4.tgz
     version: 0.37.4
-generated: "2025-08-26T09:33:59.905233687Z"
+generated: "2025-10-16T12:43:43.356914173Z"
