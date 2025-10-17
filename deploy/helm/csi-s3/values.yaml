@@ -48,3 +48,9 @@ tolerations:
 nodeSelector: {}
 
 kubeletPath: /var/lib/kubelet
+
+# Image pull secrets for private registries
+# Example:
+# imagePullSecrets:
+#   - name: myregistrykey
+imagePullSecrets: []
