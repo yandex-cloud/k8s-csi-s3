@@ -33,6 +33,7 @@ type Config struct {
 	Endpoint        string
 	Mounter         string
 	Insecure        bool
+	Minio           string
 }
 
 type FSMeta struct {
@@ -87,6 +88,7 @@ func NewClientFromSecret(secret map[string]string) (*s3Client, error) {
 		// Mounter is set in the volume preferences, not secrets
 		Mounter:  "",
 		Insecure: insecure,
+		Minio:    secret["minio"],
 	})
 }
 
