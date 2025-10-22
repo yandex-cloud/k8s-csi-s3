@@ -5,12 +5,12 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"k8s.io/klog/v2"
 	"net/http"
 	"net/url"
 	"strconv"
 	"sync/atomic"
 
-	"github.com/golang/glog"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
@@ -115,7 +115,7 @@ func (client *s3Client) RemovePrefix(bucketName string, prefix string) error {
 		return client.minio.RemoveObject(client.ctx, bucketName, prefix, minio.RemoveObjectOptions{})
 	}
 
-	glog.Warningf("removeObjects failed with: %s, will try removeObjectsOneByOne", err)
+	klog.Warningf("removeObjects failed with: %s, will try removeObjectsOneByOne", err)
 
 	if err = client.removeObjectsOneByOne(bucketName, prefix); err == nil {
 		return client.minio.RemoveObject(client.ctx, bucketName, prefix, minio.RemoveObjectOptions{})
@@ -131,7 +131,7 @@ func (client *s3Client) RemoveBucket(bucketName string) error {
 		return client.minio.RemoveBucket(client.ctx, bucketName)
 	}
 
-	glog.Warningf("removeObjects failed with: %s, will try removeObjectsOneByOne", err)
+	klog.Warningf("removeObjects failed with: %s, will try removeObjectsOneByOne", err)
 
 	if err = client.removeObjectsOneByOne(bucketName, ""); err == nil {
 		return client.minio.RemoveBucket(client.ctx, bucketName)
@@ -160,7 +160,7 @@ func (client *s3Client) removeObjects(bucketName, prefix string) error {
 	}()
 
 	if listErr != nil {
-		glog.Error("Error listing objects", listErr)
+		klog.Error("Error listing objects", listErr)
 		return listErr
 	}
 
@@ -172,7 +172,7 @@ func (client *s3Client) removeObjects(bucketName, prefix string) error {
 		errorCh := client.minio.RemoveObjects(client.ctx, bucketName, objectsCh, opts)
 		haveErrWhenRemoveObjects := false
 		for e := range errorCh {
-			glog.Errorf("Failed to remove object %s, error: %s", e.ObjectName, e.Err)
+			klog.Errorf("Failed to remove object %s, error: %s", e.ObjectName, e.Err)
 			haveErrWhenRemoveObjects = true
 		}
 		if haveErrWhenRemoveObjects {
@@ -207,7 +207,7 @@ func (client *s3Client) removeObjectsOneByOne(bucketName, prefix string) error {
 	}()
 
 	if listErr != nil {
-		glog.Error("Error listing objects", listErr)
+		klog.Error("Error listing objects", listErr)
 		return listErr
 	}
 
@@ -217,7 +217,7 @@ func (client *s3Client) removeObjectsOneByOne(bucketName, prefix string) error {
 			err := client.minio.RemoveObject(client.ctx, bucketName, obj.Key,
 				minio.RemoveObjectOptions{VersionID: obj.VersionID})
 			if err != nil {
-				glog.Errorf("Failed to remove object %s, error: %s", obj.Key, err)
+				klog.Errorf("Failed to remove object %s, error: %s", obj.Key, err)
 				atomic.AddInt64(&removeErrors, 1)
 			}
 			<-guardCh
