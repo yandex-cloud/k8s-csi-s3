@@ -1,0 +1,10 @@
+{{- if .Values.ca.create }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.ca.name }}
+  namespace: {{ .Release.Namespace }}
+data:
+  {{ .Values.ca.path }}: |-
+    {{ .Values.ca.certificate | nindent 4 }}
+{{- end }}
