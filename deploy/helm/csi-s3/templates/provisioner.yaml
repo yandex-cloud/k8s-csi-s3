@@ -104,7 +104,7 @@ metadata:
   name: csi-s3-provisioner
   namespace: {{ .Release.Namespace }}
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: csi-s3-provisioner
