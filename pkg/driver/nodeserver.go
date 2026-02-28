@@ -23,9 +23,9 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/golang/glog"
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/mounter"
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/s3"
-	"github.com/golang/glog"
 	"golang.org/x/net/context"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
@@ -50,7 +50,7 @@ func getMeta(bucketName, prefix string, context map[string]string) *s3.FSMeta {
 		for _, opt := range re.FindAll([]byte(mountOptStr), -1) {
 			// Unquote options
 			opt = re2.ReplaceAllFunc(opt, func(q []byte) []byte {
-				return re3.ReplaceAll(q[1 : len(q)-1], []byte("$1"))
+				return re3.ReplaceAll(q[1:len(q)-1], []byte("$1"))
 			})
 			mountOptions = append(mountOptions, string(opt))
 		}
@@ -253,7 +253,7 @@ func checkMount(targetPath string) (bool, error) {
 	notMnt, err := mount.New("").IsLikelyNotMountPoint(targetPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			if err = os.MkdirAll(targetPath, 0750); err != nil {
+			if err = os.MkdirAll(targetPath, 0750); err != nil && !os.IsExist(err) {
 				return false, err
 			}
 			notMnt = true
