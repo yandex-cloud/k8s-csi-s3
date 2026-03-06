@@ -1,7 +1,6 @@
 package mounter
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -130,21 +129,63 @@ func FuseUnmount(path string) error {
 	return waitForProcess(process, 20)
 }
 
+// mountCheckFunc checks whether the given path is a mount point.
+// Returns true if it is NOT a mount point.
+type mountCheckFunc func(path string) (bool, error)
+
+// unitStateFunc returns the ActiveState and Result of a systemd unit.
+// Returns ("", "", err) if the unit state cannot be determined.
+type unitStateFunc func() (activeState string, result string, err error)
+
+func defaultMountCheck(path string) (bool, error) {
+	return mount.New("").IsNotMountPoint(path)
+}
+
+func systemdUnitStateFunc(conn *systemd.Conn, unitName string) unitStateFunc {
+	if conn == nil || unitName == "" {
+		return nil
+	}
+	return func() (string, string, error) {
+		unitProps, err := conn.GetAllProperties(unitName)
+		if err != nil {
+			return "", "", err
+		}
+		activeState, _ := unitProps["ActiveState"].(string)
+		result, _ := unitProps["Result"].(string)
+		return activeState, result, nil
+	}
+}
+
 func waitForMount(path string, timeout time.Duration) error {
+	return waitForMountWithUnitCheck(path, timeout, nil, "")
+}
+
+func waitForMountWithUnitCheck(path string, timeout time.Duration, conn *systemd.Conn, unitName string) error {
+	return waitForMountLoop(path, timeout, defaultMountCheck, systemdUnitStateFunc(conn, unitName))
+}
+
+func waitForMountLoop(path string, timeout time.Duration, isMountCheck mountCheckFunc, getUnitState unitStateFunc) error {
 	var elapsed time.Duration
 	var interval = 10 * time.Millisecond
 	for {
-		notMount, err := mount.New("").IsNotMountPoint(path)
+		notMount, err := isMountCheck(path)
 		if err != nil {
 			return err
 		}
 		if !notMount {
 			return nil
 		}
+		// If we have a unit state checker, see if the unit has failed
+		if getUnitState != nil {
+			activeState, result, err := getUnitState()
+			if err == nil && (activeState == "failed" || activeState == "inactive") {
+				return fmt.Errorf("geesefs unit entered state %q (result: %s) before mount appeared at %s", activeState, result, path)
+			}
+		}
 		time.Sleep(interval)
 		elapsed = elapsed + interval
 		if elapsed >= timeout {
-			return errors.New("Timeout waiting for mount")
+			return fmt.Errorf("Timeout waiting for mount at %s after %v", path, timeout)
 		}
 	}
 }
