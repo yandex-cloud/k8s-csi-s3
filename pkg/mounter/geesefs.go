@@ -193,10 +193,21 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 				)
 			}
 			// Already mounted at right location, wait for mount
-			return waitForMount(target, 30*time.Second)
+			return waitForMountWithUnitCheck(target, 30*time.Second, conn, unitName)
 		} else {
 			// Stop and garbage collect the unit if automatic collection didn't work for some reason
-			conn.StopUnit(unitName, "replace", nil)
+			stopCh := make(chan string, 1)
+			_, err := conn.StopUnit(unitName, "replace", stopCh)
+			if err != nil {
+				glog.Warningf("Failed to stop stale unit %s: %v", unitName, err)
+			} else {
+				select {
+				case res := <-stopCh:
+					glog.Infof("Stale unit %s stopped with result: %s", unitName, res)
+				case <-time.After(15 * time.Second):
+					glog.Warningf("Timed out waiting for stale unit %s to stop", unitName)
+				}
+			}
 			conn.ResetFailedUnit(unitName)
 		}
 	}
@@ -218,5 +229,5 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 	if err != nil {
 		return fmt.Errorf("Error starting systemd unit %s on host: %v", unitName, err)
 	}
-	return waitForMount(target, 30*time.Second)
+	return waitForMountWithUnitCheck(target, 30*time.Second, conn, unitName)
 }
