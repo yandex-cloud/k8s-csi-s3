@@ -31,14 +31,20 @@ secret:
   create: true
   # Name of the secret
   name: csi-s3-secret
-  # S3 Access Key
+  # S3 Access Key (not required when using IRSA)
   accessKey: ""
-  # S3 Secret Key
+  # S3 Secret Key (not required when using IRSA)
   secretKey: ""
   # Endpoint
   endpoint: https://storage.yandexcloud.net
   # Region
   region: ""
+  # Use IRSA (IAM Roles for Service Accounts) for authentication instead of static credentials
+  useIRSA: false
+  # IAM role ARN (optional, defaults to AWS_ROLE_ARN env var injected by EKS)
+  roleArn: ""
+  # Path to the projected service account token file (optional, defaults to EKS-injected path)
+  webIdentityTokenFile: ""
 
 tolerations:
   all: false
