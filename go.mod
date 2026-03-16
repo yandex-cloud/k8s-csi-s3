@@ -8,6 +8,7 @@ require (
 	github.com/godbus/dbus/v5 v5.0.4 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.1.0 // indirect
+	github.com/google/uuid v1.1.1 // indirect
 	github.com/kubernetes-csi/csi-lib-utils v0.6.1 // indirect
 	github.com/kubernetes-csi/csi-test v2.0.0+incompatible
 	github.com/kubernetes-csi/drivers v1.0.2
