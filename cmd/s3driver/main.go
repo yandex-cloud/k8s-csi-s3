@@ -20,6 +20,8 @@ import (
 	"flag"
 	"log"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/driver"
 )
@@ -36,10 +38,19 @@ var (
 func main() {
 	flag.Parse()
 
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, syscall.SIGQUIT)
+
 	driver, err := driver.New(*nodeID, *endpoint)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	go func() {
+		<-sig
+		driver.Stop()
+	}()
+
 	driver.Run()
 	os.Exit(0)
 }
