@@ -17,27 +17,26 @@ limitations under the License.
 package driver
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
 
+	"github.com/golang/glog"
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/mounter"
 	"github.com/yandex-cloud/k8s-csi-s3/pkg/s3"
-	"github.com/golang/glog"
-	"golang.org/x/net/context"
+	mount "k8s.io/mount-utils"
 
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"k8s.io/kubernetes/pkg/util/mount"
-
-	csicommon "github.com/kubernetes-csi/drivers/pkg/csi-common"
 )
 
 type nodeServer struct {
-	*csicommon.DefaultNodeServer
+	csi.UnimplementedNodeServer
+	driver *driver
 }
 
 func getMeta(bucketName, prefix string, context map[string]string) *s3.FSMeta {
@@ -50,7 +49,7 @@ func getMeta(bucketName, prefix string, context map[string]string) *s3.FSMeta {
 		for _, opt := range re.FindAll([]byte(mountOptStr), -1) {
 			// Unquote options
 			opt = re2.ReplaceAllFunc(opt, func(q []byte) []byte {
-				return re3.ReplaceAll(q[1 : len(q)-1], []byte("$1"))
+				return re3.ReplaceAll(q[1:len(q)-1], []byte("$1"))
 			})
 			mountOptions = append(mountOptions, string(opt))
 		}
@@ -91,16 +90,16 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	if notMnt {
 		// Staged mount is dead by some reason. Revive it
 		bucketName, prefix := volumeIDToBucketPrefix(volumeID)
-		s3, err := s3.NewClientFromSecret(req.GetSecrets())
+		s3Client, err := s3.NewClientFromSecret(req.GetSecrets())
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
 		}
 		meta := getMeta(bucketName, prefix, req.VolumeContext)
-		mounter, err := mounter.New(meta, s3.Config)
+		m, err := mounter.New(meta, s3Client.Config)
 		if err != nil {
 			return nil, err
 		}
-		if err := mounter.Mount(stagingTargetPath, volumeID); err != nil {
+		if err := m.Mount(stagingTargetPath, volumeID); err != nil {
 			return nil, err
 		}
 	}
@@ -185,11 +184,11 @@ func (ns *nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 	}
 
 	meta := getMeta(bucketName, prefix, req.VolumeContext)
-	mounter, err := mounter.New(meta, client.Config)
+	m, err := mounter.New(meta, client.Config)
 	if err != nil {
 		return nil, err
 	}
-	if err := mounter.Mount(stagingTargetPath, volumeID); err != nil {
+	if err := m.Mount(stagingTargetPath, volumeID); err != nil {
 		return nil, err
 	}
 
@@ -229,7 +228,6 @@ func (ns *nodeServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstag
 
 // NodeGetCapabilities returns the supported capabilities of the node server
 func (ns *nodeServer) NodeGetCapabilities(ctx context.Context, req *csi.NodeGetCapabilitiesRequest) (*csi.NodeGetCapabilitiesResponse, error) {
-	// currently there is a single NodeServer capability according to the spec
 	nscap := &csi.NodeServiceCapability{
 		Type: &csi.NodeServiceCapability_Rpc{
 			Rpc: &csi.NodeServiceCapability_RPC{
@@ -247,6 +245,16 @@ func (ns *nodeServer) NodeGetCapabilities(ctx context.Context, req *csi.NodeGetC
 
 func (ns *nodeServer) NodeExpandVolume(ctx context.Context, req *csi.NodeExpandVolumeRequest) (*csi.NodeExpandVolumeResponse, error) {
 	return &csi.NodeExpandVolumeResponse{}, status.Error(codes.Unimplemented, "NodeExpandVolume is not implemented")
+}
+
+func (ns *nodeServer) NodeGetInfo(ctx context.Context, req *csi.NodeGetInfoRequest) (*csi.NodeGetInfoResponse, error) {
+	return &csi.NodeGetInfoResponse{
+		NodeId: ns.driver.nodeID,
+	}, nil
+}
+
+func (ns *nodeServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeGetVolumeStatsRequest) (*csi.NodeGetVolumeStatsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "NodeGetVolumeStats is not implemented")
 }
 
 func checkMount(targetPath string) (bool, error) {
