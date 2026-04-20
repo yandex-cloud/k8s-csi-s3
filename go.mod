@@ -1,6 +1,6 @@
 module github.com/yandex-cloud/k8s-csi-s3
 
-go 1.25.9
+go 1.25.5
 
 require (
 	github.com/container-storage-interface/spec v1.12.0
