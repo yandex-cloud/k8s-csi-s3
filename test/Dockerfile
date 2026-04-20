@@ -1,4 +1,4 @@
-FROM golang:1.16-buster
+FROM golang:1.25.5
 
 LABEL maintainers="Vitaliy Filippov <vitalif@yourcmc.ru>"
 LABEL description="csi-s3 testing image"
