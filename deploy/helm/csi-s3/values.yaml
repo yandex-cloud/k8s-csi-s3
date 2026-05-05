@@ -1,9 +1,9 @@
 ---
 images:
-  # Source: quay.io/k8scsi/csi-node-driver-registrar:v2.16.0
-  registrar: cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-node-driver-registrar:v2.16.0
-  # Source: quay.io/k8scsi/csi-provisioner:v6.2.0
-  provisioner: cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-provisioner:v6.2.0
+  # Source: https://github.com/kubernetes-csi/node-driver-registrar
+  registrar: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.16.0
+  # Source: https://github.com/kubernetes-csi/external-provisioner
+  provisioner: registry.k8s.io/sig-storage/csi-provisioner:v6.2.0
   # Main image
   csi: cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-s3-driver:0.43.7
 
