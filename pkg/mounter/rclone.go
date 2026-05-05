@@ -14,6 +14,7 @@ type rcloneMounter struct {
 	region          string
 	accessKeyID     string
 	secretAccessKey string
+	insecure        bool
 }
 
 const (
@@ -27,6 +28,7 @@ func newRcloneMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
 		region:          cfg.Region,
 		accessKeyID:     cfg.AccessKeyID,
 		secretAccessKey: cfg.SecretAccessKey,
+		insecure:        cfg.Insecure,
 	}, nil
 }
 
@@ -44,6 +46,9 @@ func (rclone *rcloneMounter) Mount(target, volumeID string) error {
 	}
 	if rclone.region != "" {
 		args = append(args, fmt.Sprintf("--s3-region=%s", rclone.region))
+	}
+	if rclone.insecure {
+		args = append(args, "--no-check-certificate")
 	}
 	args = append(args, rclone.meta.MountOptions...)
 	envs := []string{

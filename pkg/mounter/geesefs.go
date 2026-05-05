@@ -24,6 +24,7 @@ type geesefsMounter struct {
 	region          string
 	accessKeyID     string
 	secretAccessKey string
+	insecure        bool
 }
 
 func newGeeseFSMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
@@ -33,6 +34,7 @@ func newGeeseFSMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
 		region:          cfg.Region,
 		accessKeyID:     cfg.AccessKeyID,
 		secretAccessKey: cfg.SecretAccessKey,
+		insecure:        cfg.Insecure,
 	}, nil
 }
 
@@ -93,6 +95,9 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 	var args []string
 	if geesefs.region != "" {
 		args = append(args, "--region", geesefs.region)
+	}
+	if geesefs.insecure {
+		args = append(args, "--no-verify-ssl")
 	}
 	args = append(
 		args,
