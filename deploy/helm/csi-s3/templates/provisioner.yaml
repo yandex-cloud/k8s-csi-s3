@@ -37,6 +37,52 @@ roleRef:
   kind: ClusterRole
   name: csi-s3-external-provisioner-runner
   apiGroup: rbac.authorization.k8s.io
+
+---
+# Provisioner must be able to work with endpoints in current namespace
+# if (and only if) leadership election is enabled
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: external-provisioner-cfg
+rules:
+# Only one of the following rules for endpoints or leases is required based on
+# what is set for `--leader-election-type`. Endpoints are deprecated in favor of Leases.
+- apiGroups: ["coordination.k8s.io"]
+  resources: ["leases"]
+  verbs: ["get", "watch", "list", "delete", "update", "create"]
+# Permissions for CSIStorageCapacity are only needed enabling the publishing
+# of storage capacity information.
+- apiGroups: ["storage.k8s.io"]
+  resources: ["csistoragecapacities"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# The GET permissions below are needed for walking up the ownership chain
+# for CSIStorageCapacity. They are sufficient for deployment via
+# StatefulSet (only needs to get Pod) and Deployment (needs to get
+# Pod and then ReplicaSet to find the Deployment).
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get"]
+- apiGroups: ["apps"]
+  resources: ["replicasets"]
+  verbs: ["get"]
+
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: csi-provisioner-role-cfg
+  namespace: {{ .Release.Namespace }}
+subjects:
+  - kind: ServiceAccount
+    name: csi-s3-provisioner-sa
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: external-provisioner-cfg
+  apiGroup: rbac.authorization.k8s.io
+
 ---
 kind: Service
 apiVersion: v1
@@ -52,14 +98,13 @@ spec:
     - name: csi-s3-dummy
       port: 65535
 ---
-kind: StatefulSet
+kind: Deployment
 apiVersion: apps/v1
 metadata:
   name: csi-s3-provisioner
   namespace: {{ .Release.Namespace }}
 spec:
-  serviceName: "csi-provisioner-s3"
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: csi-s3-provisioner
@@ -86,6 +131,8 @@ spec:
           image: {{ .Values.images.provisioner }}
           args:
             - "--csi-address=$(ADDRESS)"
+            - "--leader-election"
+            - "--http-endpoint=:8080"
             - "--v=4"
           env:
             - name: ADDRESS
