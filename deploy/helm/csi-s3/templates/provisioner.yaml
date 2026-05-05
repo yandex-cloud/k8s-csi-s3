@@ -81,6 +81,9 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{ - if .Values.priorityClassName }}
+      priorityClassName: {{ .Values.priorityClassName }}
+      {{ - end }}
       containers:
         - name: csi-provisioner
           image: {{ .Values.images.provisioner }}
