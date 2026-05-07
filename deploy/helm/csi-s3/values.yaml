@@ -48,3 +48,41 @@ tolerations:
 nodeSelector: {}
 
 kubeletPath: /var/lib/kubelet
+
+# Init container for node daemon set (optional)
+initContainer:
+  enabled: false
+  image: ""
+  imagePullPolicy: IfNotPresent
+  command: []
+  args: []
+  # volumeMounts: []
+
+# Init container for provisioner stateful set (optional)
+initContainerProvisioner:
+  enabled: false
+  image: ""
+  imagePullPolicy: IfNotPresent
+  command: []
+  args: []
+  # volumeMounts: []
+
+# Extra volumes to mount on all containers
+extraVolumes: []
+# Example:
+# - name: my-volume
+#   hostPath:
+#     path: /some/path
+#     type: Directory
+
+# Extra volume mounts for node daemon set containers
+extraVolumeMounts: []
+# Example:
+# - name: my-volume
+#   mountPath: /mnt/my-volume
+
+# Extra volume mounts for provisioner stateful set containers
+extraVolumeMountsProvisioner: []
+# Example:
+# - name: my-volume
+#   mountPath: /mnt/my-volume

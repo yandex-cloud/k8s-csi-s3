@@ -50,6 +50,24 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       serviceAccount: csi-s3
+      {{- if .Values.initContainer.enabled }}
+      initContainers:
+        - name: init-container
+          image: {{ .Values.initContainer.image }}
+          imagePullPolicy: {{ .Values.initContainer.imagePullPolicy }}
+          {{- with .Values.initContainer.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.initContainer.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.initContainer.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- end }}
       containers:
         - name: driver-registrar
           image: {{ .Values.images.registrar }}
@@ -71,6 +89,9 @@ spec:
               mountPath: /csi
             - name: registration-dir
               mountPath: /registration/
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
         - name: csi-s3
           securityContext:
             privileged: true
@@ -103,6 +124,9 @@ spec:
               mountPath: /dev/fuse
             - name: systemd-control
               mountPath: /run/systemd
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
       volumes:
         - name: registration-dir
           hostPath:
@@ -127,3 +151,6 @@ spec:
           hostPath:
             path: /run/systemd
             type: DirectoryOrCreate
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}

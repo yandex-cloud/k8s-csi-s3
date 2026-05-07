@@ -81,6 +81,24 @@ spec:
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- if .Values.initContainerProvisioner.enabled }}
+      initContainers:
+        - name: init-container
+          image: {{ .Values.initContainerProvisioner.image }}
+          imagePullPolicy: {{ .Values.initContainerProvisioner.imagePullPolicy }}
+          {{- with .Values.initContainerProvisioner.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.initContainerProvisioner.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.initContainerProvisioner.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- end }}
       containers:
         - name: csi-provisioner
           image: {{ .Values.images.provisioner }}
@@ -94,6 +112,9 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: {{ .Values.kubeletPath }}/plugins/ru.yandex.s3.csi
+            {{- with .Values.extraVolumeMountsProvisioner }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
         - name: csi-s3
           image: {{ .Values.images.csi }}
           imagePullPolicy: IfNotPresent
@@ -111,6 +132,12 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: {{ .Values.kubeletPath }}/plugins/ru.yandex.s3.csi
+            {{- with .Values.extraVolumeMountsProvisioner }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
       volumes:
         - name: socket-dir
           emptyDir: {}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
