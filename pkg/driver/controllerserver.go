@@ -70,7 +70,7 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 
 	exists, err := client.BucketExists(bucketName)
 	if err != nil {
-		return nil, fmt.Errorf("failed to check if bucket %s exists: %v", volumeID, err)
+		return nil, fmt.Errorf("failed to check if bucket %s exists: %v", bucketName, err)
 	}
 
 	if !exists {
