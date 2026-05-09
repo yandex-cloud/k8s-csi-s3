@@ -8,7 +8,7 @@ This is a Container Storage Interface ([CSI](https://github.com/container-storag
 
 * Kubernetes 1.17+
 * Kubernetes has to allow privileged containers
-* Docker daemon must allow shared mounts (systemd flag `MountFlags=shared`)
+* Container runtime must allow shared mounts (systemd flag `MountFlags=shared`)
 
 ### Helm chart
 
@@ -215,7 +215,7 @@ make build
 
 ### Tests
 
-Currently the driver is tested by the [CSI Sanity Tester](https://github.com/kubernetes-csi/csi-test/tree/master/pkg/sanity). As end-to-end tests require S3 storage and a mounter like s3fs, this is best done in a docker container. A Dockerfile and the test script are in the `test` directory. The easiest way to run the tests is to just use the make command:
+Currently the driver is tested by the [CSI Sanity Tester](https://github.com/kubernetes-csi/csi-test/tree/master/pkg/sanity). As end-to-end tests require S3 storage and a mounter like s3fs, this is best done in a container. A Dockerfile and the test script are in the `test` directory. The easiest way to run the tests is to just use the make command:
 
 ```bash
 make test
