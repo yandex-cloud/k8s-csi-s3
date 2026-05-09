@@ -19,20 +19,26 @@ const (
 
 // Implements Mounter
 type geesefsMounter struct {
-	meta            *s3.FSMeta
-	endpoint        string
-	region          string
-	accessKeyID     string
-	secretAccessKey string
+	meta                 *s3.FSMeta
+	endpoint             string
+	region               string
+	accessKeyID          string
+	secretAccessKey      string
+	useIRSA              bool
+	roleArn              string
+	webIdentityTokenFile string
 }
 
 func newGeeseFSMounter(meta *s3.FSMeta, cfg *s3.Config) (Mounter, error) {
 	return &geesefsMounter{
-		meta:            meta,
-		endpoint:        cfg.Endpoint,
-		region:          cfg.Region,
-		accessKeyID:     cfg.AccessKeyID,
-		secretAccessKey: cfg.SecretAccessKey,
+		meta:                 meta,
+		endpoint:             cfg.Endpoint,
+		region:               cfg.Region,
+		accessKeyID:          cfg.AccessKeyID,
+		secretAccessKey:      cfg.SecretAccessKey,
+		useIRSA:              cfg.UseIRSA,
+		roleArn:              cfg.RoleArn,
+		webIdentityTokenFile: cfg.WebIdentityTokenFile,
 	}, nil
 }
 
@@ -69,17 +75,30 @@ func (geesefs *geesefsMounter) CopyBinary(from, to string) error {
 	return nil
 }
 
+func (geesefs *geesefsMounter) authEnvs() []string {
+	if geesefs.useIRSA {
+		envs := []string{}
+		if geesefs.roleArn != "" {
+			envs = append(envs, "AWS_ROLE_ARN="+geesefs.roleArn)
+		}
+		if geesefs.webIdentityTokenFile != "" {
+			envs = append(envs, "AWS_WEB_IDENTITY_TOKEN_FILE="+geesefs.webIdentityTokenFile)
+		}
+		return envs
+	}
+	return []string{
+		"AWS_ACCESS_KEY_ID=" + geesefs.accessKeyID,
+		"AWS_SECRET_ACCESS_KEY=" + geesefs.secretAccessKey,
+	}
+}
+
 func (geesefs *geesefsMounter) MountDirect(target string, args []string) error {
 	args = append([]string{
 		"--endpoint", geesefs.endpoint,
 		"-o", "allow_other",
 		"--log-file", "/dev/stderr",
 	}, args...)
-	envs := []string{
-		"AWS_ACCESS_KEY_ID=" + geesefs.accessKeyID,
-		"AWS_SECRET_ACCESS_KEY=" + geesefs.secretAccessKey,
-	}
-	return fuseMount(target, geesefsCmd, args, envs)
+	return fuseMount(target, geesefsCmd, args, geesefs.authEnvs())
 }
 
 type execCmd struct {
@@ -164,7 +183,7 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 		systemd.PropExecStart(args, false),
 		systemd.Property{
 			Name: "Environment",
-			Value: dbus.MakeVariant([]string{ "AWS_ACCESS_KEY_ID="+geesefs.accessKeyID, "AWS_SECRET_ACCESS_KEY="+geesefs.secretAccessKey }),
+			Value: dbus.MakeVariant(geesefs.authEnvs()),
 		},
 		systemd.Property{
 			Name: "CollectMode",

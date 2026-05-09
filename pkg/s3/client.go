@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"sync/atomic"
 
@@ -27,12 +28,16 @@ type s3Client struct {
 
 // Config holds values to configure the driver
 type Config struct {
-	AccessKeyID     string
-	SecretAccessKey string
-	Region          string
-	Endpoint        string
-	Mounter         string
-	Insecure        bool
+	AccessKeyID          string
+	SecretAccessKey      string
+	Region               string
+	Endpoint             string
+	Mounter              string
+	Insecure             bool
+	// IRSA (IAM Roles for Service Accounts) fields
+	UseIRSA              bool
+	RoleArn              string
+	WebIdentityTokenFile string
 }
 
 type FSMeta struct {
@@ -63,9 +68,26 @@ func NewClient(cfg *Config) (*s3Client, error) {
 		tlsConfig.InsecureSkipVerify = true
 		transport.TLSClientConfig = tlsConfig
 	}
+	var creds *credentials.Credentials
+	if client.Config.UseIRSA {
+		// Use IAM credentials from IRSA (projected service account token).
+		// If RoleArn/WebIdentityTokenFile are set in config, override env vars
+		// so the IAM credential provider picks them up.
+		if client.Config.RoleArn != "" {
+			os.Setenv("AWS_ROLE_ARN", client.Config.RoleArn)
+		}
+		if client.Config.WebIdentityTokenFile != "" {
+			os.Setenv("AWS_WEB_IDENTITY_TOKEN_FILE", client.Config.WebIdentityTokenFile)
+		}
+		creds = credentials.NewIAM("")
+		glog.Infof("Using IRSA for S3 authentication (role=%s)", os.Getenv("AWS_ROLE_ARN"))
+	} else {
+		creds = credentials.NewStaticV4(client.Config.AccessKeyID, client.Config.SecretAccessKey, "")
+	}
+
 	minioClient, err := minio.New(endpoint, &minio.Options{
 		Transport: transport,
-		Creds:     credentials.NewStaticV4(client.Config.AccessKeyID, client.Config.SecretAccessKey, ""),
+		Creds:     creds,
 		Region:    client.Config.Region,
 		Secure:    ssl,
 	})
@@ -79,14 +101,18 @@ func NewClient(cfg *Config) (*s3Client, error) {
 
 func NewClientFromSecret(secret map[string]string) (*s3Client, error) {
 	insecure, _ := strconv.ParseBool(secret["insecure"])
+	useIRSA, _ := strconv.ParseBool(secret["useIRSA"])
 	return NewClient(&Config{
-		AccessKeyID:     secret["accessKeyID"],
-		SecretAccessKey: secret["secretAccessKey"],
-		Region:          secret["region"],
-		Endpoint:        secret["endpoint"],
+		AccessKeyID:          secret["accessKeyID"],
+		SecretAccessKey:      secret["secretAccessKey"],
+		Region:               secret["region"],
+		Endpoint:             secret["endpoint"],
 		// Mounter is set in the volume preferences, not secrets
-		Mounter:  "",
-		Insecure: insecure,
+		Mounter:              "",
+		Insecure:             insecure,
+		UseIRSA:              useIRSA,
+		RoleArn:              secret["roleArn"],
+		WebIdentityTokenFile: secret["webIdentityTokenFile"],
 	})
 }
 
