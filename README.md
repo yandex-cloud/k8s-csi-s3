@@ -36,6 +36,7 @@ stringData:
   secretAccessKey: <YOUR_SECRET_ACCESS_KEY>
   # For AWS set it to "https://s3.<region>.amazonaws.com", for example https://s3.eu-central-1.amazonaws.com
   endpoint: https://storage.yandexcloud.net
+  # for KZ region set it to endpoint: https://storage.yandexcloud.kz
   # For AWS set it to AWS region
   #region: ""
 ```
