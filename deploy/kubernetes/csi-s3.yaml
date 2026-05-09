@@ -43,6 +43,29 @@ spec:
           effect: NoExecute
           tolerationSeconds: 300
       serviceAccount: csi-s3
+      initContainers:
+        - name: setup-fuse-device
+          image: alpine:3.22
+          securityContext:
+            privileged: true
+          command:
+            - sh
+            - -c
+            - |
+              set -eux
+              if [ -d /dev/fuse ]; then
+                echo "/dev/fuse is a directory, removing..."
+                rm -rf /dev/fuse
+              fi
+              if [ ! -e /dev/fuse ]; then
+                echo "Creating /dev/fuse..."
+                mknod /dev/fuse c 10 229
+                chmod 666 /dev/fuse
+              fi
+              ls -l /dev/fuse
+          volumeMounts:
+            - name: dev
+              mountPath: /dev
       containers:
         - name: driver-registrar
           image: cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-node-driver-registrar:v2.16.0
@@ -113,9 +136,16 @@ spec:
           hostPath:
             path: /var/lib/kubelet/pods
             type: Directory
+        - name: dev
+          hostPath:
+            path: /dev
+            type: Directory
         - name: fuse-device
           hostPath:
             path: /dev/fuse
+            # Since it may not exist, we’ll specify it as a string first.
+            # In that case, it will be created as a directory, so we’ll convert it to a character device (CharDevice) in the initContainer to make it available for use in the subsequent containers.
+            # type: CharDevice
         - name: systemd-control
           hostPath:
             path: /run/systemd
