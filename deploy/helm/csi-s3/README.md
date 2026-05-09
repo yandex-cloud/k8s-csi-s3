@@ -39,3 +39,7 @@ The following table lists all configuration parameters and their default values.
 | `tolerations.all`            | Tolerate all taints by the CSI-S3 node driver (mounter)                | false                                                  |
 | `tolerations.node`           | Custom tolerations for the CSI-S3 node driver (mounter)                | []                                                     |
 | `tolerations.controller`     | Custom tolerations for the CSI-S3 controller (provisioner)             | []                                                     |
+| `ca.create`                  | Create configmap for custom CA cert                                    | false                                                  |
+| `ca.name`                    | Configmap name for custom CA cert                                      | ca-custom-pemstore                                     |
+| `ca.path`                    | Configmap path for custom CA cert                                      | ca-custom-cert.pem                                     |
+| `ca.certificate`             | Configmap string data CA                                               |                                                        |

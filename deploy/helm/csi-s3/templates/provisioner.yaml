@@ -94,6 +94,12 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: {{ .Values.kubeletPath }}/plugins/ru.yandex.s3.csi
+          {{- if and .Values.ca.create .Values.ca.name .Values.ca.path }}
+            - name: {{ .Values.ca.name}}
+              mountPath: /etc/ssl/certs/{{ .Values.ca.path }}
+              subPath: {{ .Values.ca.path }}
+              readOnly: false
+          {{- end }}
         - name: csi-s3
           image: {{ .Values.images.csi }}
           imagePullPolicy: IfNotPresent
@@ -111,6 +117,17 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: {{ .Values.kubeletPath }}/plugins/ru.yandex.s3.csi
+          {{- if and .Values.ca.create .Values.ca.name .Values.ca.path }}
+            - name: {{ .Values.ca.name}}
+              mountPath: /etc/ssl/certs/{{ .Values.ca.path }}
+              subPath: {{ .Values.ca.path }}
+              readOnly: false
+          {{- end }}
       volumes:
         - name: socket-dir
           emptyDir: {}
+      {{- if and .Values.ca.create .Values.ca.name }}
+        - name: {{ .Values.ca.name }}
+          configMap:
+            name: {{ .Values.ca.name }}
+      {{- end }}

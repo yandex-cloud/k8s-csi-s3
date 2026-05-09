@@ -48,3 +48,12 @@ tolerations:
 nodeSelector: {}
 
 kubeletPath: /var/lib/kubelet
+
+ca:
+  create: false
+  name: ca-custom-pemstore
+  path: ca-custom-cert.pem
+  certificate: ""  #|
+    # -----BEGIN CERTIFICATE-----
+    # ...
+    # -----END CERTIFICATE-----

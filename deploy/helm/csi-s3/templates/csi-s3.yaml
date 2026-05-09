@@ -71,6 +71,12 @@ spec:
               mountPath: /csi
             - name: registration-dir
               mountPath: /registration/
+            {{- if and .Values.ca.create .Values.ca.name .Values.ca.path }}
+            - name: {{ .Values.ca.name}}
+              mountPath: /etc/ssl/certs/{{ .Values.ca.path }}
+              subPath: {{ .Values.ca.path }}
+              readOnly: false
+            {{- end }}
         - name: csi-s3
           securityContext:
             privileged: true
@@ -103,6 +109,12 @@ spec:
               mountPath: /dev/fuse
             - name: systemd-control
               mountPath: /run/systemd
+            {{- if and .Values.ca.create .Values.ca.name .Values.ca.path }}
+            - name: {{ .Values.ca.name}}
+              mountPath: /etc/ssl/certs/{{ .Values.ca.path }}
+              subPath: {{ .Values.ca.path }}
+              readOnly: false
+            {{- end }}
       volumes:
         - name: registration-dir
           hostPath:
@@ -127,3 +139,8 @@ spec:
           hostPath:
             path: /run/systemd
             type: DirectoryOrCreate
+        {{- if and .Values.ca.create .Values.ca.name }}
+        - name: {{ .Values.ca.name }}
+          configMap:
+            name: {{ .Values.ca.name }}
+        {{- end }}
