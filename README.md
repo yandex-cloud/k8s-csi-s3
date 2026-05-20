@@ -117,6 +117,33 @@ kubectl create -f examples/storageclass.yaml
 
 If something does not work as expected, check the troubleshooting section below.
 
+## Nomad installation
+
+This driver can also run as a Nomad CSI plugin.
+
+### Requirements
+
+* Nomad clients running the Docker task driver
+* `allow_privileged = true` in Nomad Docker plugin config
+* Linux hosts with shared mounts enabled (`/` should be `rshared`)
+
+### Deploy CSI plugin jobs
+
+```bash
+nomad job run deploy/nomad/plugin-s3-controller.nomad.hcl
+nomad job run deploy/nomad/plugin-s3-node.nomad.hcl
+nomad plugin status s3
+```
+
+### Register a volume
+
+```bash
+nomad volume register deploy/nomad/volume-s3.hcl
+nomad volume status s3-demo
+```
+
+Update `deploy/nomad/volume-s3.hcl` with your S3 credentials and endpoint before registering.
+
 ## Additional configuration
 
 ### Bucket
