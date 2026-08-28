@@ -99,6 +99,7 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 		"--setuid", "65534", // nobody. drop root privileges
 		"--setgid", "65534", // nogroup
 	)
+	var unsafeArgs []string
 	useSystemd := true
 	for i := 0; i < len(geesefs.meta.MountOptions); i++ {
 		opt := geesefs.meta.MountOptions[i]
@@ -117,8 +118,10 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 			}
 			if key == "log-file" || key == "shared-config" || key == "cache" {
 				// Skip options accessing local FS
-				if e < 0 {
-					i++
+				unsafeArgs = append(unsafeArgs, opt)
+				i++
+				if i < len(geesefs.meta.MountOptions) {
+					unsafeArgs = append(unsafeArgs, geesefs.meta.MountOptions[i])
 				}
 			} else if key != "" {
 				args = append(args, opt)
@@ -126,6 +129,10 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 		} else if len(opt) > 0 {
 			args = append(args, opt)
 		}
+	}
+	if !useSystemd {
+		// Unsafe options are allowed when running inside the container
+		args = append(args, unsafeArgs...)
 	}
 	args = append(args, fullPath, target)
 	// Try to start geesefs using systemd so it doesn't get killed when the container exits
@@ -156,11 +163,6 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 		},
 		systemd.PropExecStart(args, false),
 		systemd.Property{
-			Name: "ExecStopPost",
-			// force & lazy unmount to cleanup possibly dead mountpoints
-			Value: dbus.MakeVariant([]execCmd{ execCmd{ "/bin/umount", []string{ "/bin/umount", "-f", "-l", target }, false } }),
-		},
-		systemd.Property{
 			Name: "Environment",
 			Value: dbus.MakeVariant([]string{ "AWS_ACCESS_KEY_ID="+geesefs.accessKeyID, "AWS_SECRET_ACCESS_KEY="+geesefs.secretAccessKey }),
 		},
@@ -183,23 +185,38 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 				}
 			}
 			if curPath != target {
+				// FIXME This may mean that the same bucket&path are used for multiple PVs. Support it somehow
 				return fmt.Errorf(
 					"GeeseFS for volume %v is already mounted on host, but"+
 					" in a different directory. We want %v, but it's in %v",
 					volumeID, target, curPath,
 				)
 			}
-			// Already mounted at right location
-			return nil
+			// Already mounted at right location, wait for mount
+			return waitForMount(target, 30*time.Second)
 		} else {
 			// Stop and garbage collect the unit if automatic collection didn't work for some reason
 			conn.StopUnit(unitName, "replace", nil)
 			conn.ResetFailedUnit(unitName)
 		}
 	}
+	unitPath := "/run/systemd/system/" + unitName + ".d"
+	err = os.MkdirAll(unitPath, 0755)
+	if err != nil {
+		return fmt.Errorf("Error creating directory %s: %v", unitPath, err)
+	}
+	// force & lazy unmount to cleanup possibly dead mountpoints
+	err = os.WriteFile(
+		unitPath+"/50-StopProps.conf",
+		[]byte("[Service]\nExecStopPost=/bin/umount -f -l "+target+"\nTimeoutStopSec=20\n"),
+		0600,
+	)
+	if err != nil {
+		return fmt.Errorf("Error writing %v/50-ExecStopPost.conf: %v", unitPath, err)
+	}
 	_, err = conn.StartTransientUnit(unitName, "replace", newProps, nil)
 	if err != nil {
 		return fmt.Errorf("Error starting systemd unit %s on host: %v", unitName, err)
 	}
-	return waitForMount(target, 10*time.Second)
+	return waitForMount(target, 30*time.Second)
 }

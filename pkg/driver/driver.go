@@ -17,14 +17,22 @@ limitations under the License.
 package driver
 
 import (
+	"context"
+	"net"
+	"net/url"
+	"os"
+	"path"
+	"path/filepath"
+
 	"github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/golang/glog"
-
-	csicommon "github.com/kubernetes-csi/drivers/pkg/csi-common"
+	"google.golang.org/grpc"
 )
 
 type driver struct {
-	driver   *csicommon.CSIDriver
+	name     string
+	version  string
+	nodeID   string
 	endpoint string
 
 	ids *identityServer
@@ -39,50 +47,82 @@ var (
 
 // New initializes the driver
 func New(nodeID string, endpoint string) (*driver, error) {
-	d := csicommon.NewCSIDriver(driverName, vendorVersion, nodeID)
-	if d == nil {
-		glog.Fatalln("Failed to initialize CSI Driver.")
-	}
-
-	s3Driver := &driver{
+	d := &driver{
+		name:     driverName,
+		version:  vendorVersion,
+		nodeID:   nodeID,
 		endpoint: endpoint,
-		driver:   d,
 	}
-	return s3Driver, nil
+	return d, nil
 }
 
-func (s3 *driver) newIdentityServer(d *csicommon.CSIDriver) *identityServer {
-	return &identityServer{
-		DefaultIdentityServer: csicommon.NewDefaultIdentityServer(d),
+func (d *driver) Run() {
+	glog.Infof("Driver: %v ", d.name)
+	glog.Infof("Version: %v ", d.version)
+
+	d.ids = &identityServer{driver: d}
+	d.ns = &nodeServer{driver: d}
+	d.cs = &controllerServer{driver: d}
+
+	// Parse endpoint
+	u, err := url.Parse(d.endpoint)
+	if err != nil {
+		glog.Fatalf("Failed to parse endpoint %s: %v", d.endpoint, err)
+	}
+
+	var addr string
+	switch u.Scheme {
+	case "unix":
+		addr = u.Path
+		if err := os.MkdirAll(path.Dir(addr), 0750); err != nil {
+			glog.Fatalf("Failed to create directory for socket: %v", err)
+		}
+		if err := os.Remove(addr); err != nil && !os.IsNotExist(err) {
+			glog.Fatalf("Failed to remove existing socket: %v", err)
+		}
+	case "tcp":
+		addr = u.Host
+	default:
+		glog.Fatalf("Unsupported protocol: %s", u.Scheme)
+	}
+
+	listener, err := net.Listen(u.Scheme, addr)
+	if err != nil {
+		glog.Fatalf("Failed to listen on %s: %v", addr, err)
+	}
+
+	// Ensure socket file is cleaned up on exit
+	if u.Scheme == "unix" {
+		absAddr, err := filepath.Abs(addr)
+		if err == nil {
+			defer os.Remove(absAddr)
+		}
+	}
+
+	opts := []grpc.ServerOption{
+		grpc.UnaryInterceptor(logGRPC),
+	}
+	server := grpc.NewServer(opts...)
+
+	csi.RegisterIdentityServer(server, d.ids)
+	csi.RegisterControllerServer(server, d.cs)
+	csi.RegisterNodeServer(server, d.ns)
+
+	glog.Infof("Listening for connections on address: %#v", listener.Addr())
+	if err := server.Serve(listener); err != nil {
+		glog.Fatalf("Failed to serve: %v", err)
 	}
 }
 
-func (s3 *driver) newControllerServer(d *csicommon.CSIDriver) *controllerServer {
-	return &controllerServer{
-		DefaultControllerServer: csicommon.NewDefaultControllerServer(d),
+// logGRPC logs all gRPC calls
+func logGRPC(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	glog.V(3).Infof("GRPC call: %s", info.FullMethod)
+	glog.V(5).Infof("GRPC request: %+v", req)
+	resp, err := handler(ctx, req)
+	if err != nil {
+		glog.Errorf("GRPC error: %v", err)
+	} else {
+		glog.V(5).Infof("GRPC response: %+v", resp)
 	}
-}
-
-func (s3 *driver) newNodeServer(d *csicommon.CSIDriver) *nodeServer {
-	return &nodeServer{
-		DefaultNodeServer: csicommon.NewDefaultNodeServer(d),
-	}
-}
-
-func (s3 *driver) Run() {
-	glog.Infof("Driver: %v ", driverName)
-	glog.Infof("Version: %v ", vendorVersion)
-	// Initialize default library driver
-
-	s3.driver.AddControllerServiceCapabilities([]csi.ControllerServiceCapability_RPC_Type{csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME})
-	s3.driver.AddVolumeCapabilityAccessModes([]csi.VolumeCapability_AccessMode_Mode{csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER})
-
-	// Create GRPC servers
-	s3.ids = s3.newIdentityServer(s3.driver)
-	s3.ns = s3.newNodeServer(s3.driver)
-	s3.cs = s3.newControllerServer(s3.driver)
-
-	s := csicommon.NewNonBlockingGRPCServer()
-	s.Start(s3.endpoint, s3.ids, s3.cs, s3.ns)
-	s.Wait()
+	return resp, err
 }

@@ -1,20 +1,20 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: csi-provisioner-sa
+  name: csi-s3-provisioner-sa
   namespace: kube-system
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: external-provisioner-runner
+  name: csi-s3-external-provisioner-runner
 rules:
   - apiGroups: [""]
     resources: ["secrets"]
     verbs: ["get", "list"]
   - apiGroups: [""]
     resources: ["persistentvolumes"]
-    verbs: ["get", "list", "watch", "create", "delete"]
+    verbs: ["get", "list", "watch", "create", "patch", "delete"]
   - apiGroups: [""]
     resources: ["persistentvolumeclaims"]
     verbs: ["get", "list", "watch", "update"]
@@ -28,26 +28,26 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: csi-provisioner-role
+  name: csi-s3-provisioner-role
 subjects:
   - kind: ServiceAccount
-    name: csi-provisioner-sa
+    name: csi-s3-provisioner-sa
     namespace: kube-system
 roleRef:
   kind: ClusterRole
-  name: external-provisioner-runner
+  name: csi-s3-external-provisioner-runner
   apiGroup: rbac.authorization.k8s.io
 ---
 kind: Service
 apiVersion: v1
 metadata:
-  name: csi-provisioner-s3
+  name: csi-s3-provisioner
   namespace: kube-system
   labels:
-    app: csi-provisioner-s3
+    app: csi-s3-provisioner
 spec:
   selector:
-    app: csi-provisioner-s3
+    app: csi-s3-provisioner
   ports:
     - name: csi-s3-dummy
       port: 65535
@@ -55,20 +55,20 @@ spec:
 kind: StatefulSet
 apiVersion: apps/v1
 metadata:
-  name: csi-provisioner-s3
+  name: csi-s3-provisioner
   namespace: kube-system
 spec:
   serviceName: "csi-provisioner-s3"
   replicas: 1
   selector:
     matchLabels:
-      app: csi-provisioner-s3
+      app: csi-s3-provisioner
   template:
     metadata:
       labels:
-        app: csi-provisioner-s3
+        app: csi-s3-provisioner
     spec:
-      serviceAccount: csi-provisioner-sa
+      serviceAccount: csi-s3-provisioner-sa
       tolerations:
         - key: node-role.kubernetes.io/master
           operator: Exists
@@ -76,7 +76,7 @@ spec:
           operator: Exists
       containers:
         - name: csi-provisioner
-          image: quay.io/k8scsi/csi-provisioner:v2.1.0
+          image: cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-provisioner:v6.2.0
           args:
             - "--csi-address=$(ADDRESS)"
             - "--v=4"
@@ -88,7 +88,7 @@ spec:
             - name: socket-dir
               mountPath: /var/lib/kubelet/plugins/ru.yandex.s3.csi
         - name: csi-s3
-          image: cr.yandex/crp9ftr22d26age3hulg/csi-s3:0.36.2
+          image: cr.yandex/crp9ftr22d26age3hulg/csi-s3:0.43.7
           imagePullPolicy: IfNotPresent
           args:
             - "--endpoint=$(CSI_ENDPOINT)"

@@ -35,6 +35,7 @@ The following table lists all configuration parameters and their default values.
 | `secret.accessKey`           | S3 Access Key                                                          |                                                        |
 | `secret.secretKey`           | S3 Secret Key                                                          |                                                        |
 | `secret.endpoint`            | Endpoint                                                               | https://storage.yandexcloud.net                        |
+| `secret.region`              | Region                                                                 |                         |
 | `tolerations.all`            | Tolerate all taints by the CSI-S3 node driver (mounter)                | false                                                  |
 | `tolerations.node`           | Custom tolerations for the CSI-S3 node driver (mounter)                | []                                                     |
 | `tolerations.controller`     | Custom tolerations for the CSI-S3 controller (provisioner)             | []                                                     |

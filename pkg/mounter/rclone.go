@@ -34,7 +34,7 @@ func (rclone *rcloneMounter) Mount(target, volumeID string) error {
 	args := []string{
 		"mount",
 		fmt.Sprintf(":s3:%s", path.Join(rclone.meta.BucketName, rclone.meta.Prefix)),
-		fmt.Sprintf("%s", target),
+		target,
 		"--daemon",
 		"--s3-provider=AWS",
 		"--s3-env-auth=true",

@@ -10,7 +10,19 @@ This is a Container Storage Interface ([CSI](https://github.com/container-storag
 * Kubernetes has to allow privileged containers
 * Docker daemon must allow shared mounts (systemd flag `MountFlags=shared`)
 
-### 1. Create a secret with your S3 credentials
+### Helm chart
+
+Helm chart is published at `https://yandex-cloud.github.io/k8s-csi-s3`:
+
+```
+helm repo add yandex-s3 https://yandex-cloud.github.io/k8s-csi-s3/charts
+
+helm install csi-s3 yandex-s3/csi-s3
+```
+
+### Manual installation
+
+#### 1. Create a secret with your S3 credentials
 
 ```yaml
 apiVersion: v1
@@ -30,7 +42,7 @@ stringData:
 
 The region can be empty if you are using some other S3 compatible storage.
 
-### 2. Deploy the driver
+#### 2. Deploy the driver
 
 ```bash
 cd deploy/kubernetes
@@ -39,21 +51,38 @@ kubectl create -f driver.yaml
 kubectl create -f csi-s3.yaml
 ```
 
-If you're upgrading from a previous version which had `attacher.yaml` you
-can safely delete all resources created from that file:
+##### Upgrading
+
+If you're upgrading from <= 0.35.5 - delete all resources from `attacher.yaml`:
 
 ```
 wget https://raw.githubusercontent.com/yandex-cloud/k8s-csi-s3/v0.35.5/deploy/kubernetes/attacher.yaml
 kubectl delete -f attacher.yaml
 ```
 
-### 3. Create the storage class
+If you're upgrading from <= 0.40.6 - delete all resources from old `provisioner.yaml`:
+
+```bash
+wget -O old-provisioner.yaml https://raw.githubusercontent.com/yandex-cloud/k8s-csi-s3/v0.40.6/deploy/kubernetes/provisioner.yaml
+kubectl delete -f old-provisioner.yaml
+```
+
+Then reapply `csi-s3.yaml`, `driver.yaml` and `provisioner.yaml`:
+
+```bash
+cd deploy/kubernetes
+kubectl apply -f provisioner.yaml
+kubectl apply -f driver.yaml
+kubectl apply -f csi-s3.yaml
+```
+
+#### 3. Create the storage class
 
 ```bash
 kubectl create -f examples/storageclass.yaml
 ```
 
-### 4. Test the S3 driver
+#### 4. Test the S3 driver
 
 1. Create a pvc using the new storage class:
 
@@ -82,8 +111,8 @@ kubectl create -f examples/storageclass.yaml
     ```bash
     $ kubectl exec -ti csi-s3-test-nginx bash
     $ mount | grep fuse
-    s3fs on /var/lib/www/html type fuse.s3fs (rw,nosuid,nodev,relatime,user_id=0,group_id=0,allow_other)
-    $ touch /var/lib/www/html/hello_world
+    pvc-035763df-0488-4941-9a34-f637292eb95c: on /usr/share/nginx/html/s3 type fuse.geesefs (rw,nosuid,nodev,relatime,user_id=65534,group_id=0,default_permissions,allow_other)
+    $ touch /usr/share/nginx/html/s3/hello_world
     ```
 
 If something does not work as expected, check the troubleshooting section below.

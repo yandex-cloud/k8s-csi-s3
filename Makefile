@@ -16,7 +16,7 @@
 REGISTRY_NAME=gru.ocir.io/grq1iurfepyg
 IMAGE_NAME=csi-s3
 IMAGE_NAME2=yandex-cloud/csi-s3/csi-s3-driver
-VERSION ?= 0.36.2
+VERSION ?= 0.43.7
 IMAGE_TAG=$(REGISTRY_NAME)/$(IMAGE_NAME):$(VERSION)
 TEST_IMAGE_TAG=$(IMAGE_NAME):test
 
