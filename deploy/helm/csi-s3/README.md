@@ -23,6 +23,7 @@ The following table lists all configuration parameters and their default values.
 
 | Parameter                    | Description                                                            | Default                                                |
 | ---------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------ |
+| `provisioner.extraArgs`      | Extra arguments for the provisioner                                    | []                                                   |
 | `storageClass.create`        | Specifies whether the storage class should be created                  | true                                                   |
 | `storageClass.name`          | Storage class name                                                     | csi-s3                                                 |
 | `storageClass.singleBucket`  | Use a single bucket for all dynamically provisioned persistent volumes |                                                        |

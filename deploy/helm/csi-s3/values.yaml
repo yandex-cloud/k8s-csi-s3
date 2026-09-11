@@ -7,6 +7,13 @@ images:
   # Main image
   csi: cr.yandex/crp9ftr22d26age3hulg/yandex-cloud/csi-s3/csi-s3-driver:0.43.7
 
+provisioner:
+  # Extra arguments for the provisioner
+  # Example - change the bucket name prefix from "pvc" to "pvc-s3":
+  # extraArgs:
+  #   - "--volume-name-prefix=pvc-s3"
+  extraArgs: []
+
 storageClass:
   # Specifies whether the storage class should be created
   create: true
