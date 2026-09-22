@@ -61,6 +61,13 @@ func (cs *controllerServer) CreateVolume(ctx context.Context, req *csi.CreateVol
 		return nil, status.Error(codes.InvalidArgument, "Volume Capabilities missing in request")
 	}
 
+	isGeeseFS := params[mounter.TypeKey] != "s3fs" && params[mounter.TypeKey] != "rclone"
+	if isGeeseFS {
+		if err := mounter.ValidateGeeseFSOptions(getMeta("", "", params).MountOptions); err != nil {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+	}
+
 	glog.V(4).Infof("Got a request to create volume %s", volumeID)
 
 	client, err := s3.NewClientFromSecret(req.GetSecrets())

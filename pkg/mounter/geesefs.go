@@ -14,8 +14,30 @@ import (
 )
 
 const (
-	geesefsCmd    = "geesefs"
+	geesefsCmd = "geesefs"
 )
+
+var forbiddenGeeseFSOptions = map[string]struct{}{
+	"iam": {}, "iam-flavor": {}, "iam-url": {}, "iam-header": {},
+	"endpoint": {}, "pprof": {}, "setuid": {}, "setgid": {}, "log-file": {},
+	"shared-config": {}, "cache": {}, "no-systemd": {}, "f": {},
+}
+
+// ValidateGeeseFSOptions checks only parsed, user-supplied options.
+func ValidateGeeseFSOptions(options []string) error {
+	for _, arg := range options {
+		if !strings.HasPrefix(arg, "-") {
+			continue
+		}
+		name := strings.TrimPrefix(arg, "-")
+		name = strings.TrimPrefix(name, "-")
+		name, _, _ = strings.Cut(name, "=")
+		if _, forbidden := forbiddenGeeseFSOptions[name]; forbidden {
+			return fmt.Errorf("GeeseFS option %q is not allowed", arg)
+		}
+	}
+	return nil
+}
 
 // Implements Mounter
 type geesefsMounter struct {
@@ -89,6 +111,10 @@ type execCmd struct {
 }
 
 func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
+	if err := ValidateGeeseFSOptions(geesefs.meta.MountOptions); err != nil {
+		return err
+	}
+
 	fullPath := fmt.Sprintf("%s:%s", geesefs.meta.BucketName, geesefs.meta.Prefix)
 	var args []string
 	if geesefs.region != "" {
@@ -99,46 +125,10 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 		"--setuid", "65534", // nobody. drop root privileges
 		"--setgid", "65534", // nogroup
 	)
-	var unsafeArgs []string
-	useSystemd := true
-	for i := 0; i < len(geesefs.meta.MountOptions); i++ {
-		opt := geesefs.meta.MountOptions[i]
-		if opt == "--no-systemd" {
-			useSystemd = false
-		} else if len(opt) > 0 && opt[0] == '-' {
-			// Remove unsafe options
-			s := 1
-			if len(opt) > 1 && opt[1] == '-' {
-				s++
-			}
-			key := opt[s:]
-			e := strings.Index(opt, "=")
-			if e >= 0 {
-				key = opt[s:e]
-			}
-			if key == "log-file" || key == "shared-config" || key == "cache" {
-				// Skip options accessing local FS
-				unsafeArgs = append(unsafeArgs, opt)
-				i++
-				if i < len(geesefs.meta.MountOptions) {
-					unsafeArgs = append(unsafeArgs, geesefs.meta.MountOptions[i])
-				}
-			} else if key != "" {
-				args = append(args, opt)
-			}
-		} else if len(opt) > 0 {
-			args = append(args, opt)
-		}
-	}
-	if !useSystemd {
-		// Unsafe options are allowed when running inside the container
-		args = append(args, unsafeArgs...)
-	}
+
+	args = append(args, geesefs.meta.MountOptions...)
 	args = append(args, fullPath, target)
-	// Try to start geesefs using systemd so it doesn't get killed when the container exits
-	if !useSystemd {
-		return geesefs.MountDirect(target, args)
-	}
+
 	conn, err := systemd.New()
 	if err != nil {
 		glog.Errorf("Failed to connect to systemd dbus service: %v, starting geesefs directly", err)
@@ -153,21 +143,21 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 	if pluginDir == "" {
 		pluginDir = "/var/lib/kubelet/plugins/ru.yandex.s3.csi"
 	}
-	args = append([]string{pluginDir+"/geesefs", "-f", "-o", "allow_other", "--endpoint", geesefs.endpoint}, args...)
-	glog.Info("Starting geesefs using systemd: "+strings.Join(args, " "))
-	unitName := "geesefs-"+systemd.PathBusEscape(volumeID)+".service"
+	args = append([]string{pluginDir + "/geesefs", "-f", "-o", "allow_other", "--endpoint", geesefs.endpoint}, args...)
+	glog.Info("Starting geesefs using systemd: " + strings.Join(args, " "))
+	unitName := "geesefs-" + systemd.PathBusEscape(volumeID) + ".service"
 	newProps := []systemd.Property{
 		systemd.Property{
-			Name: "Description",
-			Value: dbus.MakeVariant("GeeseFS mount for Kubernetes volume "+volumeID),
+			Name:  "Description",
+			Value: dbus.MakeVariant("GeeseFS mount for Kubernetes volume " + volumeID),
 		},
 		systemd.PropExecStart(args, false),
 		systemd.Property{
-			Name: "Environment",
-			Value: dbus.MakeVariant([]string{ "AWS_ACCESS_KEY_ID="+geesefs.accessKeyID, "AWS_SECRET_ACCESS_KEY="+geesefs.secretAccessKey }),
+			Name:  "Environment",
+			Value: dbus.MakeVariant([]string{"AWS_ACCESS_KEY_ID=" + geesefs.accessKeyID, "AWS_SECRET_ACCESS_KEY=" + geesefs.secretAccessKey}),
 		},
 		systemd.Property{
-			Name: "CollectMode",
+			Name:  "CollectMode",
 			Value: dbus.MakeVariant("inactive-or-failed"),
 		},
 	}
@@ -188,7 +178,7 @@ func (geesefs *geesefsMounter) Mount(target, volumeID string) error {
 				// FIXME This may mean that the same bucket&path are used for multiple PVs. Support it somehow
 				return fmt.Errorf(
 					"GeeseFS for volume %v is already mounted on host, but"+
-					" in a different directory. We want %v, but it's in %v",
+						" in a different directory. We want %v, but it's in %v",
 					volumeID, target, curPath,
 				)
 			}

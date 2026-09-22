@@ -164,8 +164,8 @@ You can check POSIX compatibility matrix here: https://github.com/yandex-cloud/g
 * Does not store file permissions and custom modification times
 * By default runs **outside** of the csi-s3 container using systemd, to not crash
   mountpoints with "Transport endpoint is not connected" when csi-s3 is upgraded
-  or restarted. Add `--no-systemd` to `parameters.options` of the `StorageClass`
-  to disable this behaviour.
+  or restarted. If systemd is unavailable, the driver starts GeeseFS directly.
+  The `--no-systemd` option in `parameters.options` is rejected.
 
 #### s3fs
 
