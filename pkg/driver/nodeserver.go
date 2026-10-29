@@ -89,7 +89,7 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	}
 	if notMnt {
 		// Staged mount is dead by some reason. Revive it
-		bucketName, prefix := volumeIDToBucketPrefix(volumeID)
+		bucketName, prefix := volumeBucketPrefix(volumeID, req.GetVolumeContext())
 		s3Client, err := s3.NewClientFromSecret(req.GetSecrets())
 		if err != nil {
 			return nil, fmt.Errorf("failed to initialize S3 client: %s", err)
@@ -156,7 +156,7 @@ func (ns *nodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpu
 func (ns *nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVolumeRequest) (*csi.NodeStageVolumeResponse, error) {
 	volumeID := req.GetVolumeId()
 	stagingTargetPath := req.GetStagingTargetPath()
-	bucketName, prefix := volumeIDToBucketPrefix(volumeID)
+	bucketName, prefix := volumeBucketPrefix(volumeID, req.GetVolumeContext())
 
 	// Check arguments
 	if len(volumeID) == 0 {

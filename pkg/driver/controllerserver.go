@@ -145,7 +145,7 @@ func (cs *controllerServer) ValidateVolumeCapabilities(ctx context.Context, req 
 	if req.GetVolumeCapabilities() == nil {
 		return nil, status.Error(codes.InvalidArgument, "Volume capabilities missing in request")
 	}
-	bucketName, _ := volumeIDToBucketPrefix(req.GetVolumeId())
+	bucketName, _ := volumeBucketPrefix(req.GetVolumeId(), req.GetVolumeContext())
 
 	client, err := s3.NewClientFromSecret(req.GetSecrets())
 	if err != nil {
@@ -244,6 +244,26 @@ func sanitizeVolumeID(volumeID string) string {
 		volumeID = hex.EncodeToString(h.Sum(nil))
 	}
 	return volumeID
+}
+
+// volumeBucketPrefix returns the bucket name and prefix of a volume.
+//
+// By default they are derived from the volumeID. A statically provisioned PV may
+// instead set the "bucket" (and optionally "prefix") volume attributes. This lets
+// several PVs with different volumeHandles point to the same bucket, so each of them
+// gets its own staging mount and its own credentials.
+//
+// Dynamically provisioned volumes in a StorageClass with the "bucket" parameter also
+// carry "bucket" in their volume context, but their volumeID is "<bucket>/<prefix>".
+// When the volumeID already starts with the same bucket, the volumeID wins, so these
+// volumes keep mounting their own prefix.
+func volumeBucketPrefix(volumeID string, volumeContext map[string]string) (string, string) {
+	idBucket, idPrefix := volumeIDToBucketPrefix(volumeID)
+	bucket := volumeContext[mounter.BucketKey]
+	if bucket == "" || bucket == idBucket {
+		return idBucket, idPrefix
+	}
+	return bucket, volumeContext[mounter.PrefixKey]
 }
 
 // volumeIDToBucketPrefix returns the bucket name and prefix based on the volumeID.

@@ -143,6 +143,33 @@ If you want to mount a pre-existing bucket or prefix within a pre-existing bucke
 
 To do that you should omit `storageClassName` in the `PersistentVolumeClaim` and manually create a `PersistentVolume` with a matching `claimRef`, like in the following example: [deploy/kubernetes/examples/pvc-manual.yaml](deploy/kubernetes/examples/pvc-manual.yaml).
 
+#### Several PVs for the same bucket
+
+Kubernetes stages a volume once per node per `volumeHandle`, and csi-s3 reads the credentials only when staging.
+If two PVs use the same `volumeHandle` (e.g. the bucket name), they share one mount on each node,
+and whichever PV is staged first decides the credentials for both.
+
+To give each PV its own mount and its own credentials, use a unique `volumeHandle` and set the bucket
+(and optionally the prefix) in `volumeAttributes`:
+
+```yaml
+  csi:
+    driver: ru.yandex.s3.csi
+    volumeHandle: team-a-data   # unique per PV
+    nodeStageSecretRef:
+      name: team-a-secret
+      namespace: kube-system
+    nodePublishSecretRef:
+      name: team-a-secret
+      namespace: kube-system
+    volumeAttributes:
+      bucket: shared-bucket
+      prefix: data              # optional
+      mounter: geesefs
+```
+
+If `bucket` is not set, or the `volumeHandle` already starts with the same bucket name, the bucket and prefix are taken from the `volumeHandle` as before.
+
 ### Mounter
 
 We **strongly recommend** to use the default mounter which is [GeeseFS](https://github.com/yandex-cloud/geesefs).

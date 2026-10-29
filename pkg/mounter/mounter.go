@@ -30,6 +30,7 @@ const (
 	rcloneMounterType  = "rclone"
 	TypeKey            = "mounter"
 	BucketKey          = "bucket"
+	PrefixKey          = "prefix"
 	OptionsKey         = "options"
 )
 
