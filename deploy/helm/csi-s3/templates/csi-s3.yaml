@@ -49,6 +49,9 @@ spec:
         {{- with .Values.tolerations.node }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
+      {{- with .Values.priorityClassName.node }}
+      priorityClassName: {{ . }}
+      {{- end }}
       serviceAccount: csi-s3
       containers:
         - name: driver-registrar

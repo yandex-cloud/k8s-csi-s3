@@ -45,6 +45,12 @@ tolerations:
   node: []
   controller: []
 
+# Priority classes for the pods, e.g. system-node-critical for the node driver
+# so it is not preempted or evicted ahead of the workloads using its mounts
+priorityClassName:
+  node: ""
+  controller: ""
+
 nodeSelector: {}
 
 kubeletPath: /var/lib/kubelet
